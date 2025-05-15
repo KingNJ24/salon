@@ -1,0 +1,434 @@
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="brand-banner">
+                <h1 class="banner-text">NandiniJ</h1>
+            </div>
+            <h1 class="hero-title"><%= siteInfo.heroTitle || 'Makeup Studio' %></h1>
+            <p class="hero-text"><%= siteInfo.heroSubtitle || 'Experience luxury beauty services at our studio. Our expert stylists will help you look and feel your best.' %></p>
+            <a href="/contact" class="btn">Book an Appointment</a>
+        </div>
+    </div>
+</section>
+
+<!-- Video Ad Section -->
+<section class="section video-ad-section">
+    <div class="container">
+        <h2 class="section-title text-center">Welcome to Our Salon</h2>
+        <div class="video-container">
+            <video controls autoplay loop muted poster="/images/about.jpg" id="salon-video" onerror="handleVideoError()">
+                <source src="<%= siteInfo.homeVideo || '/videos/salon-ad.mp4' %>" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div id="video-fallback" style="display: none; position: relative;">
+                <img src="/images/about.jpg" alt="Salon Video Placeholder" style="width: 100%; display: block;">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.5); color: white; text-align: center; padding: 20px;">
+                    <p>Our salon video is coming soon! Visit us to experience our luxury beauty services firsthand.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section class="section">
+    <div class="container">
+        <h2 class="section-title text-center">Our Services</h2>
+        <p class="text-center">We offer a wide range of services to meet all your beauty needs.</p>
+        
+        <div class="services-grid">
+            <% services.forEach(service => { %>
+                <div class="service-card">
+                    <div class="service-image">
+                        <% if (service.type === 'video') { %>
+                            <!-- Video thumbnail with hover-to-play -->
+                            <div class="video-thumbnail" data-video-src="<%= service.videoUrl %>">
+                                <img src="<%= service.image %>" alt="<%= service.name %>" 
+                                     onerror="this.src='https://via.placeholder.com/300x200?text=<%= service.name.replace(/ /g, '+') %>'">
+                                
+                                <!-- Preview video that plays on hover -->
+                                <video class="preview-video" muted loop preload="none" 
+                                       poster="<%= service.image %>">
+                                    <source src="<%= service.videoUrl %>" type="video/mp4">
+                                </video>
+                                
+                                <div class="play-button">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <img src="<%= service.image %>" alt="<%= service.name %>" onerror="this.src='https://via.placeholder.com/300x200?text=<%= service.name.replace(/ /g, '+') %>'">
+                        <% } %>
+                    </div>
+                    <div class="service-content">
+                        <h3 class="service-title"><%= service.name %></h3>
+                        <p><%= service.description %></p>
+                        <a href="/services" class="btn">Learn More</a>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="section" style="background-color: var(--color-light);">
+    <div class="container">
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: var(--spacing-lg); align-items: center;">
+            <div>
+                <img src="/images/about.jpg" alt="About <%= siteInfo.salonName %>" onerror="this.src='https://via.placeholder.com/500x300?text=About+Our+Salon'">
+            </div>
+            <div>
+                <h2>About <%= siteInfo.salonName %></h2>
+                <p><%= siteInfo.aboutText || 'Our salon was founded with a simple mission: to provide exceptional hair care services in a welcoming and relaxing environment.' %></p>
+                <a href="/about" class="btn">Learn More About Us</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Lookbook Preview -->
+<section class="section">
+    <div class="container">
+        <h2 class="section-title text-center">Our Lookbook</h2>
+        <p class="text-center">Browse our gallery of styles created by our talented team.</p>
+        
+        <div class="gallery-grid" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="gallery-item">
+                <div class="gallery-image">
+                    <img src="/images/colors2.jpg" alt="Hair Color" onerror="this.src='https://via.placeholder.com/250x250?text=Hair+Color'">
+                </div>
+            </div>
+            <div class="gallery-item">
+                <div class="gallery-image">
+                    <img src="/images/cuts2.jpg" alt="Hair Cut" onerror="this.src='https://via.placeholder.com/250x250?text=Hair+Cut'">
+                </div>
+            </div>
+            <div class="gallery-item">
+                <div class="gallery-image">
+                    <img src="/images/texture1.jpg" alt="Hair Texture" onerror="this.src='https://via.placeholder.com/250x250?text=Hair+Texture'">
+                </div>
+            </div>
+            <div class="gallery-item">
+                <div class="gallery-image">
+                    <img src="/images/makeup1.jpg" alt="Makeup" onerror="this.src='https://via.placeholder.com/250x250?text=Makeup'">
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center" style="margin-top: var(--spacing-lg);">
+            <a href="/lookbook" class="btn">View Full Lookbook</a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="section" style="background-color: var(--color-primary); color: var(--color-white);">
+    <div class="container text-center">
+        <h2>Ready to Transform Your Look?</h2>
+        <p>Book an appointment today and let our expert stylists help you look and feel your best.</p>
+        <a href="/contact" class="btn" style="background-color: var(--color-white); color: var(--color-primary);">Book an Appointment</a>
+    </div>
+</section>
+
+<!-- Video Modal (hidden by default) -->
+<div id="home-video-modal" class="video-modal" style="display: none;">
+    <div class="video-container">
+        <button class="home-close-modal">&times;</button>
+        <video id="home-video-player" controls autoplay>
+            Your browser does not support the video tag.
+        </video>
+    </div>
+</div>
+
+<script>
+    function handleVideoError() {
+        document.getElementById('salon-video').style.display = 'none';
+        document.getElementById('video-fallback').style.display = 'block';
+    }
+    
+    // Handle video setup and autoplay
+    document.addEventListener('DOMContentLoaded', function() {
+        const video = document.getElementById('salon-video');
+        
+        // Handle video errors
+        video.addEventListener('error', function() {
+            handleVideoError();
+        });
+        
+        // Try to autoplay the video with fallback for mobile
+        function attemptAutoplay() {
+            const playPromise = video.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    // Autoplay started successfully
+                    console.log('Video autoplay started successfully');
+                }).catch(error => {
+                    // Autoplay was prevented
+                    console.log('Autoplay prevented:', error);
+                    
+                    // Add click-to-play overlay for mobile
+                    const playOverlay = document.createElement('div');
+                    playOverlay.className = 'play-overlay';
+                    playOverlay.innerHTML = '<div class="play-button"><svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>';
+                    playOverlay.style.position = 'absolute';
+                    playOverlay.style.top = '0';
+                    playOverlay.style.left = '0';
+                    playOverlay.style.width = '100%';
+                    playOverlay.style.height = '100%';
+                    playOverlay.style.display = 'flex';
+                    playOverlay.style.alignItems = 'center';
+                    playOverlay.style.justifyContent = 'center';
+                    playOverlay.style.backgroundColor = 'rgba(0,0,0,0.3)';
+                    playOverlay.style.cursor = 'pointer';
+                    
+                    // Remove controls to make the overlay work better
+                    video.controls = false;
+                    
+                    // Add overlay to container
+                    video.parentElement.style.position = 'relative';
+                    video.parentElement.appendChild(playOverlay);
+                    
+                    // Play video when overlay is clicked
+                    playOverlay.addEventListener('click', function() {
+                        video.muted = false; // Unmute when explicitly played
+                        video.play()
+                            .then(() => {
+                                playOverlay.remove();
+                                video.controls = true;
+                            })
+                            .catch(err => console.error('Play failed:', err));
+                    });
+                });
+            }
+        }
+        
+        // Attempt autoplay when video metadata is loaded
+        if (video.readyState >= 1) {
+            attemptAutoplay();
+        } else {
+            video.addEventListener('loadedmetadata', attemptAutoplay);
+        }
+        
+        // Make sure video loops properly
+        video.addEventListener('ended', function() {
+            video.currentTime = 0;
+            video.play().catch(err => console.error('Loop playback failed:', err));
+        });
+        
+        // Service videos hover-to-play and modal functionality
+        const videoModal = document.getElementById('home-video-modal');
+        const videoPlayer = document.getElementById('home-video-player');
+        const closeModal = document.querySelector('.home-close-modal');
+        const videoThumbnails = document.querySelectorAll('.video-thumbnail');
+        
+        // Setup hover-to-play videos for services
+        videoThumbnails.forEach(thumbnail => {
+            const previewVideo = thumbnail.querySelector('.preview-video');
+            
+            // Play video on hover
+            thumbnail.addEventListener('mouseenter', function() {
+                if (previewVideo) {
+                    previewVideo.load(); // Ensure video is loaded
+                    previewVideo.play().catch(err => console.error('Preview playback error:', err));
+                }
+            });
+            
+            // Pause video when mouse leaves
+            thumbnail.addEventListener('mouseleave', function() {
+                if (previewVideo) {
+                    previewVideo.pause();
+                    previewVideo.currentTime = 0;
+                }
+            });
+            
+            // Open modal when clicked
+            thumbnail.addEventListener('click', function() {
+                const videoSrc = this.getAttribute('data-video-src');
+                console.log('Opening video:', videoSrc);
+                
+                // Set video source
+                videoPlayer.innerHTML = '';  // Clear any existing sources
+                videoPlayer.src = videoSrc;
+                
+                // Show modal
+                videoModal.style.display = 'flex';
+                
+                // Try playing after a short delay
+                setTimeout(() => {
+                    videoPlayer.play().catch(error => {
+                        console.error('Error playing video:', error);
+                    });
+                }, 300);
+            });
+        });
+        
+        // Close video modal
+        if (closeModal) {
+            closeModal.addEventListener('click', function() {
+                videoModal.style.display = 'none';
+                videoPlayer.pause();
+                videoPlayer.src = '';
+            });
+        }
+        
+        // Also close modal when clicking outside the video
+        if (videoModal) {
+            videoModal.addEventListener('click', function(event) {
+                if (event.target === videoModal) {
+                    videoModal.style.display = 'none';
+                    videoPlayer.pause();
+                    videoPlayer.src = '';
+                }
+            });
+        }
+    });
+</script>
+
+<style>
+    .brand-banner {
+        margin-bottom: 20px;
+    }
+    
+    .banner-text {
+        font-size: 4rem;
+        font-weight: 700;
+        color: var(--color-primary);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin: 0;
+        line-height: 1;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .video-ad-section {
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+    }
+    
+    .video-container {
+        max-width: 800px;
+        margin: 0 auto;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .video-container video {
+        width: 100%;
+        display: block;
+    }
+    
+    .play-button {
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s ease;
+    }
+    
+    .play-overlay:hover .play-button {
+        transform: scale(1.1);
+        background: rgba(0, 0, 0, 0.7);
+    }
+    
+    /* Service Video Styles */
+    .video-thumbnail {
+        position: relative;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    .video-thumbnail img, 
+    .video-thumbnail video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .video-thumbnail .preview-video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 1;
+    }
+    
+    .video-thumbnail:hover .preview-video {
+        opacity: 1;
+    }
+    
+    .video-thumbnail:hover img {
+        transform: scale(1.05);
+    }
+    
+    .video-thumbnail .play-button {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        opacity: 0.8;
+        transition: opacity 0.3s;
+        width: 60px;
+        height: 60px;
+    }
+    
+    .video-thumbnail:hover .play-button {
+        opacity: 1;
+    }
+    
+    /* Video Modal Styles */
+    .video-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    
+    .video-modal .video-container {
+        position: relative;
+        width: 80%;
+        max-width: 800px;
+        aspect-ratio: 16/9;
+        background-color: #000;
+    }
+    
+    .video-modal .video-container video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    
+    .home-close-modal {
+        position: absolute;
+        top: -40px;
+        right: -40px;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 30px;
+        cursor: pointer;
+    }
+</style> 

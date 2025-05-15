@@ -1,0 +1,139 @@
+<!-- Add New Team Member Button -->
+<div style="margin-bottom: 20px;">
+    <button class="btn" id="add-member-btn">Add New Team Member</button>
+</div>
+
+<!-- Team Members -->
+<div class="card">
+    <div class="card-header">
+        <h2>Team Members</h2>
+    </div>
+    <div class="card-body">
+        <div class="team-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+            <% if (team.length === 0) { %>
+                <div class="text-center" style="grid-column: 1 / -1;">No team members yet</div>
+            <% } else { %>
+                <% team.forEach(member => { %>
+                    <div class="team-card" style="background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
+                        <div class="team-image" style="height: 300px; overflow: hidden;">
+                            <img src="<%= member.image %>" alt="<%= member.name %>" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/placeholder.jpg'">
+                        </div>
+                        <div class="team-info" style="padding: 20px;">
+                            <h3 style="margin-bottom: 5px;"><%= member.name %></h3>
+                            <p style="color: var(--primary); margin-bottom: 10px;"><%= member.title %></p>
+                            <p style="margin-bottom: 15px;"><%= member.bio %></p>
+                            <div class="actions">
+                                <button class="btn btn-sm edit-member-btn" 
+                                    data-id="<%= member.id %>"
+                                    data-name="<%= member.name %>"
+                                    data-title="<%= member.title %>"
+                                    data-bio="<%= member.bio %>"
+                                    data-image="<%= member.image %>">Edit</button>
+                                <button class="btn btn-sm btn-danger delete-btn" data-id="<%= member.id %>" data-confirm="Are you sure you want to remove this team member?" data-endpoint="/api/team/delete/<%= member.id %>">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Team Member Edit/Add Modal (hidden by default) -->
+<div id="team-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modal-title">Edit Team Member</h2>
+        
+        <form id="team-form" class="admin-form" data-endpoint="/api/team/update/0">
+            <input type="hidden" id="member-id" name="id" value="">
+            
+            <div class="form-group">
+                <label for="member-name">Name</label>
+                <input type="text" id="member-name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="member-title">Title/Position</label>
+                <input type="text" id="member-title" name="title" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="member-bio">Bio</label>
+                <textarea id="member-bio" name="bio" rows="4" required></textarea>
+            </div>
+            
+            <div class="form-group image-upload">
+                <label>Team Member Photo</label>
+                <div class="image-preview" style="margin-bottom: 10px;">
+                    <img src="" alt="Preview" style="max-width: 100%; max-height: 200px; display: none;">
+                </div>
+                <input type="file" accept="image/*" class="form-control">
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn upload-btn">Upload</button>
+                    <input type="text" id="member-image" name="image" class="image-url-input" style="flex: 1;" placeholder="Image URL">
+                </div>
+                <p class="help-text">Upload an image or provide a URL.</p>
+            </div>
+            
+            <div class="actions">
+                <button type="button" class="btn btn-secondary close-modal">Cancel</button>
+                <button type="submit" class="btn">Save Team Member</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('team-modal');
+        const closeButtons = document.querySelectorAll('.close, .close-modal');
+        const addMemberBtn = document.getElementById('add-member-btn');
+        const editButtons = document.querySelectorAll('.edit-member-btn');
+        const teamForm = document.getElementById('team-form');
+        
+        // Open modal for adding a new team member
+        addMemberBtn.addEventListener('click', function() {
+            document.getElementById('modal-title').textContent = 'Add New Team Member';
+            teamForm.reset();
+            document.getElementById('member-id').value = '';
+            teamForm.setAttribute('data-endpoint', '/api/team/create');
+            modal.style.display = 'block';
+        });
+        
+        // Open modal for editing a team member
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const memberId = this.getAttribute('data-id');
+                const name = this.getAttribute('data-name');
+                const title = this.getAttribute('data-title');
+                const bio = this.getAttribute('data-bio');
+                const image = this.getAttribute('data-image');
+                
+                document.getElementById('modal-title').textContent = 'Edit Team Member';
+                document.getElementById('member-id').value = memberId;
+                document.getElementById('member-name').value = name;
+                document.getElementById('member-title').value = title;
+                document.getElementById('member-bio').value = bio;
+                document.getElementById('member-image').value = image;
+                
+                teamForm.setAttribute('data-endpoint', `/api/team/update/${memberId}`);
+                modal.style.display = 'block';
+            });
+        });
+        
+        // Close modal
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+</script> 

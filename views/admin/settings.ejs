@@ -1,0 +1,481 @@
+<!-- Site Settings Form -->
+<div class="card">
+    <div class="card-header">
+        <h2>Site Settings</h2>
+    </div>
+    <div class="card-body">
+        <form id="settings-form" class="admin-form" data-endpoint="/api/settings/update">
+            <!-- Basic Information -->
+            <h3 style="margin-top: 0;">Basic Information</h3>
+            
+            <div class="form-group">
+                <label for="salon-name">Salon Name</label>
+                <input type="text" id="salon-name" name="salonName" value="<%= siteInfo.salonName %>" required>
+            </div>
+            
+            <!-- Logo Upload -->
+            <div class="form-group">
+                <label>Logo</label>
+                <div class="image-upload">
+                    <div class="image-preview">
+                        <img src="<%= siteInfo.logo || '/images/logo.png' %>" alt="Logo Preview" style="max-height: 100px; width: 100px; display: block; margin-bottom: 10px; border-radius: 50%; object-fit: cover; aspect-ratio: 1/1; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                    </div>
+                    <input type="file" accept="image/*">
+                    <div style="display: flex; margin-top: 10px;">
+                        <input type="text" name="logo" class="image-url-input" value="<%= siteInfo.logo || '/images/logo.png' %>" placeholder="Image URL">
+                        <button type="button" class="btn upload-btn">Upload</button>
+                    </div>
+                    <p class="help-text">Upload a logo image or provide a URL. The logo will appear as a circle on the website.</p>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="salon-address">Address</label>
+                <input type="text" id="salon-address" name="address" value="<%= siteInfo.address %>" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="salon-phone">Phone</label>
+                <input type="text" id="salon-phone" name="phone" value="<%= siteInfo.phone %>" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="salon-email">Email</label>
+                <input type="email" id="salon-email" name="email" value="<%= siteInfo.email %>" required>
+            </div>
+            
+            <!-- Social Media Links -->
+            <h3>Social Media</h3>
+            
+            <div class="form-group">
+                <label for="social-facebook">Facebook</label>
+                <input type="url" id="social-facebook" name="socialMedia.facebook" value="<%= siteInfo.socialMedia?.facebook || '' %>" placeholder="https://facebook.com/yoursalon">
+            </div>
+            
+            <div class="form-group">
+                <label for="social-instagram">Instagram</label>
+                <input type="url" id="social-instagram" name="socialMedia.instagram" value="<%= siteInfo.socialMedia?.instagram || '' %>" placeholder="https://instagram.com/yoursalon">
+            </div>
+            
+            <div class="form-group">
+                <label for="social-twitter">Twitter</label>
+                <input type="url" id="social-twitter" name="socialMedia.twitter" value="<%= siteInfo.socialMedia?.twitter || '' %>" placeholder="https://twitter.com/yoursalon">
+            </div>
+            
+            <div class="form-group">
+                <label for="social-pinterest">Pinterest</label>
+                <input type="url" id="social-pinterest" name="socialMedia.pinterest" value="<%= siteInfo.socialMedia?.pinterest || '' %>" placeholder="https://pinterest.com/yoursalon">
+            </div>
+            
+            <div class="form-group">
+                <label for="social-youtube">YouTube</label>
+                <input type="url" id="social-youtube" name="socialMedia.youtube" value="<%= siteInfo.socialMedia?.youtube || '' %>" placeholder="https://youtube.com/channel/yoursalon">
+            </div>
+            
+            <!-- Featured Services -->
+            <h3>Homepage Featured Services</h3>
+            <p class="help-text">Select up to 3 services to feature on the homepage. If none are selected, the first 3 services will be shown.</p>
+            
+            <div class="form-group" id="featured-services-container">
+                <div id="featured-services-list">
+                    <!-- This will be populated with services via JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Business Hours -->
+            <h3>Business Hours</h3>
+            
+            <div class="form-group">
+                <label for="hours-monday">Monday</label>
+                <input type="text" id="hours-monday" name="hours.monday" value="<%= siteInfo.hours.monday %>">
+            </div>
+            
+            <div class="form-group">
+                <label for="hours-tuesday">Tuesday</label>
+                <input type="text" id="hours-tuesday" name="hours.tuesday" value="<%= siteInfo.hours.tuesday %>">
+            </div>
+            
+            <div class="form-group">
+                <label for="hours-wednesday">Wednesday</label>
+                <input type="text" id="hours-wednesday" name="hours.wednesday" value="<%= siteInfo.hours.wednesday %>">
+            </div>
+            
+            <div class="form-group">
+                <label for="hours-thursday">Thursday</label>
+                <input type="text" id="hours-thursday" name="hours.thursday" value="<%= siteInfo.hours.thursday %>">
+            </div>
+            
+            <div class="form-group">
+                <label for="hours-friday">Friday</label>
+                <input type="text" id="hours-friday" name="hours.friday" value="<%= siteInfo.hours.friday %>">
+            </div>
+            
+            <div class="form-group">
+                <label for="hours-saturday">Saturday</label>
+                <input type="text" id="hours-saturday" name="hours.saturday" value="<%= siteInfo.hours.saturday %>">
+            </div>
+            
+            <div class="form-group">
+                <label for="hours-sunday">Sunday</label>
+                <input type="text" id="hours-sunday" name="hours.sunday" value="<%= siteInfo.hours.sunday %>">
+            </div>
+            
+            <!-- Homepage Content -->
+            <h3>Homepage Content</h3>
+            
+            <div class="form-group">
+                <label for="hero-title">Hero Title</label>
+                <input type="text" id="hero-title" name="heroTitle" value="<%= siteInfo.heroTitle || 'Your Hair, Our Passion' %>">
+            </div>
+            
+            <div class="form-group">
+                <label for="hero-subtitle">Hero Subtitle</label>
+                <input type="text" id="hero-subtitle" name="heroSubtitle" value="<%= siteInfo.heroSubtitle || 'Experience the best in hair care and styling' %>">
+            </div>
+            
+            <div class="form-group">
+                <label for="about-text">About Section</label>
+                <textarea id="about-text" name="aboutText" rows="4"><%= siteInfo.aboutText || 'We are a team of passionate stylists dedicated to helping you look and feel your best. With years of experience and a commitment to excellence, we provide top-quality hair services in a welcoming environment.' %></textarea>
+            </div>
+            
+            <!-- Home Video Upload -->
+            <div class="form-group">
+                <label>Home Page Video</label>
+                <div class="video-preview" style="margin-bottom: 15px; max-width: 100%; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    <video id="video-preview" controls preload="metadata" style="max-width: 100%; display: block;" poster="/images/about.jpg">
+                        <source src="<%= siteInfo.homeVideo || '/videos/salon-ad.mp4' %>" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="image-upload">
+                    <input type="file" accept="video/*" id="video-file-input" class="form-control">
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button type="button" class="btn upload-btn" id="video-upload-btn">Upload Video</button>
+                        <input type="text" id="home-video-url" name="homeVideo" value="<%= siteInfo.homeVideo || '/videos/salon-ad.mp4' %>" style="flex: 1;" placeholder="Video URL">
+                    </div>
+                    <p class="help-text">Upload a video for the homepage (MP4 recommended) or provide a video URL. The video will autoplay on the homepage.</p>
+                </div>
+            </div>
+            
+            <!-- Admin Credentials -->
+            <h3>Admin Credentials</h3>
+            
+            <div class="form-group">
+                <label for="admin-username">Admin Username</label>
+                <input type="text" id="admin-username" name="adminUsername" value="nikhil">
+                <p class="help-text">Enter a new username to change it.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="admin-password">Admin Password</label>
+                <input type="password" id="admin-password" name="adminPassword" placeholder="Enter new password">
+                <p class="help-text">Leave blank to keep current password.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="admin-confirm-password">Confirm Password</label>
+                <input type="password" id="admin-confirm-password" name="adminConfirmPassword" placeholder="Confirm new password">
+            </div>
+            
+            <!-- Save Button -->
+            <div class="form-group" style="margin-top: 30px;">
+                <button type="submit" class="btn">Save Settings</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const settingsForm = document.getElementById('settings-form');
+        const videoFileInput = document.getElementById('video-file-input');
+        const videoUploadBtn = document.getElementById('video-upload-btn');
+        const videoPreview = document.getElementById('video-preview');
+        const homeVideoUrlInput = document.getElementById('home-video-url');
+        const featuredServicesContainer = document.getElementById('featured-services-list');
+        
+        // Load all services for featured services selection
+        loadServices();
+        
+        function loadServices() {
+            // Use AJAX to get services data
+            fetch('/api/services/list')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.services) {
+                        populateFeaturedServicesSelect(data.services);
+                    } else {
+                        console.error('Failed to load services');
+                        featuredServicesContainer.innerHTML = '<p>Error loading services. Please refresh the page and try again.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading services:', error);
+                    // Get services from the DOM if available - fallback method
+                    const services = [];
+                    try {
+                        document.querySelectorAll('#dashboard-services .service-item').forEach(el => {
+                            const id = el.getAttribute('data-id');
+                            const name = el.querySelector('.service-name')?.textContent || 'Service';
+                            const image = el.querySelector('img')?.src || '/images/placeholder.jpg';
+                            if (id) services.push({ id, name, image });
+                        });
+                        
+                        if (services.length > 0) {
+                            populateFeaturedServicesSelect(services);
+                        } else {
+                            featuredServicesContainer.innerHTML = '<p>Error loading services. Please visit the Services tab to manage your services first.</p>';
+                        }
+                    } catch (e) {
+                        featuredServicesContainer.innerHTML = '<p>Error loading services. Please visit the Services tab to manage your services first.</p>';
+                    }
+                });
+        }
+        
+        function populateFeaturedServicesSelect(services) {
+            if (!featuredServicesContainer) return;
+            
+            // Get current featured services
+            const currentFeatured = [
+                '<%= siteInfo.featuredServices && siteInfo.featuredServices[0] ? siteInfo.featuredServices[0].toString() : "" %>',
+                '<%= siteInfo.featuredServices && siteInfo.featuredServices[1] ? siteInfo.featuredServices[1].toString() : "" %>',
+                '<%= siteInfo.featuredServices && siteInfo.featuredServices[2] ? siteInfo.featuredServices[2].toString() : "" %>'
+            ].filter(id => id && id !== "");
+            
+            // Create featured services selection UI
+            let html = `
+                <style>
+                    .service-selection {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                        gap: 15px;
+                        margin-bottom: 15px;
+                    }
+                    .service-item {
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        padding: 10px;
+                        display: flex;
+                        flex-direction: column;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    }
+                    .service-item:hover {
+                        border-color: #aaa;
+                    }
+                    .service-item.selected {
+                        border-color: var(--color-primary);
+                        background-color: rgba(var(--color-primary-rgb), 0.05);
+                    }
+                    .service-item img {
+                        width: 100%;
+                        height: 100px;
+                        object-fit: cover;
+                        border-radius: 4px;
+                        margin-bottom: 8px;
+                    }
+                    .service-name {
+                        font-weight: 500;
+                    }
+                </style>
+                <p class="help-text">Select up to 3 services to feature on the homepage:</p>
+                <div class="service-selection">
+            `;
+            
+            services.forEach(service => {
+                const isSelected = currentFeatured.includes(service.id.toString());
+                html += `
+                    <div class="service-item ${isSelected ? 'selected' : ''}" data-id="${service.id}">
+                        <img src="${service.image}" alt="${service.name}" onerror="this.src='/images/placeholder.jpg'">
+                        <div class="service-name">${service.name}</div>
+                        <input type="checkbox" name="featuredServices" value="${service.id}" ${isSelected ? 'checked' : ''} style="display: none;">
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            
+            featuredServicesContainer.innerHTML = html;
+            
+            // Add click handler for service selection
+            document.querySelectorAll('.service-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const checkbox = this.querySelector('input[type="checkbox"]');
+                    const selected = this.classList.toggle('selected');
+                    checkbox.checked = selected;
+                    
+                    // Limit to 3 selected services
+                    const selectedCount = document.querySelectorAll('.service-item.selected').length;
+                    if (selectedCount > 3) {
+                        this.classList.remove('selected');
+                        checkbox.checked = false;
+                        alert('You can select a maximum of 3 services for the homepage.');
+                    }
+                });
+            });
+        }
+        
+        // Handle video file upload
+        if (videoFileInput && videoUploadBtn) {
+            // Preview selected video file
+            videoFileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    
+                    // Create object URL for preview
+                    const videoURL = URL.createObjectURL(file);
+                    videoPreview.src = videoURL;
+                    videoPreview.load();
+                }
+            });
+            
+            // Handle video upload
+            videoUploadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                if (!videoFileInput.files || !videoFileInput.files[0]) {
+                    alert('Please select a video file to upload');
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('file', videoFileInput.files[0]);
+                
+                videoUploadBtn.disabled = true;
+                videoUploadBtn.textContent = 'Uploading...';
+                
+                fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        createNotification('Video uploaded successfully', 'success');
+                        homeVideoUrlInput.value = data.filePath;
+                    } else {
+                        alert('Failed to upload video');
+                    }
+                    
+                    videoUploadBtn.disabled = false;
+                    videoUploadBtn.textContent = 'Upload Video';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred during upload');
+                    videoUploadBtn.disabled = false;
+                    videoUploadBtn.textContent = 'Upload Video';
+                });
+            });
+        }
+        
+        // Update video preview when URL changes
+        if (homeVideoUrlInput) {
+            homeVideoUrlInput.addEventListener('change', function() {
+                if (this.value && videoPreview) {
+                    videoPreview.querySelector('source').src = this.value;
+                    videoPreview.load();
+                }
+            });
+        }
+        
+        // Show notification helper function
+        function createNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.padding = '12px 20px';
+            notification.style.backgroundColor = type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#cce5ff';
+            notification.style.color = type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#004085';
+            notification.style.borderRadius = '4px';
+            notification.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+            notification.style.zIndex = '9999';
+            
+            // Add to body
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s ease';
+                
+                // Remove from DOM after animation
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+        
+        settingsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validate password confirmation
+            const password = document.getElementById('admin-password').value;
+            const confirmPassword = document.getElementById('admin-confirm-password').value;
+            
+            if (password && password !== confirmPassword) {
+                alert('Password and confirmation do not match');
+                return;
+            }
+            
+            const formData = new FormData(settingsForm);
+            const data = {};
+            
+            // Process form data into a nested object
+            formData.forEach((value, key) => {
+                if (key.includes('.')) {
+                    const [parent, child] = key.split('.');
+                    if (!data[parent]) data[parent] = {};
+                    data[parent][child] = value;
+                } else if (key === 'featuredServices') {
+                    // Handle multiple selected services
+                    if (!data[key]) data[key] = [];
+                    data[key].push(value);
+                } else {
+                    data[key] = value;
+                }
+            });
+            
+            // Send settings update
+            fetch('/api/settings/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // Create temporary message
+                    const message = document.createElement('div');
+                    message.className = 'success-message';
+                    message.textContent = 'Settings saved successfully!';
+                    message.style.backgroundColor = '#d4edda';
+                    message.style.color = '#155724';
+                    message.style.padding = '15px';
+                    message.style.marginBottom = '20px';
+                    message.style.borderRadius = '4px';
+                    
+                    // Insert at the top of the form
+                    settingsForm.insertBefore(message, settingsForm.firstChild);
+                    
+                    // Remove after 3 seconds
+                    setTimeout(() => {
+                        message.remove();
+                    }, 3000);
+                } else {
+                    alert('Failed to save settings.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while saving settings.');
+            });
+        });
+    });
+</script> 

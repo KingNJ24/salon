@@ -1,0 +1,15 @@
+{
+  "salonName": "Your Salon",
+  "address": "123 Main Street, City, State 12345",
+  "phone": "(123) 456-7890",
+  "email": "info@yoursalon.com",
+  "hours": {
+    "monday": "9am - 8pm",
+    "tuesday": "9am - 8pm",
+    "wednesday": "9am - 8pm",
+    "thursday": "9am - 8pm",
+    "friday": "9am - 8pm",
+    "saturday": "9am - 6pm",
+    "sunday": "10am - 5pm"
+  }
+}

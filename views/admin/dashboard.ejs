@@ -1,0 +1,97 @@
+<!-- Dashboard Stats -->
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <h3>Total Bookings</h3>
+        <div class="value"><%= bookings.length %></div>
+    </div>
+    
+    <div class="stat-card">
+        <h3>New Bookings</h3>
+        <div class="value"><%= bookings.filter(b => b.status === 'New').length %></div>
+    </div>
+    
+    <div class="stat-card">
+        <h3>Services</h3>
+        <div class="value"><%= services.length %></div>
+    </div>
+    
+    <div class="stat-card">
+        <h3>Gallery Items</h3>
+        <div class="value"><%= gallery.length %></div>
+    </div>
+</div>
+
+<!-- Recent Bookings -->
+<div class="card">
+    <div class="card-header">
+        <h2>Recent Bookings</h2>
+        <a href="/admin/bookings" class="btn btn-sm">View All</a>
+    </div>
+    <div class="card-body">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Service</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (bookings.length === 0) { %>
+                        <tr>
+                            <td colspan="5" class="text-center">No bookings yet</td>
+                        </tr>
+                    <% } else { %>
+                        <% bookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5).forEach(booking => { %>
+                            <tr>
+                                <td><%= booking.name %></td>
+                                <td><%= booking.service %></td>
+                                <td><%= new Date(booking.date).toLocaleDateString() %></td>
+                                <td>
+                                    <span class="badge badge-<%= booking.status.toLowerCase() %>"><%= booking.status %></span>
+                                </td>
+                                <td class="actions">
+                                    <select class="status-select" data-id="<%= booking.id %>">
+                                        <option value="New" <%= booking.status === 'New' ? 'selected' : '' %>>New</option>
+                                        <option value="Pending" <%= booking.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                                        <option value="Confirmed" <%= booking.status === 'Confirmed' ? 'selected' : '' %>>Confirmed</option>
+                                        <option value="Completed" <%= booking.status === 'Completed' ? 'selected' : '' %>>Completed</option>
+                                        <option value="Cancelled" <%= booking.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="quick-links">
+    <div class="row" style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <a href="/admin/bookings" class="card" style="flex: 1; min-width: 200px; text-align: center; padding: 30px 20px;">
+            <h3>Manage Bookings</h3>
+            <p>View and update all booking requests</p>
+        </a>
+        
+        <a href="/admin/services" class="card" style="flex: 1; min-width: 200px; text-align: center; padding: 30px 20px;">
+            <h3>Manage Services</h3>
+            <p>Add, edit or remove salon services</p>
+        </a>
+        
+        <a href="/admin/gallery" class="card" style="flex: 1; min-width: 200px; text-align: center; padding: 30px 20px;">
+            <h3>Manage Gallery</h3>
+            <p>Update your lookbook gallery</p>
+        </a>
+        
+        <a href="/admin/settings" class="card" style="flex: 1; min-width: 200px; text-align: center; padding: 30px 20px;">
+            <h3>Site Settings</h3>
+            <p>Update salon information and hours</p>
+        </a>
+    </div>
+</div> 

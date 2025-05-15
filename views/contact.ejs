@@ -1,0 +1,102 @@
+<!-- Contact Header -->
+<section class="section">
+    <div class="container">
+        <h1 class="text-center">Contact Us</h1>
+        <p class="text-center">We're here to help! Reach out to us with any questions or to book an appointment.</p>
+        
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="success-message" style="background-color: #d4edda; color: #155724; padding: 15px; margin: 20px 0; border-radius: 4px; text-align: center;">
+                Thank you for your booking request! We'll contact you shortly to confirm your appointment.
+            </div>
+        <% } %>
+    </div>
+</section>
+
+<!-- Contact Content -->
+<section class="section" style="padding-top: 0;">
+    <div class="container">
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
+            <!-- Contact Information -->
+            <div>
+                <h2>Get in Touch</h2>
+                <div style="margin-bottom: var(--spacing-md);">
+                    <h3>Address</h3>
+                    <p><%= siteInfo.address %></p>
+                </div>
+                
+                <div style="margin-bottom: var(--spacing-md);">
+                    <h3>Phone</h3>
+                    <p><a href="tel:<%= siteInfo.phone %>"><%= siteInfo.phone %></a></p>
+                </div>
+                
+                <div style="margin-bottom: var(--spacing-md);">
+                    <h3>Email</h3>
+                    <p><a href="mailto:<%= siteInfo.email %>"><%= siteInfo.email %></a></p>
+                </div>
+                
+                <div style="margin-bottom: var(--spacing-md);">
+                    <h3>Hours</h3>
+                    <p>
+                        Monday - Friday: <%= siteInfo.hours.monday %><br>
+                        Saturday: <%= siteInfo.hours.saturday %><br>
+                        Sunday: <%= siteInfo.hours.sunday %>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Contact Form -->
+            <div>
+                <h2>Book an Appointment</h2>
+                <form id="contact-form" method="POST" action="/booking">
+                    <div style="margin-bottom: var(--spacing-sm);">
+                        <label for="name" style="display: block; margin-bottom: 5px;">Name *</label>
+                        <input type="text" id="name" name="name" required style="width: 100%; padding: 10px; border: 1px solid var(--color-gray); border-radius: var(--border-radius);">
+                    </div>
+                    
+                    <div style="margin-bottom: var(--spacing-sm);">
+                        <label for="email" style="display: block; margin-bottom: 5px;">Email *</label>
+                        <input type="email" id="email" name="email" required style="width: 100%; padding: 10px; border: 1px solid var(--color-gray); border-radius: var(--border-radius);">
+                    </div>
+                    
+                    <div style="margin-bottom: var(--spacing-sm);">
+                        <label for="phone" style="display: block; margin-bottom: 5px;">Phone *</label>
+                        <input type="tel" id="phone" name="phone" required style="width: 100%; padding: 10px; border: 1px solid var(--color-gray); border-radius: var(--border-radius);">
+                    </div>
+                    
+                    <div style="margin-bottom: var(--spacing-sm);">
+                        <label for="service" style="display: block; margin-bottom: 5px;">Service *</label>
+                        <select id="service" name="service" required style="width: 100%; padding: 10px; border: 1px solid var(--color-gray); border-radius: var(--border-radius);">
+                            <option value="">Select a Service</option>
+                            <option value="Haircut">Haircut</option>
+                            <option value="Coloring">Hair Coloring</option>
+                            <option value="Treatment">Hair Treatment</option>
+                            <option value="Styling">Hair Styling</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: var(--spacing-sm);">
+                        <label for="date" style="display: block; margin-bottom: 5px;">Preferred Date *</label>
+                        <input type="date" id="date" name="date" required style="width: 100%; padding: 10px; border: 1px solid var(--color-gray); border-radius: var(--border-radius);">
+                    </div>
+                    
+                    <div style="margin-bottom: var(--spacing-md);">
+                        <label for="message" style="display: block; margin-bottom: 5px;">Message</label>
+                        <textarea id="message" name="message" rows="4" style="width: 100%; padding: 10px; border: 1px solid var(--color-gray); border-radius: var(--border-radius);"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn" style="width: 100%;">Book Appointment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Map Section -->
+<section class="section">
+    <div class="container">
+        <h2 class="text-center">Visit Us</h2>
+        <div style="height: 400px; background-color: var(--color-light-gray); display: flex; align-items: center; justify-content: center; margin-top: var(--spacing-md);">
+            <p>Map would be displayed here.</p>
+        </div>
+    </div>
+</section> 

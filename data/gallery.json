@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "category": "Bridal",
+    "image": "/images/bridal1.jpg",
+    "title": "Bridal Style 1"
+  },
+  {
+    "id": 2,
+    "category": "Bridal",
+    "image": "/images/bridal2.jpg",
+    "title": "Bridal Style 2"
+  },
+  {
+    "id": 3,
+    "category": "Colors",
+    "image": "/images/colors1.jpg",
+    "title": "Hair Color 1"
+  },
+  {
+    "id": 4,
+    "category": "Colors",
+    "image": "/images/colors2.jpg",
+    "title": "Hair Color 2"
+  },
+  {
+    "id": 5,
+    "category": "Cuts",
+    "image": "/images/cuts1.jpg",
+    "title": "Haircut 1"
+  },
+  {
+    "id": 6,
+    "category": "Cuts",
+    "image": "/images/cuts2.jpg",
+    "title": "Haircut 2"
+  },
+  {
+    "id": 7,
+    "category": "Makeup",
+    "image": "/images/makeup1.jpg",
+    "title": "Makeup Look 1"
+  },
+  {
+    "id": 8,
+    "category": "Textures",
+    "image": "/images/texture1.jpg",
+    "title": "Hair Texture 1"
+  }
+]

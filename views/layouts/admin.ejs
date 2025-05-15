@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> | Salon Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin/style.css">
+    <script src="/js/placeholder-generator.js"></script>
+</head>
+<body>
+    <div class="admin-layout">
+        <% if (title !== 'Admin Login') { %>
+            <!-- Sidebar navigation -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h1>Salon Admin</h1>
+                </div>
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li><a href="/admin/dashboard" class="<%= title === 'Admin Dashboard' ? 'active' : '' %>">Dashboard</a></li>
+                        <li><a href="/admin/bookings" class="<%= title === 'Manage Bookings' ? 'active' : '' %>">Bookings</a></li>
+                        <li><a href="/admin/services" class="<%= title === 'Manage Services' ? 'active' : '' %>">Services</a></li>
+                        <li><a href="/admin/gallery" class="<%= title === 'Manage Gallery' ? 'active' : '' %>">Gallery</a></li>
+                        <li><a href="/admin/team" class="<%= title === 'Manage Team' ? 'active' : '' %>">Team</a></li>
+                        <li><a href="/admin/settings" class="<%= title === 'Site Settings' ? 'active' : '' %>">Settings</a></li>
+                    </ul>
+                </nav>
+                <div class="sidebar-footer">
+                    <a href="/" target="_blank">View Website</a>
+                    <a href="/admin/logout">Logout</a>
+                </div>
+            </aside>
+        <% } %>
+        
+        <main class="content <%= title === 'Admin Login' ? 'full-width' : '' %>">
+            <% if (title !== 'Admin Login') { %>
+                <header class="content-header">
+                    <h1><%= title %></h1>
+                </header>
+            <% } %>
+            
+            <%- body %>
+        </main>
+    </div>
+
+    <script src="/js/admin/main.js"></script>
+</body>
+</html> 

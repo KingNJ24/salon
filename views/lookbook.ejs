@@ -1,0 +1,291 @@
+<!-- Lookbook Header -->
+<section class="section lookbook-header">
+    <div class="container">
+        <h1>Our Lookbook</h1>
+        <p>From natural looks to highly stylized creations, here are some looks by our salon team featuring the very best in hair, makeup and style.</p>
+    </div>
+</section>
+
+<!-- Category Filters -->
+<section class="section" style="padding-top: 0;">
+    <div class="container">
+        <div class="category-filters">
+            <% categories.forEach(function(category) { %>
+                <button class="category-filter <%= category === 'All' ? 'active' : '' %>" data-category="<%= category %>"><%= category %></button>
+            <% }); %>
+        </div>
+        
+        <div class="gallery-grid">
+            <% galleryItems.forEach(function(item) { %>
+                <div class="gallery-item" data-category="<%= item.category %>">
+                    <div class="gallery-image">
+                        <% if (item.type === 'video') { %>
+                            <!-- Video items with hover-to-play -->
+                            <div class="video-thumbnail" data-video-src="<%= item.videoUrl %>">
+                                <img src="<%= item.image %>" alt="<%= item.title %>" 
+                                     onerror="this.src='https://via.placeholder.com/300x300?text=Video+Thumbnail'">
+                                
+                                <!-- Preview video that plays on hover -->
+                                <video class="preview-video" muted loop preload="none" 
+                                       poster="<%= item.image %>">
+                                    <source src="<%= item.videoUrl %>" type="video/mp4">
+                                </video>
+                                
+                                <div class="play-button">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        <% } else { %>
+                            <!-- Regular images -->
+                            <img src="<%= item.image %>" alt="<%= item.title %>" style="width:100%; height:100%; object-fit:cover;"
+                                 onerror="this.src='https://via.placeholder.com/300x300?text=<%= item.category %>'">
+                        <% } %>
+                    </div>
+                    <div class="gallery-title">
+                        <h3><%= item.title %></h3>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+</section>
+
+<!-- Video Modal (hidden by default) -->
+<div id="video-modal" class="video-modal" style="display: none;">
+    <div class="video-container">
+        <button class="close-modal">&times;</button>
+        <video id="video-player" controls autoplay>
+            Your browser does not support the video tag.
+        </video>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<section class="section" style="background-color: var(--color-light);">
+    <div class="container text-center">
+        <h2>Inspired by What You See?</h2>
+        <p>Book an appointment today and let our expert stylists help you achieve the look you want.</p>
+        <a href="/contact" class="btn">Book an Appointment</a>
+    </div>
+</section>
+
+<!-- Gallery Item Styles -->
+<style>
+    .video-thumbnail {
+        position: relative;
+        cursor: pointer;
+        width: 100%;
+        height: 250px;
+        overflow: hidden;
+    }
+    
+    .video-thumbnail img, 
+    .video-thumbnail video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .video-thumbnail .preview-video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 1;
+    }
+    
+    .video-thumbnail:hover .preview-video {
+        opacity: 1;
+    }
+    
+    .video-thumbnail:hover img {
+        transform: scale(1.05);
+    }
+    
+    .play-button {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        opacity: 0.8;
+        transition: opacity 0.3s;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .video-thumbnail:hover .play-button {
+        opacity: 1;
+    }
+    
+    .gallery-image {
+        height: 250px;
+        overflow: hidden;
+        border-radius: 4px 4px 0 0;
+    }
+    
+    .gallery-item {
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .gallery-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Video Modal Styles */
+    .video-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    
+    .video-container {
+        position: relative;
+        width: 80%;
+        max-width: 800px;
+        aspect-ratio: 16/9;
+        background-color: #000;
+    }
+    
+    .video-container video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    
+    .close-modal {
+        position: absolute;
+        top: -40px;
+        right: -40px;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 30px;
+        cursor: pointer;
+    }
+</style>
+
+<!-- JavaScript for video handling and category filtering -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Video modal functionality
+    const videoModal = document.getElementById('video-modal');
+    const videoPlayer = document.getElementById('video-player');
+    const videoSource = document.getElementById('video-source');
+    const closeModal = document.querySelector('.close-modal');
+    const videoThumbnails = document.querySelectorAll('.video-thumbnail');
+    
+    // Setup hover-to-play videos
+    videoThumbnails.forEach(thumbnail => {
+        const previewVideo = thumbnail.querySelector('.preview-video');
+        
+        // Play video on hover
+        thumbnail.addEventListener('mouseenter', function() {
+            if (previewVideo) {
+                previewVideo.load(); // Ensure video is loaded
+                previewVideo.play().catch(err => console.error('Preview playback error:', err));
+            }
+        });
+        
+        // Pause video when mouse leaves
+        thumbnail.addEventListener('mouseleave', function() {
+            if (previewVideo) {
+                previewVideo.pause();
+                previewVideo.currentTime = 0;
+            }
+        });
+        
+        // Open modal when clicked
+        thumbnail.addEventListener('click', function() {
+            const videoSrc = this.getAttribute('data-video-src');
+            console.log('Opening video:', videoSrc);
+            
+            // Set video source directly
+            videoPlayer.innerHTML = '';  // Clear any existing sources
+            videoPlayer.src = videoSrc;
+            
+            // Show modal
+            videoModal.style.display = 'flex';
+            
+            // Try playing after a short delay
+            setTimeout(() => {
+                try {
+                    const playPromise = videoPlayer.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.error('Error playing video:', error);
+                            // Try playing again with user interaction
+                            videoPlayer.controls = true;
+                        });
+                    }
+                } catch (err) {
+                    console.error('Video play error:', err);
+                }
+            }, 300);
+        });
+    });
+    
+    // Close video modal
+    closeModal.addEventListener('click', function() {
+        videoModal.style.display = 'none';
+        videoPlayer.pause();
+        videoPlayer.src = '';
+    });
+    
+    // Also close modal when clicking outside the video
+    videoModal.addEventListener('click', function(event) {
+        if (event.target === videoModal) {
+            videoModal.style.display = 'none';
+            videoPlayer.pause();
+            videoPlayer.src = '';
+        }
+    });
+    
+    // Category filtering functionality
+    const categoryFilters = document.querySelectorAll('.category-filter');
+    const galleryItems = document.querySelectorAll('.gallery-item');
+    
+    categoryFilters.forEach(filter => {
+        filter.addEventListener('click', function() {
+            // Update active state
+            categoryFilters.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            const category = this.getAttribute('data-category');
+            
+            // Filter items
+            galleryItems.forEach(item => {
+                if (category === 'All' || item.getAttribute('data-category') === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script> 

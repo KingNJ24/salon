@@ -1,0 +1,287 @@
+<!-- Services Header -->
+<section class="section">
+    <div class="container">
+        <h1 class="text-center">Our Services</h1>
+        <p class="text-center">We offer a comprehensive range of hair and beauty services to meet all your needs.</p>
+    </div>
+</section>
+
+<!-- Services List -->
+<section class="section" style="padding-top: 0;">
+    <div class="container">
+        <div class="services-grid">
+            <% if (services && services.length > 0) { %>
+                <% services.forEach(service => { %>
+                    <div class="service-card">
+                        <div class="service-image">
+                            <% if (service.type === 'video') { %>
+                                <!-- Video thumbnail with hover-to-play -->
+                                <div class="video-thumbnail" data-video-src="<%= service.videoUrl %>">
+                                    <img src="<%= service.image %>" alt="<%= service.name %>" 
+                                         onerror="this.src='https://via.placeholder.com/300x200?text=<%= service.name.replace(/ /g, '+') %>'">
+                                    
+                                    <!-- Preview video that plays on hover -->
+                                    <video class="preview-video" muted loop preload="none" 
+                                           poster="<%= service.image %>">
+                                        <source src="<%= service.videoUrl %>" type="video/mp4">
+                                    </video>
+                                    
+                                    <div class="play-button">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            <% } else { %>
+                                <!-- Regular image -->
+                                <img src="<%= service.image %>" alt="<%= service.name %>" onerror="this.src='https://via.placeholder.com/300x200?text=<%= service.name.replace(/ /g, '+') %>'">
+                            <% } %>
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title"><%= service.name %></h3>
+                            <p><%= service.description %></p>
+                            <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> <%= service.price %></p>
+                            <a href="/contact" class="btn">Book Now</a>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <!-- Fallback service cards if no services are found -->
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="/images/cuts1.jpg" alt="Hair Cutting" onerror="this.src='https://via.placeholder.com/300x200?text=Hair+Cutting'">
+                    </div>
+                    <div class="service-content">
+                        <h3 class="service-title">Hair Cutting</h3>
+                        <p>Our skilled stylists provide personalized haircuts tailored to your face shape and lifestyle.</p>
+                        <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> $40+</p>
+                        <a href="/contact" class="btn">Book Now</a>
+                    </div>
+                </div>
+                
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="/images/colors1.jpg" alt="Hair Coloring" onerror="this.src='https://via.placeholder.com/300x200?text=Hair+Coloring'">
+                    </div>
+                    <div class="service-content">
+                        <h3 class="service-title">Hair Coloring</h3>
+                        <p>Our expert colorists can help you achieve the perfect shade to complement your skin tone and style.</p>
+                        <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> $80+</p>
+                        <a href="/contact" class="btn">Book Now</a>
+                    </div>
+                </div>
+                
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="/images/texture1.jpg" alt="Hair Treatments" onerror="this.src='https://via.placeholder.com/300x200?text=Hair+Treatments'">
+                    </div>
+                    <div class="service-content">
+                        <h3 class="service-title">Hair Treatments</h3>
+                        <p>Revitalize your hair with our professional treatments designed to improve its health and appearance.</p>
+                        <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> $30+</p>
+                        <a href="/contact" class="btn">Book Now</a>
+                    </div>
+                </div>
+                
+                <div class="service-card">
+                    <div class="service-image">
+                        <img src="/images/bridal1.jpg" alt="Hair Styling" onerror="this.src='https://via.placeholder.com/300x200?text=Hair+Styling'">
+                    </div>
+                    <div class="service-content">
+                        <h3 class="service-title">Hair Styling</h3>
+                        <p>From everyday styles to special occasion looks, our stylists can create the perfect style for any event.</p>
+                        <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> $45+</p>
+                        <a href="/contact" class="btn">Book Now</a>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</section>
+
+<!-- Video Modal (hidden by default) -->
+<div id="video-modal" class="video-modal" style="display: none;">
+    <div class="video-container">
+        <button class="close-modal">&times;</button>
+        <video id="video-player" controls autoplay>
+            Your browser does not support the video tag.
+        </video>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<section class="section" style="background-color: var(--color-primary); color: var(--color-white);">
+    <div class="container text-center">
+        <h2>Ready to Book Your Service?</h2>
+        <p>Contact us today to schedule your appointment.</p>
+        <a href="/contact" class="btn" style="background-color: var(--color-white); color: var(--color-primary);">Book an Appointment</a>
+    </div>
+</section>
+
+<style>
+    .video-thumbnail {
+        position: relative;
+        cursor: pointer;
+        width: 100%;
+        height: 200px;
+        overflow: hidden;
+    }
+    
+    .video-thumbnail img, 
+    .video-thumbnail video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .video-thumbnail .preview-video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 1;
+    }
+    
+    .video-thumbnail:hover .preview-video {
+        opacity: 1;
+    }
+    
+    .video-thumbnail:hover img {
+        transform: scale(1.05);
+    }
+    
+    .play-button {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        opacity: 0.8;
+        transition: opacity 0.3s;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .video-thumbnail:hover .play-button {
+        opacity: 1;
+    }
+    
+    /* Video Modal Styles */
+    .video-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    
+    .video-modal .video-container {
+        position: relative;
+        width: 80%;
+        max-width: 800px;
+        aspect-ratio: 16/9;
+        background-color: #000;
+    }
+    
+    .video-modal .video-container video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    
+    .close-modal {
+        position: absolute;
+        top: -40px;
+        right: -40px;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 30px;
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Video modal functionality
+        const videoModal = document.getElementById('video-modal');
+        const videoPlayer = document.getElementById('video-player');
+        const closeModal = document.querySelector('.close-modal');
+        const videoThumbnails = document.querySelectorAll('.video-thumbnail');
+        
+        // Setup hover-to-play videos
+        videoThumbnails.forEach(thumbnail => {
+            const previewVideo = thumbnail.querySelector('.preview-video');
+            
+            // Play video on hover
+            thumbnail.addEventListener('mouseenter', function() {
+                if (previewVideo) {
+                    previewVideo.load(); // Ensure video is loaded
+                    previewVideo.play().catch(err => console.error('Preview playback error:', err));
+                }
+            });
+            
+            // Pause video when mouse leaves
+            thumbnail.addEventListener('mouseleave', function() {
+                if (previewVideo) {
+                    previewVideo.pause();
+                    previewVideo.currentTime = 0;
+                }
+            });
+            
+            // Open modal when clicked
+            thumbnail.addEventListener('click', function() {
+                const videoSrc = this.getAttribute('data-video-src');
+                
+                // Set video source
+                videoPlayer.innerHTML = '';  // Clear any existing sources
+                videoPlayer.src = videoSrc;
+                
+                // Show modal
+                videoModal.style.display = 'flex';
+                
+                // Try playing after a short delay
+                setTimeout(() => {
+                    videoPlayer.play().catch(error => {
+                        console.error('Error playing video:', error);
+                    });
+                }, 300);
+            });
+        });
+        
+        // Close video modal
+        if (closeModal) {
+            closeModal.addEventListener('click', function() {
+                videoModal.style.display = 'none';
+                videoPlayer.pause();
+                videoPlayer.src = '';
+            });
+        }
+        
+        // Also close modal when clicking outside the video
+        if (videoModal) {
+            videoModal.addEventListener('click', function(event) {
+                if (event.target === videoModal) {
+                    videoModal.style.display = 'none';
+                    videoPlayer.pause();
+                    videoPlayer.src = '';
+                }
+            });
+        }
+    });
+</script> 

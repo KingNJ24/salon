@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "name": "Women's Haircut",
+    "price": "60+",
+    "description": "Personalized haircuts tailored to your face shape and lifestyle",
+    "image": "/images/cuts1.jpg",
+    "category": "Haircut"
+  },
+  {
+    "id": 2,
+    "name": "Men's Haircut",
+    "price": "40+",
+    "description": "Modern or classic cuts for men of all ages",
+    "image": "/images/cuts2.jpg",
+    "category": "Haircut"
+  },
+  {
+    "id": 3,
+    "name": "Hair Coloring",
+    "price": "80+",
+    "description": "Full color services to help you achieve the perfect shade",
+    "image": "/images/colors1.jpg",
+    "category": "Coloring"
+  },
+  {
+    "id": 4,
+    "name": "Balayage",
+    "price": "150+",
+    "description": "Beautiful, natural-looking highlights and color gradients",
+    "image": "/images/colors2.jpg",
+    "category": "Coloring"
+  },
+  {
+    "id": 5,
+    "name": "Bridal Styling",
+    "price": "120+",
+    "description": "Make your special day even more memorable with our bridal services",
+    "image": "/images/bridal1.jpg",
+    "category": "Styling"
+  },
+  {
+    "id": 6,
+    "name": "Hair Treatments",
+    "price": "45+",
+    "description": "Revitalize your hair with our professional treatments",
+    "image": "/images/texture1.jpg",
+    "category": "Treatment"
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "Sarah Johnson",
+    "title": "Founder & Master Stylist",
+    "bio": "Specializing in precision cuts and color transformations.",
+    "image": "/images/stylist1.jpg"
+  },
+  {
+    "id": 2,
+    "name": "Michael Brown",
+    "title": "Senior Stylist",
+    "bio": "Expert in modern men's cuts and styling techniques.",
+    "image": "/images/stylist2.jpg"
+  },
+  {
+    "id": 3,
+    "name": "Emily Davis",
+    "title": "Color Specialist",
+    "bio": "Known for creating stunning balayage and color melts.",
+    "image": "/images/stylist3.jpg"
+  }
+]
