@@ -16,38 +16,49 @@
         </div>
         
         <div class="gallery-grid">
-            <% galleryItems.forEach(function(item) { %>
-                <div class="gallery-item" data-category="<%= item.category %>">
-                    <div class="gallery-image">
-                        <% if (item.type === 'video') { %>
-                            <!-- Video items with hover-to-play -->
-                            <div class="video-thumbnail" data-video-src="<%= item.videoUrl %>">
-                                <img src="<%= item.image %>" alt="<%= item.title %>" 
-                                     onerror="this.src='https://via.placeholder.com/300x300?text=Video+Thumbnail'">
-                                
-                                <!-- Preview video that plays on hover -->
-                                <video class="preview-video" muted loop preload="none" 
-                                       poster="<%= item.image %>">
-                                    <source src="<%= item.videoUrl %>" type="video/mp4">
-                                </video>
-                                
-                                <div class="play-button">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white">
-                                        <path d="M8 5v14l11-7z"/>
-                                    </svg>
-                                </div>
-                            </div>
-                        <% } else { %>
-                            <!-- Regular images -->
-                            <img src="<%= item.image %>" alt="<%= item.title %>" style="width:100%; height:100%; object-fit:cover;"
-                                 onerror="this.src='https://via.placeholder.com/300x300?text=<%= item.category %>'">
-                        <% } %>
-                    </div>
-                    <div class="gallery-title">
-                        <h3><%= item.title %></h3>
-                    </div>
+            <% 
+            // Filter only visible items and sort by display order
+            const visibleItems = galleryItems.filter(item => item.isVisible !== false);
+            visibleItems.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+            
+            if (visibleItems.length === 0) { %>
+                <div style="grid-column: 1/-1; text-align: center; padding: 50px 0;">
+                    <p>No gallery items to display yet. Check back soon!</p>
                 </div>
-            <% }); %>
+            <% } else {
+                visibleItems.forEach(function(item) { %>
+                    <div class="gallery-item" data-category="<%= item.category %>">
+                        <div class="gallery-image">
+                            <% if (item.type === 'video') { %>
+                                <!-- Video items with hover-to-play -->
+                                <div class="video-thumbnail" data-video-src="<%= item.videoUrl %>">
+                                    <img src="<%= item.image %>" alt="<%= item.title %>" 
+                                         onerror="this.src='https://via.placeholder.com/300x300?text=Video+Thumbnail'">
+                                    
+                                    <!-- Preview video that plays on hover -->
+                                    <video class="preview-video" muted loop preload="none" 
+                                           poster="<%= item.image %>">
+                                        <source src="<%= item.videoUrl %>" type="video/mp4">
+                                    </video>
+                                    
+                                    <div class="play-button">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            <% } else { %>
+                                <!-- Regular images -->
+                                <img src="<%= item.image %>" alt="<%= item.title %>" style="width:100%; height:100%; object-fit:cover;"
+                                     onerror="this.src='https://via.placeholder.com/300x300?text=<%= item.category %>'">
+                            <% } %>
+                        </div>
+                        <div class="gallery-title">
+                            <h3><%= item.title %></h3>
+                        </div>
+                    </div>
+                <% });
+            } %>
         </div>
     </div>
 </section>
@@ -195,92 +206,49 @@ document.addEventListener('DOMContentLoaded', function() {
     // Video modal functionality
     const videoModal = document.getElementById('video-modal');
     const videoPlayer = document.getElementById('video-player');
-    const videoSource = document.getElementById('video-source');
     const closeModal = document.querySelector('.close-modal');
     const videoThumbnails = document.querySelectorAll('.video-thumbnail');
     
-    // Setup hover-to-play videos
-    videoThumbnails.forEach(thumbnail => {
-        const previewVideo = thumbnail.querySelector('.preview-video');
-        
-        // Play video on hover
-        thumbnail.addEventListener('mouseenter', function() {
-            if (previewVideo) {
-                previewVideo.load(); // Ensure video is loaded
-                previewVideo.play().catch(err => console.error('Preview playback error:', err));
-            }
-        });
-        
-        // Pause video when mouse leaves
-        thumbnail.addEventListener('mouseleave', function() {
-            if (previewVideo) {
-                previewVideo.pause();
-                previewVideo.currentTime = 0;
-            }
-        });
-        
-        // Open modal when clicked
-        thumbnail.addEventListener('click', function() {
-            const videoSrc = this.getAttribute('data-video-src');
-            console.log('Opening video:', videoSrc);
-            
-            // Set video source directly
-            videoPlayer.innerHTML = '';  // Clear any existing sources
-            videoPlayer.src = videoSrc;
-            
-            // Show modal
-            videoModal.style.display = 'flex';
-            
-            // Try playing after a short delay
-            setTimeout(() => {
-                try {
-                    const playPromise = videoPlayer.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(error => {
-                            console.error('Error playing video:', error);
-                            // Try playing again with user interaction
-                            videoPlayer.controls = true;
-                        });
-                    }
-                } catch (err) {
-                    console.error('Video play error:', err);
-                }
-            }, 300);
-        });
-    });
-    
-    // Close video modal
+    // Hide modal when clicking close button or outside modal
     closeModal.addEventListener('click', function() {
         videoModal.style.display = 'none';
         videoPlayer.pause();
-        videoPlayer.src = '';
     });
     
-    // Also close modal when clicking outside the video
-    videoModal.addEventListener('click', function(event) {
-        if (event.target === videoModal) {
+    // Close modal when clicking outside video container
+    videoModal.addEventListener('click', function(e) {
+        if (e.target === videoModal) {
             videoModal.style.display = 'none';
             videoPlayer.pause();
-            videoPlayer.src = '';
         }
     });
     
-    // Category filtering functionality
-    const categoryFilters = document.querySelectorAll('.category-filter');
+    // Play videos in modal when thumbnail is clicked
+    videoThumbnails.forEach(thumbnail => {
+        thumbnail.addEventListener('click', function() {
+            const videoSrc = this.getAttribute('data-video-src');
+            videoPlayer.innerHTML = `<source src="${videoSrc}" type="video/mp4">Your browser does not support the video tag.`;
+            videoPlayer.load();
+            videoModal.style.display = 'flex';
+            videoPlayer.play().catch(err => console.log('Autoplay failed:', err));
+        });
+    });
+    
+    // Category filtering
+    const categoryButtons = document.querySelectorAll('.category-filter');
     const galleryItems = document.querySelectorAll('.gallery-item');
     
-    categoryFilters.forEach(filter => {
-        filter.addEventListener('click', function() {
-            // Update active state
-            categoryFilters.forEach(btn => btn.classList.remove('active'));
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Update active button styling
+            categoryButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
             
             const category = this.getAttribute('data-category');
             
-            // Filter items
             galleryItems.forEach(item => {
                 if (category === 'All' || item.getAttribute('data-category') === category) {
-                    item.style.display = 'block';
+                    item.style.display = '';
                 } else {
                     item.style.display = 'none';
                 }

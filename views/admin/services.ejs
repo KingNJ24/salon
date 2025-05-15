@@ -1,7 +1,12 @@
-<!-- Add New Service Button -->
-<div style="margin-bottom: 20px;">
+<!-- Add Reorder Button -->
+<div style="margin-bottom: 20px; display: flex; gap: 20px;">
     <button class="btn" id="add-service-btn">Add New Service</button>
-    <button class="btn" id="add-video-service-btn" style="margin-left: 10px; background-color: #d4a373;">Add Video Service</button>
+    <button class="btn" id="add-video-service-btn" style="background-color: #d4a373;">Add Video Service</button>
+    <button class="btn" id="reorder-mode-btn" style="background-color: #6c757d;">Reorder Services</button>
+    <button class="btn" id="save-order-btn" style="display: none; background-color: #28a745;">Save Order</button>
+    <div id="reorder-instructions" style="display: none; margin-left: 20px; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">
+        Drag and drop services to reorder them. Click 'Save Order' when finished.
+    </div>
 </div>
 
 <!-- Services Table -->
@@ -10,32 +15,47 @@
         <h2>All Services</h2>
     </div>
     <div class="card-body">
-        <div class="table-container">
+        <div class="table-container" id="services-container">
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Media</th>
+                        <th style="width: 60px;">Order</th>
+                        <th style="width: 60px;">ID</th>
+                        <th style="width: 80px;">Media</th>
                         <th>Name</th>
                         <th>Price</th>
                         <th>Category</th>
                         <th>Description</th>
+                        <th>Visible</th>
+                        <th>Homepage</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="services-tbody">
                     <% if (services.length === 0) { %>
                         <tr>
-                            <td colspan="7" class="text-center">No services yet</td>
+                            <td colspan="10" class="text-center">No services yet</td>
                         </tr>
                     <% } else { %>
-                        <% services.forEach(service => { %>
-                            <tr>
-                                <td><%= service.id %></td>
+                        <% services.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)).forEach(service => { %>
+                            <tr class="service-row" data-id="<%= service._id || service.id %>" data-order="<%= service.displayOrder || 0 %>">
+                                <td>
+                                    <span class="order-badge" style="display: inline-block; background-color: #e9ecef; color: #495057; border-radius: 50%; width: 28px; height: 28px; text-align: center; line-height: 28px;">
+                                        #<%= service.displayOrder || 0 %>
+                                    </span>
+                                    <div class="reorder-handle" style="display: none; cursor: grab; color: #6c757d; width: 28px; height: 28px; align-items: center; justify-content: center; margin-top: 5px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                                        </svg>
+                                    </div>
+                                </td>
+                                <td><%= service._id || service.id %></td>
                                 <td>
                                     <% if (service.type === 'video') { %>
                                         <div style="position: relative; width: 50px; height: 50px;">
-                                            <img src="<%= service.image %>" alt="<%= service.name %>" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.src='/images/placeholder.jpg'">
+                                            <img src="<%= service.image %>" alt="<%= service.name %>" style="width: 50px; height: 50px; object-fit: cover; opacity: <%= service.isVisible !== false ? 1 : 0.5 %>;" onerror="this.src='/images/placeholder.jpg'">
                                             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.5); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="white">
                                                     <path d="M8 5v14l11-7z"/>
@@ -43,24 +63,49 @@
                                             </div>
                                         </div>
                                     <% } else { %>
-                                        <img src="<%= service.image %>" alt="<%= service.name %>" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.src='/images/placeholder.jpg'">
+                                        <img src="<%= service.image %>" alt="<%= service.name %>" style="width: 50px; height: 50px; object-fit: cover; opacity: <%= service.isVisible !== false ? 1 : 0.5 %>;" onerror="this.src='/images/placeholder.jpg'">
                                     <% } %>
                                 </td>
                                 <td><%= service.name %></td>
                                 <td><%= service.price %></td>
                                 <td><%= service.category %></td>
                                 <td><%= service.description.substring(0, 50) + (service.description.length > 50 ? '...' : '') %></td>
+                                <td>
+                                    <button class="visibility-toggle" 
+                                            data-id="<%= service._id || service.id %>" 
+                                            data-visible="<%= service.isVisible !== false %>"
+                                            style="width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer; background-color: <%= service.isVisible !== false ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)' %>;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </td>
+                                <td>
+                                    <button class="homepage-toggle" 
+                                            data-id="<%= service._id || service.id %>" 
+                                            data-homepage="<%= service.showOnHomepage === true %>"
+                                            style="width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer; background-color: <%= service.showOnHomepage === true ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)' %>;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                        </svg>
+                                    </button>
+                                </td>
                                 <td class="actions">
                                     <button class="btn btn-sm edit-service-btn" 
-                                        data-id="<%= service.id %>"
+                                        data-id="<%= service._id || service.id %>"
                                         data-name="<%= service.name %>"
                                         data-price="<%= service.price %>"
                                         data-category="<%= service.category %>"
                                         data-description="<%= service.description %>"
                                         data-image="<%= service.image %>"
                                         data-type="<%= service.type || 'image' %>"
-                                        data-video-url="<%= service.videoUrl || '' %>">Edit</button>
-                                    <button class="btn btn-sm btn-danger delete-btn" data-id="<%= service.id %>" data-confirm="Are you sure you want to delete this service?" data-endpoint="/api/service/delete/<%= service.id %>">Delete</button>
+                                        data-video-url="<%= service.videoUrl || '' %>"
+                                        data-display-order="<%= service.displayOrder || 0 %>"
+                                        data-is-visible="<%= service.isVisible !== false %>"
+                                        data-show-on-homepage="<%= service.showOnHomepage === true %>">Edit</button>
+                                    <button class="btn btn-sm btn-danger delete-btn" data-id="<%= service._id || service.id %>" data-confirm="Are you sure you want to delete this service?" data-endpoint="/api/service/delete/<%= service._id || service.id %>">Delete</button>
                                 </td>
                             </tr>
                         <% }); %>
@@ -80,6 +125,7 @@
         <form id="service-form" class="admin-form" data-endpoint="/api/service/update/0">
             <input type="hidden" id="service-id" name="id" value="">
             <input type="hidden" id="service-type" name="type" value="image">
+            <input type="hidden" id="service-display-order" name="displayOrder" value="0">
             
             <div class="form-group">
                 <label for="service-name">Service Name</label>
@@ -105,6 +151,19 @@
             <div class="form-group">
                 <label for="service-description">Description</label>
                 <textarea id="service-description" name="description" rows="4" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center;">
+                        <input type="checkbox" id="service-visible" name="isVisible" checked style="margin-right: 5px;">
+                        <label for="service-visible">Visible</label>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <input type="checkbox" id="service-homepage" name="showOnHomepage" style="margin-right: 5px;">
+                        <label for="service-homepage">Show on Homepage</label>
+                    </div>
+                </div>
             </div>
             
             <div class="form-group image-upload">
@@ -167,6 +226,19 @@
         const thumbnailPreview = document.querySelector('.image-preview img');
         const thumbnailInput = document.getElementById('service-image');
         const thumbnailStatus = document.getElementById('thumbnail-status');
+        
+        // Reordering functionality
+        const reorderModeBtn = document.getElementById('reorder-mode-btn');
+        const saveOrderBtn = document.getElementById('save-order-btn');
+        const reorderInstructions = document.getElementById('reorder-instructions');
+        const servicesContainer = document.getElementById('services-container');
+        const servicesTbody = document.getElementById('services-tbody');
+        
+        let isReorderMode = false;
+        let editingId = null;
+        
+        // Initialize visibility and homepage toggles
+        initToggleHandlers();
         
         // Function to capture video thumbnail
         function captureVideoThumbnail(videoElement, callback) {
@@ -417,6 +489,9 @@
                 const image = this.getAttribute('data-image');
                 const type = this.getAttribute('data-type') || 'image';
                 const videoUrl = this.getAttribute('data-video-url') || '';
+                const displayOrder = this.getAttribute('data-display-order') || 0;
+                const isVisible = this.getAttribute('data-is-visible') === 'true';
+                const showOnHomepage = this.getAttribute('data-show-on-homepage') === 'true';
                 
                 // Set form fields
                 document.getElementById('modal-title').textContent = 'Edit Service';
@@ -427,6 +502,9 @@
                 document.getElementById('service-description').value = description;
                 document.getElementById('service-image').value = image;
                 document.getElementById('service-type').value = type;
+                document.getElementById('service-display-order').value = displayOrder;
+                document.getElementById('service-visible').checked = isVisible;
+                document.getElementById('service-homepage').checked = showOnHomepage;
                 
                 if (serviceVideoUrlInput) {
                     serviceVideoUrlInput.value = videoUrl;
@@ -606,5 +684,237 @@
                 modal.style.display = 'none';
             }
         });
+        
+        // Toggle reorder mode
+        if (reorderModeBtn) {
+            reorderModeBtn.addEventListener('click', function() {
+                toggleReorderMode(true);
+            });
+        }
+        
+        // Save order button
+        if (saveOrderBtn) {
+            saveOrderBtn.addEventListener('click', function() {
+                saveServicesOrder();
+            });
+        }
+        
+        // Initialize toggle handlers for visibility and homepage
+        function initToggleHandlers() {
+            // Visibility toggles
+            document.querySelectorAll('.visibility-toggle').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const serviceRow = this.closest('.service-row');
+                    const serviceId = serviceRow.getAttribute('data-id');
+                    const isVisible = this.getAttribute('data-visible') === 'true';
+                    
+                    // Toggle visibility state
+                    const newVisibility = !isVisible;
+                    
+                    // Update UI immediately for better UX
+                    this.setAttribute('data-visible', newVisibility);
+                    this.style.backgroundColor = newVisibility ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
+                    serviceRow.querySelector('img').style.opacity = newVisibility ? 1 : 0.5;
+                    
+                    // Send update to server
+                    fetch(`/api/service/update/${serviceId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ isVisible: newVisibility })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            // Revert UI if failed
+                            console.error('Failed to update visibility');
+                            this.setAttribute('data-visible', isVisible);
+                            this.style.backgroundColor = isVisible ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
+                            serviceRow.querySelector('img').style.opacity = isVisible ? 1 : 0.5;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Revert UI on error
+                        this.setAttribute('data-visible', isVisible);
+                        this.style.backgroundColor = isVisible ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
+                        serviceRow.querySelector('img').style.opacity = isVisible ? 1 : 0.5;
+                    });
+                });
+            });
+            
+            // Homepage toggles
+            document.querySelectorAll('.homepage-toggle').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const serviceRow = this.closest('.service-row');
+                    const serviceId = serviceRow.getAttribute('data-id');
+                    const showOnHomepage = this.getAttribute('data-homepage') === 'true';
+                    
+                    // Toggle homepage state
+                    const newHomepageState = !showOnHomepage;
+                    
+                    // Update UI immediately for better UX
+                    this.setAttribute('data-homepage', newHomepageState);
+                    this.style.backgroundColor = newHomepageState ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
+                    
+                    // Send update to server
+                    fetch(`/api/service/update/${serviceId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ showOnHomepage: newHomepageState })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            // Revert UI if failed
+                            console.error('Failed to update homepage visibility');
+                            this.setAttribute('data-homepage', showOnHomepage);
+                            this.style.backgroundColor = showOnHomepage ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Revert UI on error
+                        this.setAttribute('data-homepage', showOnHomepage);
+                        this.style.backgroundColor = showOnHomepage ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
+                    });
+                });
+            });
+        }
+        
+        // Function to toggle reorder mode
+        function toggleReorderMode(enable) {
+            isReorderMode = enable;
+            
+            // Show/hide reorder handles
+            const reorderHandles = document.querySelectorAll('.reorder-handle');
+            reorderHandles.forEach(handle => {
+                handle.style.display = enable ? 'flex' : 'none';
+            });
+            
+            // Show/hide buttons
+            reorderModeBtn.style.display = enable ? 'none' : 'block';
+            saveOrderBtn.style.display = enable ? 'block' : 'none';
+            reorderInstructions.style.display = enable ? 'block' : 'none';
+            
+            // Enable/disable sorting
+            if (enable) {
+                initSortable();
+            }
+        }
+        
+        // Initialize sortable functionality using Sortable.js library
+        function initSortable() {
+            // Check if Sortable is available
+            if (typeof Sortable !== 'undefined') {
+                new Sortable(servicesTbody, {
+                    animation: 150,
+                    handle: '.reorder-handle',
+                    onEnd: function() {
+                        // Update the order numbers in the UI
+                        updateOrderDisplay();
+                    }
+                });
+            } else {
+                // Fallback if Sortable.js is not loaded
+                console.error('Sortable.js library is not loaded. Please include it in your HTML.');
+                alert('Reordering requires the Sortable.js library. Please add it to your project.');
+                toggleReorderMode(false);
+            }
+        }
+        
+        // Update display order numbers in the UI
+        function updateOrderDisplay() {
+            const rows = servicesTbody.querySelectorAll('.service-row');
+            rows.forEach((row, index) => {
+                row.setAttribute('data-order', index);
+                const orderBadge = row.querySelector('.order-badge');
+                if (orderBadge) {
+                    orderBadge.textContent = '#' + index;
+                }
+            });
+        }
+        
+        // Save the new order to the server
+        function saveServicesOrder() {
+            const rows = servicesTbody.querySelectorAll('.service-row');
+            const updates = [];
+            
+            rows.forEach((row, index) => {
+                const serviceId = row.getAttribute('data-id');
+                console.log(`Reordering: Service ID ${serviceId} to position ${index}`);
+                updates.push({
+                    id: serviceId,
+                    displayOrder: index
+                });
+            });
+            
+            console.log('Updates to send:', updates);
+            
+            // Show saving state
+            saveOrderBtn.textContent = 'Saving...';
+            saveOrderBtn.disabled = true;
+            
+            // Send batch update to server
+            const promises = updates.map(update => {
+                return fetch(`/api/service/update/${update.id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        displayOrder: update.displayOrder
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.success) {
+                        console.error(`Failed to update service ${update.id}:`, data.message);
+                    }
+                    return data.success;
+                })
+                .catch(error => {
+                    console.error(`Error updating service ${update.id}:`, error);
+                    return false;
+                });
+            });
+            
+            // Wait for all updates to complete
+            Promise.all(promises).then(results => {
+                const allSuccessful = results.every(success => success);
+                
+                saveOrderBtn.disabled = false;
+                if (allSuccessful) {
+                    saveOrderBtn.textContent = 'Order Saved!';
+                    
+                    // Update the order display
+                    rows.forEach((row, index) => {
+                        const orderCell = row.querySelector('td:first-child');
+                        if (orderCell) {
+                            orderCell.textContent = index + 1;
+                        }
+                        row.setAttribute('data-order', index);
+                    });
+                    
+                    // Reload page to ensure the order is reflected
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    saveOrderBtn.textContent = 'Error Saving Order';
+                    setTimeout(() => {
+                        saveOrderBtn.textContent = 'Try Again';
+                    }, 2000);
+                }
+            });
+        }
     });
 </script> 

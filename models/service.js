@@ -33,6 +33,18 @@ const serviceSchema = new mongoose.Schema({
   videoUrl: {
     type: String,
     default: ''
+  },
+  displayOrder: {
+    type: Number,
+    default: 0
+  },
+  isVisible: {
+    type: Boolean,
+    default: true
+  },
+  showOnHomepage: {
+    type: Boolean,
+    default: false
   }
 });
 

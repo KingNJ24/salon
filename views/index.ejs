@@ -97,26 +97,54 @@
         <p class="text-center">Browse our gallery of styles created by our talented team.</p>
         
         <div class="gallery-grid" style="grid-template-columns: repeat(4, 1fr);">
-            <div class="gallery-item">
-                <div class="gallery-image">
-                    <img src="/images/colors2.jpg" alt="Hair Color" onerror="this.src='https://via.placeholder.com/250x250?text=Hair+Color'">
+            <% 
+            // Check if we have homepage gallery items from the server
+            if (typeof homepageGallery !== 'undefined' && homepageGallery && homepageGallery.length > 0) {
+                // Use gallery items marked for homepage display
+                homepageGallery.slice(0, 4).forEach(function(item) { %>
+                    <div class="gallery-item">
+                        <div class="gallery-image">
+                            <% if (item.type === 'video') { %>
+                                <!-- Video thumbnail with play button -->
+                                <div class="video-thumbnail" data-video-src="<%= item.videoUrl %>">
+                                    <img src="<%= item.image %>" alt="<%= item.title %>" 
+                                         onerror="this.src='https://via.placeholder.com/250x250?text=Video'">
+                                    <div class="play-button">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            <% } else { %>
+                                <img src="<%= item.image %>" alt="<%= item.title %>" 
+                                     onerror="this.src='https://via.placeholder.com/250x250?text=<%= item.category %>'">
+                            <% } %>
+                        </div>
+                    </div>
+                <% });
+            } else { %>
+                <!-- Default static gallery if no items are marked for homepage -->
+                <div class="gallery-item">
+                    <div class="gallery-image">
+                        <img src="/images/colors2.jpg" alt="Hair Color" onerror="this.src='https://via.placeholder.com/250x250?text=Hair+Color'">
+                    </div>
                 </div>
-            </div>
-            <div class="gallery-item">
-                <div class="gallery-image">
-                    <img src="/images/cuts2.jpg" alt="Hair Cut" onerror="this.src='https://via.placeholder.com/250x250?text=Hair+Cut'">
+                <div class="gallery-item">
+                    <div class="gallery-image">
+                        <img src="/images/cuts2.jpg" alt="Hair Cut" onerror="this.src='https://via.placeholder.com/250x250?text=Hair+Cut'">
+                    </div>
                 </div>
-            </div>
-            <div class="gallery-item">
-                <div class="gallery-image">
-                    <img src="/images/texture1.jpg" alt="Hair Texture" onerror="this.src='https://via.placeholder.com/250x250?text=Hair+Texture'">
+                <div class="gallery-item">
+                    <div class="gallery-image">
+                        <img src="/images/texture1.jpg" alt="Hair Texture" onerror="this.src='https://via.placeholder.com/250x250?text=Hair+Texture'">
+                    </div>
                 </div>
-            </div>
-            <div class="gallery-item">
-                <div class="gallery-image">
-                    <img src="/images/makeup1.jpg" alt="Makeup" onerror="this.src='https://via.placeholder.com/250x250?text=Makeup'">
+                <div class="gallery-item">
+                    <div class="gallery-image">
+                        <img src="/images/makeup1.jpg" alt="Makeup" onerror="this.src='https://via.placeholder.com/250x250?text=Makeup'">
+                    </div>
                 </div>
-            </div>
+            <% } %>
         </div>
         
         <div class="text-center" style="margin-top: var(--spacing-lg);">

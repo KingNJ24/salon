@@ -63,9 +63,9 @@ const upload = multer({
   }
 });
 
-// Admin credentials (in a real app, store in database)
-let ADMIN_USERNAME = 'nikhil';
-let ADMIN_PASSWORD = '123456';
+// Admin credentials from environment variables
+let ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'nikhil';
+let ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '123456';
 
 // View engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -173,56 +173,110 @@ let usingMongoDB = false;
 // Routes with fallback to in-memory data if DB connection fails
 app.get('/', async (req, res) => {
   try {
-    let services, siteInfo;
+    let services, siteInfo, homepageGallery;
     
     if (usingMongoDB) {
       siteInfo = await SiteInfo.findOne();
       
-      // Get featured services if defined, otherwise get first 3 services
-      if (siteInfo && siteInfo.featuredServices && siteInfo.featuredServices.length > 0) {
+      // First try to get services marked for homepage display
+      services = await Service.find({ 
+        showOnHomepage: true,
+        isVisible: { $ne: false }
+      }).sort({ displayOrder: 1 });
+      
+      // If no services are marked for homepage, fall back to featured services
+      if (services.length === 0 && siteInfo && siteInfo.featuredServices && siteInfo.featuredServices.length > 0) {
         services = await Service.find({
-          _id: { $in: siteInfo.featuredServices }
-        });
-      } else {
-        services = await Service.find().limit(3);
+          _id: { $in: siteInfo.featuredServices },
+          isVisible: { $ne: false }
+        }).sort({ displayOrder: 1 });
       }
+      
+      // If still no services, get first 3 visible services
+      if (services.length === 0) {
+        services = await Service.find({ isVisible: { $ne: false } }).sort({ displayOrder: 1 }).limit(3);
+      }
+      
+      // Get gallery items marked for homepage display
+      homepageGallery = await Gallery.find({ 
+        showOnHomepage: true,
+        isVisible: { $ne: false }
+      }).sort({ displayOrder: 1 }).limit(4);
     } else {
       siteInfo = inMemoryDb.siteInfo;
       
-      // Get featured services if defined, otherwise get first 3 services
-      if (siteInfo.featuredServices && siteInfo.featuredServices.length > 0) {
-        services = siteInfo.featuredServices.map(id => 
-          inMemoryDb.services.find(service => service.id === id)
-        ).filter(Boolean); // Remove any undefined values
-      } else {
-        services = inMemoryDb.services.slice(0, 3);
+      // First try to get services marked for homepage display
+      services = inMemoryDb.services
+        .filter(service => service.showOnHomepage === true && service.isVisible !== false)
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      
+      // If no services are marked for homepage, fall back to featured services
+      if (services.length === 0 && siteInfo.featuredServices && siteInfo.featuredServices.length > 0) {
+        services = siteInfo.featuredServices
+          .map(id => inMemoryDb.services.find(service => service.id === id && service.isVisible !== false))
+          .filter(Boolean) // Remove any undefined values
+          .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       }
+      
+      // If still no services, get first 3 visible services
+      if (services.length === 0) {
+        services = inMemoryDb.services
+          .filter(service => service.isVisible !== false)
+          .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+          .slice(0, 3);
+      }
+      
+      // Get gallery items for homepage (in-memory version)
+      homepageGallery = inMemoryDb.galleryImages
+        .filter(item => item.showOnHomepage && item.isVisible !== false)
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+        .slice(0, 4);
     }
     
     res.render('index', { 
       title: `${siteInfo?.salonName || 'Your Salon'} - Home`,
       page: 'home',
       services,
+      homepageGallery,
       siteInfo: siteInfo || { salonName: 'Your Salon', hours: {} }
     });
   } catch (error) {
     console.error('Error:', error);
     // Fallback to in-memory data
     const siteInfo = inMemoryDb.siteInfo;
-    let services;
     
-    if (siteInfo.featuredServices && siteInfo.featuredServices.length > 0) {
-      services = siteInfo.featuredServices.map(id => 
-        inMemoryDb.services.find(service => service.id === id)
-      ).filter(Boolean);
-    } else {
-      services = inMemoryDb.services.slice(0, 3);
+    // First try to get services marked for homepage display
+    let services = inMemoryDb.services
+      .filter(service => service.showOnHomepage === true && service.isVisible !== false)
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    
+    // If no services are marked for homepage, fall back to featured services
+    if (services.length === 0 && siteInfo.featuredServices && siteInfo.featuredServices.length > 0) {
+      services = siteInfo.featuredServices
+        .map(id => inMemoryDb.services.find(service => service.id === id && service.isVisible !== false))
+        .filter(Boolean)
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
     }
+    
+    // If still no services, get first 3 visible services
+    if (services.length === 0) {
+      services = inMemoryDb.services
+        .filter(service => service.isVisible !== false)
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+        .slice(0, 3);
+    }
+    
+    // Get gallery items for homepage (fallback)
+    const homepageGallery = inMemoryDb.galleryImages
+      .filter(item => item.showOnHomepage && item.isVisible !== false)
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+      .slice(0, 4);
     
     res.render('index', { 
       title: 'Your Salon - Home',
       page: 'home',
       services,
+      homepageGallery,
       siteInfo
     });
   }
@@ -235,10 +289,15 @@ app.get('/lookbook', async (req, res) => {
     let galleryItems, siteInfo;
     
     if (usingMongoDB) {
-      galleryItems = await Gallery.find();
+      // Get only visible gallery items ordered by displayOrder
+      galleryItems = await Gallery.find({ isVisible: { $ne: false } }).sort({ displayOrder: 1 });
       siteInfo = await SiteInfo.findOne();
     } else {
-      galleryItems = inMemoryDb.galleryImages;
+      // Filter visible items and sort by displayOrder for in-memory storage
+      galleryItems = inMemoryDb.galleryImages
+        .filter(item => item.isVisible !== false)
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      
       siteInfo = inMemoryDb.siteInfo;
     }
     
@@ -253,11 +312,17 @@ app.get('/lookbook', async (req, res) => {
     console.error('Error:', error);
     // Fallback to in-memory data
     const categories = ['All', 'Bridal', 'Colors', 'Cuts', 'Makeup', 'Textures'];
+    
+    // Filter and sort in-memory gallery items
+    const galleryItems = inMemoryDb.galleryImages
+      .filter(item => item.isVisible !== false)
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    
     res.render('lookbook', { 
       title: 'Your Salon - Lookbook',
       page: 'lookbook',
       categories,
-      galleryItems: inMemoryDb.galleryImages,
+      galleryItems,
       siteInfo: inMemoryDb.siteInfo
     });
   }
@@ -269,10 +334,14 @@ app.get('/services', async (req, res) => {
     let services, siteInfo;
     
     if (usingMongoDB) {
-      services = await Service.find();
+      // Only get visible services ordered by displayOrder
+      services = await Service.find({ isVisible: { $ne: false } }).sort({ displayOrder: 1 });
       siteInfo = await SiteInfo.findOne();
     } else {
-      services = inMemoryDb.services;
+      // Filter visible services and sort by displayOrder for in-memory storage
+      services = inMemoryDb.services
+        .filter(service => service.isVisible !== false)
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       siteInfo = inMemoryDb.siteInfo;
     }
     
@@ -285,10 +354,15 @@ app.get('/services', async (req, res) => {
   } catch (error) {
     console.error('Error:', error);
     // Fallback to in-memory data
+    // Filter visible services for fallback as well
+    const services = inMemoryDb.services
+      .filter(service => service.isVisible !== false)
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    
     res.render('services', { 
       title: 'Your Salon - Services',
       page: 'services',
-      services: inMemoryDb.services,
+      services,
       siteInfo: inMemoryDb.siteInfo
     });
   }
@@ -332,10 +406,15 @@ app.get('/contact', async (req, res) => {
     
     if (usingMongoDB) {
       siteInfo = await SiteInfo.findOne();
-      services = await Service.find().select('name');
+      // Only get visible services for the dropdown
+      services = await Service.find({ isVisible: { $ne: false } }).select('name').sort({ displayOrder: 1 });
     } else {
       siteInfo = inMemoryDb.siteInfo;
-      services = inMemoryDb.services.map(s => ({ name: s.name }));
+      // Filter visible services for in-memory storage
+      services = inMemoryDb.services
+        .filter(service => service.isVisible !== false)
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+        .map(s => ({ name: s.name }));
     }
     
     res.render('contact', { 
@@ -348,10 +427,16 @@ app.get('/contact', async (req, res) => {
   } catch (error) {
     console.error('Error:', error);
     // Fallback to in-memory data
+    // Filter visible services for fallback too
+    const services = inMemoryDb.services
+      .filter(service => service.isVisible !== false)
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+      .map(s => ({ name: s.name }));
+      
     res.render('contact', { 
       title: 'Your Salon - Contact Us',
       page: 'contact',
-      services: inMemoryDb.services.map(s => ({ name: s.name })),
+      services,
       siteInfo: inMemoryDb.siteInfo,
       success: req.query.success === 'true'
     });
@@ -670,8 +755,10 @@ app.post('/api/booking/update/:id', adminAuth, async (req, res) => {
 
 app.post('/api/service/update/:id', adminAuth, async (req, res) => {
   try {
-    console.log('Updating service:', req.params.id);
+    console.log('Updating service with ID:', req.params.id);
     console.log('Update data size:', JSON.stringify(req.body).length / 1024, 'KB');
+    console.log('Update fields:', Object.keys(req.body));
+    console.log('Request body:', req.body);
 
     // Check if payload is too large
     if (JSON.stringify(req.body).length > 10 * 1024 * 1024) { // 10MB limit
@@ -682,14 +769,17 @@ app.post('/api/service/update/:id', adminAuth, async (req, res) => {
     }
 
     if (usingMongoDB) {
-      const service = await Service.findById(req.params.id);
-      
-      if (!service) {
-        console.log('Service not found in database');
-        return res.status(404).json({ success: false, message: 'Service not found' });
-      }
-      
-      console.log('Found service in database:', service._id);
+      try {
+        // Try to find by ID directly
+        console.log('Attempting to find service with exact ID:', req.params.id);
+        const service = await Service.findById(req.params.id);
+        
+        if (!service) {
+          console.log('Service not found with direct ID. Checking if ID is a string version of ObjectId');
+          return res.status(404).json({ success: false, message: 'Service not found' });
+        }
+        
+        console.log('Found service in database:', service._id);
       
       // Process image data if it's a data URL
       if (req.body.image && req.body.image.startsWith('data:image/')) {
@@ -705,26 +795,41 @@ app.post('/api/service/update/:id', adminAuth, async (req, res) => {
         }
       }
       
-      // Update service properties
-      service.name = req.body.name;
-      service.price = req.body.price;
-      service.description = req.body.description;
-      service.category = req.body.category;
-      if (req.body.image) {
-        service.image = req.body.image;
+      // Only update fields that are specifically provided in the request
+      // Use $set to update only the specified fields
+      const updateData = {};
+      
+      if (req.body.name !== undefined) updateData.name = req.body.name;
+      if (req.body.price !== undefined) updateData.price = req.body.price;
+      if (req.body.description !== undefined) updateData.description = req.body.description;
+      if (req.body.category !== undefined) updateData.category = req.body.category;
+      if (req.body.image) updateData.image = req.body.image;
+      if (req.body.type !== undefined) updateData.type = req.body.type;
+      if (req.body.videoUrl !== undefined) updateData.videoUrl = req.body.videoUrl;
+      if (req.body.displayOrder !== undefined) updateData.displayOrder = parseInt(req.body.displayOrder);
+      if (req.body.isVisible !== undefined) updateData.isVisible = req.body.isVisible;
+      if (req.body.showOnHomepage !== undefined) updateData.showOnHomepage = req.body.showOnHomepage;
+      
+      console.log('Updating service with data:', updateData);
+      
+      // Use findByIdAndUpdate to update only the specified fields
+      const updatedService = await Service.findByIdAndUpdate(
+        req.params.id,
+        { $set: updateData },
+        { new: true, runValidators: false }
+      );
+      
+      if (updatedService) {
+        console.log('Service updated successfully:', updatedService._id);
+        return res.json({ success: true, service: updatedService });
+      } else {
+        console.log('Update failed - service not found after update attempt');
+        return res.status(404).json({ success: false, message: 'Service not found after update attempt' });
       }
-      
-      // Update video fields if present
-      service.type = req.body.type || 'image';
-      if (req.body.videoUrl) {
-        service.videoUrl = req.body.videoUrl;
-      }
-      
-      console.log('Saving updated service to database...');
-      const updatedService = await service.save();
-      console.log('Service updated successfully:', updatedService._id);
-      
-      return res.json({ success: true, service: updatedService });
+    } catch (error) {
+      console.error('MongoDB error:', error.message);
+      return res.status(500).json({ success: false, message: 'MongoDB error: ' + error.message });
+    }
     } else {
       const serviceId = parseInt(req.params.id);
       const service = inMemoryDb.services.find(s => s.id === serviceId);
@@ -744,19 +849,21 @@ app.post('/api/service/update/:id', adminAuth, async (req, res) => {
           }
         }
         
-        service.name = req.body.name;
-        service.price = req.body.price;
-        service.description = req.body.description;
-        service.category = req.body.category;
-        if (req.body.image) {
-          service.image = req.body.image;
-        }
+        // Update service properties if provided in request
+        if (req.body.name !== undefined) service.name = req.body.name;
+        if (req.body.price !== undefined) service.price = req.body.price;
+        if (req.body.description !== undefined) service.description = req.body.description;
+        if (req.body.category !== undefined) service.category = req.body.category;
+        if (req.body.image) service.image = req.body.image;
         
         // Update video fields if present
-        service.type = req.body.type || 'image';
-        if (req.body.videoUrl) {
-          service.videoUrl = req.body.videoUrl;
-        }
+        if (req.body.type !== undefined) service.type = req.body.type;
+        if (req.body.videoUrl !== undefined) service.videoUrl = req.body.videoUrl;
+        
+        // Update visibility and ordering fields
+        if (req.body.displayOrder !== undefined) service.displayOrder = parseInt(req.body.displayOrder);
+        if (req.body.isVisible !== undefined) service.isVisible = req.body.isVisible;
+        if (req.body.showOnHomepage !== undefined) service.showOnHomepage = req.body.showOnHomepage;
         
         return res.json({ success: true, service });
       }
@@ -800,6 +907,17 @@ app.post('/api/service/create', adminAuth, async (req, res) => {
     let newService;
     
     if (usingMongoDB) {
+      // Find max displayOrder if not provided
+      let displayOrder = 0;
+      if (req.body.displayOrder !== undefined) {
+        displayOrder = parseInt(req.body.displayOrder);
+      } else {
+        const lastService = await Service.findOne().sort({ displayOrder: -1 });
+        if (lastService) {
+          displayOrder = (lastService.displayOrder || 0) + 1;
+        }
+      }
+      
       newService = new Service({
         name: req.body.name,
         price: req.body.price,
@@ -807,13 +925,27 @@ app.post('/api/service/create', adminAuth, async (req, res) => {
         category: req.body.category,
         image: req.body.image || '/images/placeholder.jpg',
         type: req.body.type || 'image',
-        videoUrl: req.body.videoUrl || ''
+        videoUrl: req.body.videoUrl || '',
+        displayOrder: displayOrder,
+        isVisible: req.body.isVisible !== undefined ? req.body.isVisible : true,
+        showOnHomepage: req.body.showOnHomepage !== undefined ? req.body.showOnHomepage : false
       });
       
       console.log('Saving service to MongoDB...');
       await newService.save();
       console.log('Service saved with ID:', newService._id);
     } else {
+      // Find max displayOrder if not provided
+      let displayOrder = 0;
+      if (req.body.displayOrder !== undefined) {
+        displayOrder = parseInt(req.body.displayOrder);
+      } else {
+        const lastService = [...inMemoryDb.services].sort((a, b) => (b.displayOrder || 0) - (a.displayOrder || 0))[0];
+        if (lastService) {
+          displayOrder = (lastService.displayOrder || 0) + 1;
+        }
+      }
+      
       newService = {
         id: inMemoryDb.services.length + 1,
         name: req.body.name,
@@ -822,7 +954,10 @@ app.post('/api/service/create', adminAuth, async (req, res) => {
         category: req.body.category,
         image: req.body.image || '/images/placeholder.jpg',
         type: req.body.type || 'image',
-        videoUrl: req.body.videoUrl || ''
+        videoUrl: req.body.videoUrl || '',
+        displayOrder: displayOrder,
+        isVisible: req.body.isVisible !== undefined ? req.body.isVisible : true,
+        showOnHomepage: req.body.showOnHomepage !== undefined ? req.body.showOnHomepage : false
       };
       
       inMemoryDb.services.push(newService);
@@ -936,49 +1071,58 @@ app.post('/api/gallery/update/:id', adminAuth, async (req, res) => {
       type: req.body.type,
       hasVideoUrl: !!req.body.videoUrl,
       hasImage: !!req.body.image,
-      imageIsBase64: req.body.image && req.body.image.startsWith('data:image/')
+      imageIsBase64: req.body.image && req.body.image.startsWith('data:image/'),
+      displayOrder: req.body.displayOrder,
+      isVisible: req.body.isVisible,
+      showOnHomepage: req.body.showOnHomepage
     });
     
-    const item = await Gallery.findById(req.params.id);
+    // Prepare update data object
+    const updateData = {};
     
-    if (item) {
-      item.title = req.body.title;
-      item.category = req.body.category;
-      
-      // Update type and videoUrl if provided
-      if (req.body.type) {
-        item.type = req.body.type;
-      }
-      
-      if (req.body.videoUrl) {
-        item.videoUrl = req.body.videoUrl;
-      }
-      
-      // Handle image update - check if it's a base64 data URL
-      if (req.body.image) {
-        if (req.body.image.startsWith('data:image/')) {
-          // Save base64 image to file
-          const imagePath = saveBase64Image(req.body.image);
-          if (imagePath) {
-            console.log(`Saved base64 image as ${imagePath}`);
-            item.image = imagePath;
-          } else {
-            console.log('Failed to save base64 image');
-            if (item.type === 'video') {
-              item.image = DEFAULT_VIDEO_THUMBNAIL;
-            }
-          }
+    // Only include fields that are provided in the request
+    if (req.body.title !== undefined) updateData.title = req.body.title;
+    if (req.body.category !== undefined) updateData.category = req.body.category;
+    if (req.body.type !== undefined) updateData.type = req.body.type;
+    if (req.body.videoUrl !== undefined) updateData.videoUrl = req.body.videoUrl;
+    if (req.body.displayOrder !== undefined) updateData.displayOrder = parseInt(req.body.displayOrder);
+    if (req.body.isVisible !== undefined) updateData.isVisible = req.body.isVisible;
+    if (req.body.showOnHomepage !== undefined) updateData.showOnHomepage = req.body.showOnHomepage;
+    
+    // Handle image update - check if it's a base64 data URL
+    if (req.body.image) {
+      if (req.body.image.startsWith('data:image/')) {
+        // Save base64 image to file
+        const imagePath = saveBase64Image(req.body.image);
+        if (imagePath) {
+          console.log(`Saved base64 image as ${imagePath}`);
+          updateData.image = imagePath;
         } else {
-          item.image = req.body.image;
+          console.log('Failed to save base64 image');
+          if (req.body.type === 'video') {
+            updateData.image = DEFAULT_VIDEO_THUMBNAIL;
+          }
         }
-      } else if (item.type === 'video' && (!item.image || item.image === '/images/video-placeholder.jpg')) {
-        // If it's a video without a thumbnail, use the default placeholder
-        item.image = DEFAULT_VIDEO_THUMBNAIL;
+      } else {
+        updateData.image = req.body.image;
       }
-      
-      await item.save();
-      console.log('Gallery item updated:', item._id);
-      return res.json({ success: true, item });
+    } else if (req.body.type === 'video' && (!updateData.image || updateData.image === '/images/video-placeholder.jpg')) {
+      // If it's a video without a thumbnail, use the default placeholder
+      updateData.image = DEFAULT_VIDEO_THUMBNAIL;
+    }
+    
+    console.log('Updating gallery with data:', updateData);
+    
+    // Use findByIdAndUpdate instead of retrieving and saving
+    const updatedItem = await Gallery.findByIdAndUpdate(
+      req.params.id, 
+      { $set: updateData },
+      { new: true, runValidators: false }
+    );
+    
+    if (updatedItem) {
+      console.log('Gallery item updated:', updatedItem._id);
+      return res.json({ success: true, item: updatedItem });
     }
     
     res.status(404).json({ success: false, message: 'Gallery item not found' });
@@ -1110,7 +1254,11 @@ app.post('/api/team/delete/:id', adminAuth, async (req, res) => {
 
 app.post('/api/settings/update', adminAuth, async (req, res) => {
   try {
-    console.log('Received settings update request:', JSON.stringify(req.body, null, 2));
+    console.log('Received settings update request with featured services:', 
+      req.body.featuredServices ? Array.isArray(req.body.featuredServices) 
+        ? req.body.featuredServices.length 
+        : 'single value' 
+      : 'none');
     
     // Handle admin credentials update
     if (req.body.adminUsername || req.body.adminPassword) {
@@ -1164,12 +1312,19 @@ app.post('/api/settings/update', adminAuth, async (req, res) => {
     
     // Update featured services if provided
     if (req.body.featuredServices) {
-      // Convert to array if it's not already
+      // Always convert to array
       const featuredServices = Array.isArray(req.body.featuredServices) 
         ? req.body.featuredServices 
         : [req.body.featuredServices];
       
+      // Log the featured services being saved
+      console.log('Setting featured services:', featuredServices);
+      
       siteInfo.featuredServices = featuredServices;
+    } else {
+      // If featuredServices is explicitly empty, clear the array
+      console.log('Clearing featured services (none selected)');
+      siteInfo.featuredServices = [];
     }
     
     // Update homepage content if provided
@@ -1210,14 +1365,17 @@ app.post('/api/settings/update', adminAuth, async (req, res) => {
         };
       }
       
-      // Update featured services if provided
+      // Update featured services if provided - handle properly in in-memory DB
       if (req.body.featuredServices) {
-        // Convert to array if it's not already
+        // Always convert to array and ensure they're integers (for in-memory storage)
         const featuredServices = Array.isArray(req.body.featuredServices) 
-          ? req.body.featuredServices.map(id => parseInt(id)) 
-          : [parseInt(req.body.featuredServices)];
+          ? req.body.featuredServices.map(id => Number(id)) 
+          : [Number(req.body.featuredServices)];
         
         inMemoryDb.siteInfo.featuredServices = featuredServices;
+      } else {
+        // If featuredServices is explicitly empty, clear the array
+        inMemoryDb.siteInfo.featuredServices = [];
       }
       
       // Update homepage content if provided
@@ -1320,16 +1478,31 @@ const startServer = async () => {
     
     // Try to start server, attempt different ports if default is in use
     const startServerOnPort = (port) => {
-      const server = app.listen(port)
+      // Ensure port is a number and within valid range
+      let numericPort = parseInt(port, 10);
+      if (isNaN(numericPort) || numericPort < 1024) {
+        console.error(`Invalid port: ${port}. Using default port 3000.`);
+        numericPort = 3000;
+      }
+      
+      // Ensure port doesn't exceed maximum value
+      if (numericPort > 65535) {
+        console.error(`Port ${numericPort} exceeds maximum value. Using port 3001.`);
+        numericPort = 3001;
+      }
+      
+      const server = app.listen(numericPort)
         .on('listening', () => {
-          console.log(`Salon website running on http://localhost:${port}`);
+          console.log(`Salon website running on http://localhost:${numericPort}`);
           console.log(`Using ${usingMongoDB ? 'MongoDB' : 'in-memory data store'}`);
         })
         .on('error', (err) => {
           if (err.code === 'EADDRINUSE') {
-            console.log(`Port ${port} is busy, trying port ${port + 1}`);
+            // Increment by a small amount to avoid going out of range
+            const nextPort = numericPort + 1;
+            console.log(`Port ${numericPort} is busy, trying port ${nextPort}`);
             server.close();
-            startServerOnPort(port + 1);
+            startServerOnPort(nextPort);
           } else {
             console.error('Server error:', err);
             process.exit(1);

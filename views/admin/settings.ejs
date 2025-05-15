@@ -198,36 +198,56 @@
         loadServices();
         
         function loadServices() {
+            // Show loading state
+            featuredServicesContainer.innerHTML = '<p>Loading services...</p>';
+            
             // Use AJAX to get services data
             fetch('/api/services/list')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.success && data.services) {
+                    if (data.success && data.services && data.services.length > 0) {
                         populateFeaturedServicesSelect(data.services);
                     } else {
-                        console.error('Failed to load services');
-                        featuredServicesContainer.innerHTML = '<p>Error loading services. Please refresh the page and try again.</p>';
+                        console.error('No services returned from API');
+                        featuredServicesContainer.innerHTML = '<p>No services found. Please add services in the Services tab first.</p>';
                     }
                 })
                 .catch(error => {
                     console.error('Error loading services:', error);
-                    // Get services from the DOM if available - fallback method
-                    const services = [];
+                    
+                    // Attempt to get services from the dashboard
+                    let services = [];
                     try {
-                        document.querySelectorAll('#dashboard-services .service-item').forEach(el => {
-                            const id = el.getAttribute('data-id');
-                            const name = el.querySelector('.service-name')?.textContent || 'Service';
-                            const image = el.querySelector('img')?.src || '/images/placeholder.jpg';
-                            if (id) services.push({ id, name, image });
-                        });
+                        // Try to get services from dashboard if they exist
+                        const serviceElements = document.querySelectorAll('#dashboard-services .service-item');
                         
-                        if (services.length > 0) {
-                            populateFeaturedServicesSelect(services);
-                        } else {
-                            featuredServicesContainer.innerHTML = '<p>Error loading services. Please visit the Services tab to manage your services first.</p>';
+                        if (serviceElements && serviceElements.length > 0) {
+                            serviceElements.forEach(el => {
+                                const id = el.getAttribute('data-id');
+                                const name = el.querySelector('.service-name')?.textContent || 'Service';
+                                const image = el.querySelector('img')?.src || '/images/placeholder.jpg';
+                                if (id) services.push({ id, name, image });
+                            });
                         }
                     } catch (e) {
-                        featuredServicesContainer.innerHTML = '<p>Error loading services. Please visit the Services tab to manage your services first.</p>';
+                        console.error('Error with fallback method:', e);
+                    }
+                    
+                    if (services.length > 0) {
+                        populateFeaturedServicesSelect(services);
+                    } else {
+                        // Create a button to navigate to services page
+                        featuredServicesContainer.innerHTML = `
+                            <p>Unable to load services. You may need to add services first.</p>
+                            <button type="button" class="btn" onclick="window.location.href='/admin/services'" style="margin-top: 10px;">
+                                Go to Services Management
+                            </button>
+                        `;
                     }
                 });
         }
@@ -235,12 +255,18 @@
         function populateFeaturedServicesSelect(services) {
             if (!featuredServicesContainer) return;
             
-            // Get current featured services
-            const currentFeatured = [
-                '<%= siteInfo.featuredServices && siteInfo.featuredServices[0] ? siteInfo.featuredServices[0].toString() : "" %>',
-                '<%= siteInfo.featuredServices && siteInfo.featuredServices[1] ? siteInfo.featuredServices[1].toString() : "" %>',
-                '<%= siteInfo.featuredServices && siteInfo.featuredServices[2] ? siteInfo.featuredServices[2].toString() : "" %>'
-            ].filter(id => id && id !== "");
+            // Parse current featured services from the server-side template
+            let currentFeaturedIds = [];
+            try {
+                // Get current featured services
+                currentFeaturedIds = [
+                    '<%= siteInfo.featuredServices && siteInfo.featuredServices[0] ? siteInfo.featuredServices[0].toString() : "" %>',
+                    '<%= siteInfo.featuredServices && siteInfo.featuredServices[1] ? siteInfo.featuredServices[1].toString() : "" %>',
+                    '<%= siteInfo.featuredServices && siteInfo.featuredServices[2] ? siteInfo.featuredServices[2].toString() : "" %>'
+                ].filter(id => id && id !== "");
+            } catch (e) {
+                console.error('Error parsing current featured services:', e);
+            }
             
             // Create featured services selection UI
             let html = `
@@ -259,13 +285,15 @@
                         flex-direction: column;
                         cursor: pointer;
                         transition: all 0.2s ease;
+                        position: relative;
                     }
                     .service-item:hover {
                         border-color: #aaa;
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
                     }
                     .service-item.selected {
-                        border-color: var(--color-primary);
-                        background-color: rgba(var(--color-primary-rgb), 0.05);
+                        border-color: #9c8370;
+                        background-color: rgba(156, 131, 112, 0.05);
                     }
                     .service-item img {
                         width: 100%;
@@ -277,15 +305,33 @@
                     .service-name {
                         font-weight: 500;
                     }
+                    .service-checkbox-indicator {
+                        position: absolute;
+                        top: 5px;
+                        right: 5px;
+                        width: 20px;
+                        height: 20px;
+                        border-radius: 50%;
+                        background: #9c8370;
+                        color: white;
+                        display: none;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 12px;
+                    }
+                    .service-item.selected .service-checkbox-indicator {
+                        display: flex;
+                    }
                 </style>
                 <p class="help-text">Select up to 3 services to feature on the homepage:</p>
                 <div class="service-selection">
             `;
             
             services.forEach(service => {
-                const isSelected = currentFeatured.includes(service.id.toString());
+                const isSelected = currentFeaturedIds.includes(service.id.toString());
                 html += `
                     <div class="service-item ${isSelected ? 'selected' : ''}" data-id="${service.id}">
+                        <div class="service-checkbox-indicator">✓</div>
                         <img src="${service.image}" alt="${service.name}" onerror="this.src='/images/placeholder.jpg'">
                         <div class="service-name">${service.name}</div>
                         <input type="checkbox" name="featuredServices" value="${service.id}" ${isSelected ? 'checked' : ''} style="display: none;">
@@ -295,6 +341,7 @@
             
             html += `</div>`;
             
+            // Update the container
             featuredServicesContainer.innerHTML = html;
             
             // Add click handler for service selection
@@ -305,12 +352,18 @@
                     checkbox.checked = selected;
                     
                     // Limit to 3 selected services
-                    const selectedCount = document.querySelectorAll('.service-item.selected').length;
-                    if (selectedCount > 3) {
+                    const selectedItems = document.querySelectorAll('.service-item.selected');
+                    if (selectedItems.length > 3) {
                         this.classList.remove('selected');
                         checkbox.checked = false;
                         alert('You can select a maximum of 3 services for the homepage.');
                     }
+                    
+                    // Provide feedback that the item was clicked
+                    this.style.transform = 'scale(0.98)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 100);
                 });
             });
         }
@@ -422,6 +475,7 @@
                 return;
             }
             
+            // Create FormData object
             const formData = new FormData(settingsForm);
             const data = {};
             
@@ -440,6 +494,20 @@
                 }
             });
             
+            // Double check to ensure featuredServices is properly collected
+            if (!data.featuredServices || data.featuredServices.length === 0) {
+                const checkedBoxes = document.querySelectorAll('input[name="featuredServices"]:checked');
+                if (checkedBoxes.length > 0) {
+                    data.featuredServices = Array.from(checkedBoxes).map(cb => cb.value);
+                }
+            }
+            
+            // Show saving indicator
+            const saveBtn = settingsForm.querySelector('button[type="submit"]');
+            const originalBtnText = saveBtn.textContent;
+            saveBtn.textContent = 'Saving...';
+            saveBtn.disabled = true;
+            
             // Send settings update
             fetch('/api/settings/update', {
                 method: 'POST',
@@ -448,7 +516,12 @@
                 },
                 body: JSON.stringify(data),
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(result => {
                 if (result.success) {
                     // Create temporary message
@@ -469,12 +542,17 @@
                         message.remove();
                     }, 3000);
                 } else {
-                    alert('Failed to save settings.');
+                    alert(result.message || 'Failed to save settings.');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while saving settings.');
+                alert('An error occurred while saving settings: ' + error.message);
+            })
+            .finally(() => {
+                // Restore button state
+                saveBtn.textContent = originalBtnText;
+                saveBtn.disabled = false;
             });
         });
     });

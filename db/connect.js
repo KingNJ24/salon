@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
-// Use local MongoDB connection 
-const MONGODB_URI = 'mongodb://127.0.0.1:27017/salon';
+// Use MongoDB connection from environment variables
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/salon';
 
 // Connect to MongoDB with improved options
 const connectDB = async () => {
