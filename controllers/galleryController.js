@@ -43,15 +43,49 @@ const getItemById = async (req, res, next) => {
 // Create new gallery item
 const createItem = async (req, res, next) => {
   try {
-    // Process base64 image if present
+    console.log('Creating gallery item with data:', req.body);
+    
+    // Fix videoUrl path if needed (remove leading slashes)
+    if (req.body.videoUrl && req.body.videoUrl.startsWith('//')) {
+      req.body.videoUrl = 'https:' + req.body.videoUrl;
+    }
+    
+    // Process base64 image if present (including video thumbnails)
     if (req.body.image && req.body.image.startsWith('data:image/')) {
-      req.body.image = saveBase64Image(req.body.image) || '/images/placeholder.jpg';
+      const savedImagePath = saveBase64Image(req.body.image);
+      if (!savedImagePath) {
+        console.error('Failed to save base64 image');
+        return res.status(500).json({ success: false, message: 'Failed to save image' });
+      }
+      req.body.image = savedImagePath;
+    }
+    // For video items, use a placeholder if no image is provided
+    else if (req.body.type === 'video' && (!req.body.image || req.body.image === '')) {
+      console.log('Using placeholder for video item with no thumbnail');
+      req.body.image = '/images/video-placeholder.jpg';
+    }
+    // For regular items, check if image is provided
+    else if (!req.body.image || req.body.image === '') {
+      console.error('No image provided in request body');
+      return res.status(400).json({ success: false, message: 'Image is required' });
+    }
+    
+    // Ensure required fields
+    if (!req.body.title) {
+      console.error('No title provided in request body');
+      return res.status(400).json({ success: false, message: 'Title is required' });
+    }
+    
+    if (!req.body.category) {
+      req.body.category = 'Uncategorized';
     }
     
     const newItem = new Gallery(req.body);
     await newItem.save();
+    console.log('Gallery item created successfully:', newItem);
     return res.json({ success: true, item: newItem });
   } catch (error) {
+    console.error('Error creating gallery item:', error);
     return next(error);
   }
 };
@@ -59,9 +93,26 @@ const createItem = async (req, res, next) => {
 // Update gallery item by ID
 const updateItem = async (req, res, next) => {
   try {
-    // Process base64 image if present
+    console.log('Updating gallery item with data:', req.body);
+    
+    // Fix videoUrl path if needed (remove leading slashes)
+    if (req.body.videoUrl && req.body.videoUrl.startsWith('//')) {
+      req.body.videoUrl = 'https:' + req.body.videoUrl;
+    }
+    
+    // Process base64 image if present (including video thumbnails)
     if (req.body.image && req.body.image.startsWith('data:image/')) {
-      req.body.image = saveBase64Image(req.body.image) || req.body.image;
+      const savedImagePath = saveBase64Image(req.body.image);
+      if (!savedImagePath) {
+        console.error('Failed to save base64 image');
+        return res.status(500).json({ success: false, message: 'Failed to save image' });
+      }
+      req.body.image = savedImagePath;
+    }
+    // For video items, use a placeholder if no image is provided
+    else if (req.body.type === 'video' && (!req.body.image || req.body.image === '')) {
+      console.log('Using placeholder for video item with no thumbnail');
+      req.body.image = '/images/video-placeholder.jpg';
     }
     
     const updatedItem = await Gallery.findByIdAndUpdate(
@@ -74,8 +125,10 @@ const updateItem = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Gallery item not found' });
     }
     
+    console.log('Gallery item updated successfully:', updatedItem);
     return res.json({ success: true, item: updatedItem });
   } catch (error) {
+    console.error('Error updating gallery item:', error);
     return next(error);
   }
 };
