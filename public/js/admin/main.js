@@ -210,7 +210,7 @@ function initImageUpload() {
             const base64Data = await readFileAsBase64(file);
             
             // Use the video upload endpoint
-            response = await fetch('/api/upload-video', {
+            response = await fetch('/api/express-upload-video', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
