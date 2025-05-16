@@ -12,6 +12,10 @@
   ],
   "routes": [
     {
+      "src": "/api/upload-video",
+      "dest": "/api/upload-video.js"
+    },
+    {
       "src": "/api/upload",
       "dest": "/api/upload.js"
     },
@@ -25,12 +29,17 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "VERCEL": "1"
   },
   "functions": {
-    "api/upload": {
+    "api/upload-video.js": {
       "memory": 1024,
-      "maxDuration": 10
+      "maxDuration": 60
+    },
+    "api/upload.js": {
+      "memory": 1024,
+      "maxDuration": 30
     }
   },
   "crons": []

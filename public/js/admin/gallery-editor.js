@@ -475,15 +475,35 @@ document.addEventListener('DOMContentLoaded', function() {
         videoUploadBtn.parentNode.appendChild(statusMsg);
         
         try {
-            // Detect if we're on Vercel using the dedicated function
-            const isVercel = isVercelEnvironment();
+            // Always use base64 upload for videos
+            console.log('Using dedicated video upload endpoint');
+            const base64Data = await readFileAsBase64(file);
             
-            console.log('Upload environment:', { 
-                hostname: window.location.hostname,
-                isVercel: isVercel
+            // Default admin credentials if not available
+            const credUsername = adminUsername || 'admin';
+            const credPassword = adminPassword || 'password';
+            
+            // Use the dedicated video upload endpoint
+            const response = await fetch('/api/upload-video', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa(`${credUsername}:${credPassword}`)
+                },
+                body: JSON.stringify({ 
+                    file: base64Data,
+                    fileName: file.name,
+                    fileType: file.type
+                })
             });
             
-            const data = await uploadFile(file, isVercel);
+            // Handle response
+            const data = await response.json();
+            console.log('Video upload response:', data);
+            
+            if (!response.ok) {
+                throw new Error(data.message || `Server returned ${response.status}: ${response.statusText}`);
+            }
             
             if (data.success) {
                 // Success handling
