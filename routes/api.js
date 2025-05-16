@@ -8,61 +8,142 @@ const { Team, SiteInfo, Booking } = require('../models');
 
 // File upload endpoint
 router.post('/upload', adminAuth, (req, res) => {
-  // Initialize multer with error handling
-  upload.single('file')(req, res, (err) => {
-    try {
-      // Handle multer errors
-      if (err) {
-        console.error('Multer error:', err);
-        if (err.code === 'LIMIT_FILE_SIZE') {
-          return res.status(400).json({ 
-            success: false, 
-            message: 'File is too large. Maximum size is 50MB.' 
-          });
-        }
-        if (err.code === 'INVALID_FILE_TYPE') {
-          return res.status(400).json({ 
-            success: false, 
-            message: err.message || 'Invalid file type.' 
-          });
-        }
-        return res.status(500).json({ 
-          success: false, 
-          message: 'Error uploading file: ' + err.message 
+  try {
+    // Check if we're in Vercel environment
+    if (process.env.VERCEL === '1') {
+      // In Vercel environment
+      const { cloudinaryUpload } = require('../utils/cloudinary');
+      
+      // If Cloudinary is not configured, return a clear error message
+      if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+        console.error('Cloudinary configuration missing');
+        return res.status(500).json({
+          success: false,
+          message: 'File uploads require Cloudinary configuration in Vercel. Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables.'
         });
       }
       
-      // Check if file was uploaded
-      if (!req.file) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'No file uploaded. Please select a file.' 
-        });
-      }
-      
-      console.log('File uploaded successfully:', req.file);
-      
-      // Determine the file type
-      const fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
-      
-      // Return the file path
-      const filePath = '/' + req.file.path.split('public')[1].replace(/\\/g, '/');
-      
-      return res.json({ 
-        success: true, 
-        filePath,
-        fileType,
-        originalName: req.file.originalname,
-        size: req.file.size
+      // Use Cloudinary upload
+      cloudinaryUpload.single('file')(req, res, (err) => {
+        try {
+          // Handle multer errors
+          if (err) {
+            console.error('Cloudinary upload error:', err);
+            if (err.code === 'LIMIT_FILE_SIZE') {
+              return res.status(400).json({ 
+                success: false, 
+                message: 'File is too large. Maximum size is 50MB.' 
+              });
+            }
+            if (err.code === 'INVALID_FILE_TYPE') {
+              return res.status(400).json({ 
+                success: false, 
+                message: err.message || 'Invalid file type.' 
+              });
+            }
+            return res.status(500).json({ 
+              success: false, 
+              message: 'Error uploading file: ' + err.message 
+            });
+          }
+          
+          // Check if file was uploaded
+          if (!req.file) {
+            return res.status(400).json({ 
+              success: false, 
+              message: 'No file uploaded. Please select a file.' 
+            });
+          }
+          
+          console.log('File uploaded to Cloudinary:', req.file);
+          
+          // Determine the file type
+          const fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
+          
+          // Return the Cloudinary URL
+          return res.json({ 
+            success: true, 
+            filePath: req.file.path,
+            fileType,
+            originalName: req.file.originalname,
+            size: req.file.size,
+            url: req.file.secure_url || req.file.path
+          });
+        } catch (error) {
+          console.error('Unexpected error in Cloudinary upload handler:', error);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Server error: ' + error.message 
+          });
+        }
       });
-    } catch (error) {
-      console.error('Unexpected error in upload handler:', error);
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Server error: ' + error.message 
+    } else {
+      // In local development - use the regular file system upload
+      const { upload } = require('../utils/upload');
+      
+      // Initialize multer with error handling
+      upload.single('file')(req, res, (err) => {
+        try {
+          // Handle multer errors
+          if (err) {
+            console.error('Multer error:', err);
+            if (err.code === 'LIMIT_FILE_SIZE') {
+              return res.status(400).json({ 
+                success: false, 
+                message: 'File is too large. Maximum size is 50MB.' 
+              });
+            }
+            if (err.code === 'INVALID_FILE_TYPE') {
+              return res.status(400).json({ 
+                success: false, 
+                message: err.message || 'Invalid file type.' 
+              });
+            }
+            return res.status(500).json({ 
+              success: false, 
+              message: 'Error uploading file: ' + err.message 
+            });
+          }
+          
+          // Check if file was uploaded
+          if (!req.file) {
+            return res.status(400).json({ 
+              success: false, 
+              message: 'No file uploaded. Please select a file.' 
+            });
+          }
+          
+          console.log('File uploaded successfully:', req.file);
+          
+          // Determine the file type
+          const fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
+          
+          // Return the file path
+          const filePath = '/' + req.file.path.split('public')[1].replace(/\\/g, '/');
+          
+          return res.json({ 
+            success: true, 
+            filePath,
+            fileType,
+            originalName: req.file.originalname,
+            size: req.file.size
+          });
+        } catch (error) {
+          console.error('Unexpected error in upload handler:', error);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Server error: ' + error.message 
+          });
+        }
       });
     }
-  });
+  } catch (error) {
+    console.error('Critical error in upload route:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error: ' + error.message
+    });
+  }
 });
 
 // SERVICE ROUTES
