@@ -215,6 +215,118 @@ router.post('/debug-upload', adminAuth, async (req, res) => {
   }
 });
 
+// Add a cloud-only upload endpoint
+router.post('/express-upload', adminAuth, async (req, res) => {
+  console.log('EXPRESS UPLOAD ENDPOINT CALLED');
+  console.log('Headers:', req.headers);
+  console.log('Body type:', typeof req.body);
+  console.log('Body has file:', req.body && !!req.body.file);
+  
+  try {
+    if (!req.body || !req.body.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file data found in request. Send file as base64 in the "file" field of the JSON body.'
+      });
+    }
+    
+    // Get Cloudinary
+    const { cloudinary } = require('../utils/cloudinary');
+    
+    // Validate Cloudinary config
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      console.error('Cloudinary configuration missing');
+      return res.status(500).json({
+        success: false,
+        message: 'Cloudinary configuration missing. Please check environment variables.'
+      });
+    }
+    
+    // Process file
+    const fileDataParts = req.body.file.split(';base64,');
+    if (fileDataParts.length !== 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid file format. Expected base64 encoded data.'
+      });
+    }
+    
+    const fileType = fileDataParts[0];
+    const isVideo = fileType.includes('video/');
+    
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(req.body.file, {
+      folder: 'salon',
+      resource_type: isVideo ? 'video' : 'image'
+    });
+    
+    return res.json({
+      success: true,
+      filePath: result.secure_url,
+      fileType: result.resource_type,
+      originalName: req.body.fileName || result.original_filename || 'uploaded-file',
+      size: result.bytes,
+      url: result.secure_url
+    });
+  } catch (error) {
+    console.error('Error in Express upload handler:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error: ' + error.message
+    });
+  }
+});
+
+// Add a cloud-only video upload endpoint
+router.post('/express-upload-video', adminAuth, async (req, res) => {
+  console.log('EXPRESS VIDEO UPLOAD ENDPOINT CALLED');
+  console.log('Headers:', req.headers);
+  console.log('Body type:', typeof req.body);
+  console.log('Body has file:', req.body && !!req.body.file);
+  
+  try {
+    if (!req.body || !req.body.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file data found in request. Send file as base64 in the "file" field.'
+      });
+    }
+    
+    // Get Cloudinary
+    const { cloudinary } = require('../utils/cloudinary');
+    
+    // Process file
+    const fileDataParts = req.body.file.split(';base64,');
+    if (fileDataParts.length !== 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid file format. Expected base64 encoded data.'
+      });
+    }
+    
+    // Force video resource type
+    const result = await cloudinary.uploader.upload(req.body.file, {
+      folder: 'salon',
+      resource_type: 'video'
+    });
+    
+    return res.json({
+      success: true,
+      filePath: result.secure_url,
+      fileType: 'video',
+      originalName: req.body.fileName || result.original_filename || 'uploaded-video',
+      size: result.bytes,
+      url: result.secure_url
+    });
+  } catch (error) {
+    console.error('Error in Express video upload handler:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error: ' + error.message
+    });
+  }
+});
+
 // SERVICE ROUTES
 router.get('/services', serviceController.getAllServices);
 router.get('/services/visible', serviceController.getVisibleServices);

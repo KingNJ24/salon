@@ -4,29 +4,9 @@
     {
       "src": "server.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
-    {
-      "src": "/api/test",
-      "dest": "/api/test.js"
-    },
-    {
-      "src": "/api/upload-video",
-      "dest": "/api/upload-video.js"
-    },
-    {
-      "src": "/api/upload",
-      "dest": "/api/upload.js"
-    },
-    {
-      "src": "/api/get-upload-auth",
-      "dest": "/api/get-upload-auth.js"
-    },
     {
       "src": "/(.*)",
       "dest": "server.js"
@@ -35,20 +15,5 @@
   "env": {
     "NODE_ENV": "production",
     "VERCEL": "1"
-  },
-  "functions": {
-    "api/test.js": {
-      "memory": 256,
-      "maxDuration": 10
-    },
-    "api/upload-video.js": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
-    "api/upload.js": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
-  "crons": []
+  }
 } 

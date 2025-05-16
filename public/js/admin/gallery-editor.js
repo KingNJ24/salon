@@ -368,9 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to handle file upload with Vercel compatibility
     async function uploadFile(file, forcedVercel = null) {
-        // Determine if we're in Vercel environment - always true now for all environments
-        const isVercel = true;
-        
+        // Always use cloud storage
         console.log('Uploading file using cloud storage:', { 
             fileName: file.name, 
             fileSize: file.size, 
@@ -382,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const adminPassword = document.querySelector('meta[name="admin-password"]')?.content;
         
         try {
-            // Convert to base64 always to use Cloudinary
+            // Convert to base64
             console.log('Using cloud upload method (base64)');
             const base64Data = await readFileAsBase64(file);
             
@@ -390,8 +388,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const credUsername = adminUsername || 'admin';
             const credPassword = adminPassword || 'password';
             
-            // Use fetch with JSON payload
-            const response = await fetch('/api/upload', {
+            // Use the Express router endpoint instead of the serverless function
+            const response = await fetch('/api/express-upload', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -454,15 +452,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             // Always use base64 upload for videos
-            console.log('Using dedicated video upload endpoint');
+            console.log('Using Express video upload endpoint');
             const base64Data = await readFileAsBase64(file);
             
             // Default admin credentials if not available
             const credUsername = adminUsername || 'admin';
             const credPassword = adminPassword || 'password';
             
-            // Use the dedicated video upload endpoint
-            const response = await fetch('/api/upload-video', {
+            // Use the express video upload endpoint
+            const response = await fetch('/api/express-upload-video', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

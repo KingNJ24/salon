@@ -15,6 +15,19 @@ const apiRoutes = require('./routes/api');
 // Create Express app
 const app = express();
 
+// Add a root-level diagnostic endpoint
+app.get('/vercel-test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Root level test endpoint working',
+    timestamp: new Date().toISOString(),
+    headers: req.headers,
+    path: req.path,
+    originalUrl: req.originalUrl,
+    method: req.method
+  });
+});
+
 // View engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
