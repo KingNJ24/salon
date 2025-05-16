@@ -332,4 +332,143 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Handle video upload
+    if (videoFileInput && videoUploadBtn) {
+        videoFileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                
+                // Validate file size first (client-side check)
+                const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+                if (file.size > maxSize) {
+                    showError('Video file is too large. Maximum size is 50MB.');
+                    return;
+                }
+                
+                // Validate file type
+                const validTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+                if (!validTypes.includes(file.type)) {
+                    showError('Please select a valid video file (MP4, WebM, or MOV).');
+                    return;
+                }
+                
+                // Create object URL for preview
+                const videoURL = URL.createObjectURL(file);
+                const videoPreview = document.getElementById('video-preview');
+                if (videoPreview) {
+                    videoPreview.src = videoURL;
+                    videoPreview.load();
+                    document.querySelector('.video-preview').style.display = 'block';
+                }
+            }
+        });
+        
+        videoUploadBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (!videoFileInput.files || !videoFileInput.files[0]) {
+                showError('Please select a video file to upload.');
+                return;
+            }
+            
+            const file = videoFileInput.files[0];
+            
+            // Additional client-side validation
+            const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+            if (file.size > maxSize) {
+                showError('Video file is too large. Maximum size is 50MB.');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // Show upload progress
+            videoUploadBtn.disabled = true;
+            videoUploadBtn.textContent = 'Uploading...';
+            
+            // Add status message
+            const statusMsg = document.createElement('p');
+            statusMsg.className = 'upload-status';
+            statusMsg.textContent = 'Uploading video file...';
+            videoUploadBtn.parentNode.appendChild(statusMsg);
+            
+            fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.message || `Server returned ${response.status}: ${response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Success handling
+                    statusMsg.textContent = 'Video uploaded successfully!';
+                    statusMsg.style.color = 'green';
+                    
+                    // Update the video URL input field
+                    const videoUrlInput = document.getElementById('gallery-video-url');
+                    if (videoUrlInput) {
+                        videoUrlInput.value = data.filePath;
+                    }
+                    
+                    // Update form state to indicate it's a video
+                    const typeInput = document.getElementById('gallery-type');
+                    if (typeInput) {
+                        typeInput.value = 'video';
+                    }
+                    
+                    // Show the container
+                    document.querySelector('.video-preview').style.display = 'block';
+                    
+                    setTimeout(() => {
+                        statusMsg.remove();
+                    }, 5000);
+                } else {
+                    throw new Error(data.message || 'Failed to upload video.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                statusMsg.textContent = `Error: ${error.message}`;
+                statusMsg.style.color = 'red';
+                
+                setTimeout(() => {
+                    statusMsg.remove();
+                }, 10000);
+            })
+            .finally(() => {
+                videoUploadBtn.disabled = false;
+                videoUploadBtn.textContent = 'Upload Video';
+            });
+        });
+    }
+    
+    // Helper function to show errors
+    function showError(message) {
+        const errorElement = document.getElementById('thumbnail-status') || document.createElement('p');
+        errorElement.textContent = message;
+        errorElement.style.color = 'red';
+        errorElement.style.display = 'block';
+        
+        if (!document.getElementById('thumbnail-status')) {
+            // If the element doesn't exist in the DOM, add it
+            const videoUrlGroup = document.querySelector('.video-url-group');
+            if (videoUrlGroup) {
+                videoUrlGroup.appendChild(errorElement);
+                errorElement.id = 'error-message';
+            }
+        }
+        
+        // Auto-hide after 8 seconds
+        setTimeout(() => {
+            errorElement.style.display = 'none';
+        }, 8000);
+    }
 }); 

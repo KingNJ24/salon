@@ -7,19 +7,62 @@ const galleryController = require('../controllers/galleryController');
 const { Team, SiteInfo, Booking } = require('../models');
 
 // File upload endpoint
-router.post('/upload', adminAuth, upload.single('file'), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No file uploaded' });
+router.post('/upload', adminAuth, (req, res) => {
+  // Initialize multer with error handling
+  upload.single('file')(req, res, (err) => {
+    try {
+      // Handle multer errors
+      if (err) {
+        console.error('Multer error:', err);
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ 
+            success: false, 
+            message: 'File is too large. Maximum size is 50MB.' 
+          });
+        }
+        if (err.code === 'INVALID_FILE_TYPE') {
+          return res.status(400).json({ 
+            success: false, 
+            message: err.message || 'Invalid file type.' 
+          });
+        }
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Error uploading file: ' + err.message 
+        });
+      }
+      
+      // Check if file was uploaded
+      if (!req.file) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'No file uploaded. Please select a file.' 
+        });
+      }
+      
+      console.log('File uploaded successfully:', req.file);
+      
+      // Determine the file type
+      const fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
+      
+      // Return the file path
+      const filePath = '/' + req.file.path.split('public')[1].replace(/\\/g, '/');
+      
+      return res.json({ 
+        success: true, 
+        filePath,
+        fileType,
+        originalName: req.file.originalname,
+        size: req.file.size
+      });
+    } catch (error) {
+      console.error('Unexpected error in upload handler:', error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Server error: ' + error.message 
+      });
     }
-    
-    // Return the file path
-    const filePath = '/' + req.file.path.split('public')[1].replace(/\\/g, '/');
-    return res.json({ success: true, filePath });
-  } catch (error) {
-    console.error('Error uploading file:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
-  }
+  });
 });
 
 // SERVICE ROUTES
