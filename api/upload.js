@@ -29,11 +29,11 @@ const basicAuth = (req, res) => {
 // Handler for Vercel API route
 module.exports = async (req, res) => {
   // Log the request for debugging
-  console.log('API upload request received:', { 
-    method: req.method,
-    headers: req.headers,
-    bodyType: typeof req.body
-  });
+  console.log('===== SERVERLESS API UPLOAD ENDPOINT CALLED =====');
+  console.log('Request method:', req.method);
+  console.log('Request headers:', JSON.stringify(req.headers));
+  console.log('Request body type:', typeof req.body);
+  console.log('Request body has file:', req.body && !!req.body.file);
   
   // Check if method is POST
   if (req.method !== 'POST') {
@@ -43,13 +43,14 @@ module.exports = async (req, res) => {
   // Check authentication
   const authResult = basicAuth(req, res);
   if (!authResult.authenticated) {
+    console.log('Authentication failed in serverless function');
     return res.status(401).json({ success: false, message: 'Unauthorized' });
   }
   
   try {
     // Verify Cloudinary config
     if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-      console.error('Cloudinary configuration missing');
+      console.error('Cloudinary configuration missing in serverless function');
       return res.status(500).json({
         success: false,
         message: 'Cloudinary configuration missing. Please check environment variables.'
@@ -60,7 +61,7 @@ module.exports = async (req, res) => {
     if (req.body && req.body.file) {
       try {
         // Log for debugging
-        console.log('Processing file upload from JSON body');
+        console.log('Processing file upload from JSON body in serverless function');
         
         // Validate file format based on the provided info
         const fileDataParts = req.body.file.split(';base64,');
@@ -78,6 +79,7 @@ module.exports = async (req, res) => {
         const allowedVideoTypes = ['data:video/mp4', 'data:video/webm', 'data:video/quicktime'];
         
         if (!allowedImageTypes.includes(fileType) && !allowedVideoTypes.includes(fileType)) {
+          console.log('Invalid file type detected in serverless function:', fileType);
           return res.status(400).json({
             success: false,
             message: 'Only image and video files are allowed!'
@@ -86,14 +88,15 @@ module.exports = async (req, res) => {
         
         // Determine the resource type
         const isVideo = allowedVideoTypes.includes(fileType);
+        console.log('File type detected:', isVideo ? 'video' : 'image');
         
-        // Direct file upload to Cloudinary
+        // Direct file upload to Cloudinary with explicit resource type
         const result = await cloudinary.uploader.upload(req.body.file, {
           folder: 'salon',
           resource_type: isVideo ? 'video' : 'image'
         });
         
-        console.log('Upload success:', { 
+        console.log('Upload success in serverless function:', { 
           public_id: result.public_id,
           url: result.secure_url,
           resource_type: result.resource_type
@@ -108,21 +111,21 @@ module.exports = async (req, res) => {
           url: result.secure_url
         });
       } catch (error) {
-        console.error('Cloudinary upload error:', error);
+        console.error('Cloudinary upload error in serverless function:', error);
         return res.status(500).json({
           success: false,
           message: 'Error uploading to Cloudinary: ' + error.message
         });
       }
     } else {
-      console.error('No file data found in request body');
+      console.error('No file data found in request body in serverless function');
       return res.status(400).json({
         success: false,
         message: 'No file data found in request. Send file as base64 in the "file" field of the JSON body.'
       });
     }
   } catch (error) {
-    console.error('Unexpected error in upload handler:', error);
+    console.error('Unexpected error in upload handler serverless function:', error);
     return res.status(500).json({
       success: false,
       message: 'Server error: ' + error.message

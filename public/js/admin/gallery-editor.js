@@ -350,6 +350,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Function to detect if we're running on Vercel
+    function isVercelEnvironment() {
+        // Always use Cloudinary in production environments to avoid filesystem issues
+        return true; // Force Vercel/cloud mode for all environments
+    }
+
     // For Vercel deployments, we need to convert files to base64 for upload
     function readFileAsBase64(file) {
         return new Promise((resolve, reject) => {
@@ -360,79 +366,51 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Function to detect if we're running on Vercel
-    function isVercelEnvironment() {
-        return window.location.hostname.endsWith('vercel.app') || 
-               !window.location.hostname.includes('localhost');
-    }
-
     // Function to handle file upload with Vercel compatibility
     async function uploadFile(file, forcedVercel = null) {
-        // Determine if we're in Vercel environment
-        const isVercel = forcedVercel !== null ? forcedVercel : isVercelEnvironment();
+        // Determine if we're in Vercel environment - always true now for all environments
+        const isVercel = true;
         
-        console.log('Uploading file:', { 
+        console.log('Uploading file using cloud storage:', { 
             fileName: file.name, 
             fileSize: file.size, 
-            fileType: file.type,
-            isVercel: isVercel,
-            hostname: window.location.hostname
+            fileType: file.type
         });
         
+        // Get admin credentials
+        const adminUsername = document.querySelector('meta[name="admin-username"]')?.content;
+        const adminPassword = document.querySelector('meta[name="admin-password"]')?.content;
+        
         try {
-            if (isVercel) {
-                // Vercel deployment - send as base64
-                console.log('Using Vercel upload method (base64)');
-                const base64Data = await readFileAsBase64(file);
-                
-                // Default admin credentials if not available
-                const credUsername = adminUsername || 'admin';
-                const credPassword = adminPassword || 'password';
-                
-                // Use fetch with JSON payload
-                const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Basic ' + btoa(`${credUsername}:${credPassword}`)
-                    },
-                    body: JSON.stringify({ 
-                        file: base64Data,
-                        fileName: file.name,
-                        fileType: file.type
-                    })
-                });
-                
-                // Handle response
-                const responseData = await response.json();
-                console.log('Vercel upload response:', responseData);
-                
-                if (!response.ok) {
-                    throw new Error(responseData.message || `Server returned ${response.status}: ${response.statusText}`);
-                }
-                
-                return responseData;
-            } else {
-                // Local development - use regular form data
-                console.log('Using local upload method (FormData)');
-                const formData = new FormData();
-                formData.append('file', file);
-                
-                const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                // Handle response
-                const responseData = await response.json();
-                console.log('Local upload response:', responseData);
-                
-                if (!response.ok) {
-                    throw new Error(responseData.message || `Server returned ${response.status}: ${response.statusText}`);
-                }
-                
-                return responseData;
+            // Convert to base64 always to use Cloudinary
+            console.log('Using cloud upload method (base64)');
+            const base64Data = await readFileAsBase64(file);
+            
+            // Default admin credentials if not available
+            const credUsername = adminUsername || 'admin';
+            const credPassword = adminPassword || 'password';
+            
+            // Use fetch with JSON payload
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa(credUsername + ':' + credPassword)
+                },
+                body: JSON.stringify({
+                    file: base64Data,
+                    fileName: file.name,
+                    fileType: file.type
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
             }
+            
+            const data = await response.json();
+            return data;
         } catch (error) {
             console.error('Upload error:', error);
             throw error;

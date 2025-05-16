@@ -9,74 +9,100 @@ const { Team, SiteInfo, Booking } = require('../models');
 // File upload endpoint
 router.post('/upload', adminAuth, (req, res) => {
   try {
-    // Check if we're in Vercel environment
-    if (process.env.VERCEL === '1') {
-      // In Vercel environment
-      const { cloudinaryUpload } = require('../utils/cloudinary');
+    // ALWAYS use Cloudinary in production
+    if (process.env.VERCEL === '1' || process.env.NODE_ENV === 'production') {
+      console.log('PRODUCTION ENVIRONMENT: Using Cloudinary for all uploads');
       
-      // If Cloudinary is not configured, return a clear error message
-      if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-        console.error('Cloudinary configuration missing');
-        return res.status(500).json({
-          success: false,
-          message: 'File uploads require Cloudinary configuration in Vercel. Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables.'
-        });
-      }
+      // If the request has base64 data already, pass directly to Cloudinary
+      if (req.body && req.body.file) {
+        const { cloudinary } = require('../utils/cloudinary');
       
-      // Use Cloudinary upload
-      cloudinaryUpload.single('file')(req, res, (err) => {
+        // Process the base64 data directly
         try {
-          // Handle multer errors
-          if (err) {
-            console.error('Cloudinary upload error:', err);
-            if (err.code === 'LIMIT_FILE_SIZE') {
-              return res.status(400).json({ 
-                success: false, 
-                message: 'File is too large. Maximum size is 50MB.' 
-              });
-            }
-            if (err.code === 'INVALID_FILE_TYPE') {
-              return res.status(400).json({ 
-                success: false, 
-                message: err.message || 'Invalid file type.' 
-              });
-            }
-            return res.status(500).json({ 
-              success: false, 
-              message: 'Error uploading file: ' + err.message 
+          // Determine content type and resource type
+          const fileDataParts = req.body.file.split(';base64,');
+          if (fileDataParts.length !== 2) {
+            return res.status(400).json({
+              success: false,
+              message: 'Invalid file format. Expected base64 encoded data.'
             });
           }
           
-          // Check if file was uploaded
-          if (!req.file) {
-            return res.status(400).json({ 
-              success: false, 
-              message: 'No file uploaded. Please select a file.' 
+          const fileType = fileDataParts[0];
+          // Check for video type
+          const isVideo = fileType.includes('video/');
+          
+          // Upload directly to Cloudinary
+          cloudinary.uploader.upload(req.body.file, {
+            folder: 'salon',
+            resource_type: isVideo ? 'video' : 'image'
+          })
+          .then(result => {
+            return res.json({
+              success: true,
+              filePath: result.secure_url,
+              fileType: result.resource_type,
+              originalName: req.body.fileName || result.original_filename || 'uploaded-file',
+              size: result.bytes,
+              url: result.secure_url
             });
-          }
-          
-          console.log('File uploaded to Cloudinary:', req.file);
-          
-          // Determine the file type
-          const fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
-          
-          // Return the Cloudinary URL
-          return res.json({ 
-            success: true, 
-            filePath: req.file.path,
-            fileType,
-            originalName: req.file.originalname,
-            size: req.file.size,
-            url: req.file.secure_url || req.file.path
+          })
+          .catch(error => {
+            console.error('Cloudinary upload error:', error);
+            return res.status(500).json({
+              success: false,
+              message: 'Error uploading to Cloudinary: ' + error.message
+            });
           });
         } catch (error) {
-          console.error('Unexpected error in Cloudinary upload handler:', error);
-          return res.status(500).json({ 
-            success: false, 
-            message: 'Server error: ' + error.message 
+          console.error('Error processing upload:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Error processing upload: ' + error.message
           });
         }
-      });
+      } else {
+        // For multipart form data, use multer-storage-cloudinary
+        const { cloudinaryUpload } = require('../utils/cloudinary');
+        
+        cloudinaryUpload.single('file')(req, res, (err) => {
+          try {
+            if (err) {
+              console.error('Cloudinary upload error:', err);
+              return res.status(400).json({ 
+                success: false, 
+                message: err.message || 'Error uploading file' 
+              });
+            }
+            
+            if (!req.file) {
+              return res.status(400).json({ 
+                success: false, 
+                message: 'No file uploaded' 
+              });
+            }
+            
+            console.log('File uploaded to Cloudinary:', req.file);
+            
+            const isVideo = req.file.mimetype.startsWith('video/');
+            
+            return res.json({ 
+              success: true, 
+              filePath: req.file.path || req.file.secure_url,
+              fileType: isVideo ? 'video' : 'image',
+              originalName: req.file.originalname,
+              size: req.file.size,
+              url: req.file.secure_url || req.file.path
+            });
+          } catch (error) {
+            console.error('Error in Cloudinary upload handler:', error);
+            return res.status(500).json({ 
+              success: false, 
+              message: 'Server error: ' + error.message 
+            });
+          }
+        });
+      }
     } else {
       // In local development - use the regular file system upload
       const { upload } = require('../utils/upload');
