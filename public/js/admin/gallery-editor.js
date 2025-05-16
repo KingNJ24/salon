@@ -362,30 +362,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to handle file upload with Vercel compatibility
     async function uploadFile(file, isVercel = false) {
+        console.log('Uploading file:', { 
+            fileName: file.name, 
+            fileSize: file.size, 
+            fileType: file.type,
+            isVercel: isVercel 
+        });
+        
         try {
-            const formData = new FormData();
-            
             if (isVercel) {
                 // Vercel deployment - send as base64
+                console.log('Using Vercel upload method (base64)');
                 const base64Data = await readFileAsBase64(file);
+                
+                // Default admin credentials if not available
+                const credUsername = adminUsername || 'admin';
+                const credPassword = adminPassword || 'password';
+                
                 // Use fetch with JSON payload
                 const response = await fetch('/api/upload', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Basic ' + btoa(`${adminUsername}:${adminPassword}`)
+                        'Authorization': 'Basic ' + btoa(`${credUsername}:${credPassword}`)
                     },
-                    body: JSON.stringify({ file: base64Data })
+                    body: JSON.stringify({ 
+                        file: base64Data,
+                        fileName: file.name,
+                        fileType: file.type
+                    })
                 });
                 
+                // Handle response
+                const responseData = await response.json();
+                console.log('Vercel upload response:', responseData);
+                
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || `Server returned ${response.status}: ${response.statusText}`);
+                    throw new Error(responseData.message || `Server returned ${response.status}: ${response.statusText}`);
                 }
                 
-                return await response.json();
+                return responseData;
             } else {
                 // Local development - use regular form data
+                console.log('Using local upload method (FormData)');
+                const formData = new FormData();
                 formData.append('file', file);
                 
                 const response = await fetch('/api/upload', {
@@ -393,12 +413,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: formData
                 });
                 
+                // Handle response
+                const responseData = await response.json();
+                console.log('Local upload response:', responseData);
+                
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || `Server returned ${response.status}: ${response.statusText}`);
+                    throw new Error(responseData.message || `Server returned ${response.status}: ${response.statusText}`);
                 }
                 
-                return await response.json();
+                return responseData;
             }
         } catch (error) {
             console.error('Upload error:', error);
@@ -416,6 +439,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         const file = videoFileInput.files[0];
+        
+        // Validate file type
+        const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+        if (!allowedVideoTypes.includes(file.type)) {
+            showError('Please select a valid video file (MP4, WebM, or MOV).');
+            return;
+        }
         
         // Additional client-side validation
         const maxSize = 50 * 1024 * 1024; // 50MB in bytes
@@ -436,8 +466,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             // Detect if we're on Vercel by checking hostname
-            const isVercel = window.location.hostname.includes('vercel.app') || 
+            const isVercel = window.location.hostname.endsWith('vercel.app') || 
                             !window.location.hostname.includes('localhost');
+            
+            console.log('Upload environment:', { 
+                hostname: window.location.hostname,
+                isVercel: isVercel
+            });
             
             const data = await uploadFile(file, isVercel);
             

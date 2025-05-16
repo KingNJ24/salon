@@ -1,8 +1,6 @@
 // API upload handler for Vercel serverless
 require('dotenv').config();
 const { cloudinary } = require('../utils/cloudinary');
-const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // Basic auth middleware
 const basicAuth = (req, res) => {
@@ -28,21 +26,15 @@ const basicAuth = (req, res) => {
   return { authenticated: false };
 };
 
-// Configure storage
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'salon',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov', 'webm'],
-    resource_type: (req, file) => {
-      if (file.mimetype.startsWith('video/')) return 'video';
-      return 'image';
-    }
-  }
-});
-
 // Handler for Vercel API route
 module.exports = async (req, res) => {
+  // Log the request for debugging
+  console.log('API upload request received:', { 
+    method: req.method,
+    headers: req.headers,
+    bodyType: typeof req.body
+  });
+  
   // Check if method is POST
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Method not allowed' });
@@ -64,20 +56,54 @@ module.exports = async (req, res) => {
       });
     }
     
-    // We need to manually parse multipart form data for Vercel serverless
-    if (!req.file && req.body && req.body.file) {
-      // Direct file upload to Cloudinary
+    // Handle file upload from JSON body
+    if (req.body && req.body.file) {
       try {
+        // Log for debugging
+        console.log('Processing file upload from JSON body');
+        
+        // Validate file format based on the provided info
+        const fileDataParts = req.body.file.split(';base64,');
+        
+        if (fileDataParts.length !== 2) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid file format. Expected base64 encoded data.'
+          });
+        }
+        
+        const fileType = fileDataParts[0];
+        // Check if it's an allowed file type
+        const allowedImageTypes = ['data:image/jpeg', 'data:image/jpg', 'data:image/png', 'data:image/gif'];
+        const allowedVideoTypes = ['data:video/mp4', 'data:video/webm', 'data:video/quicktime'];
+        
+        if (!allowedImageTypes.includes(fileType) && !allowedVideoTypes.includes(fileType)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Only image and video files are allowed!'
+          });
+        }
+        
+        // Determine the resource type
+        const isVideo = allowedVideoTypes.includes(fileType);
+        
+        // Direct file upload to Cloudinary
         const result = await cloudinary.uploader.upload(req.body.file, {
           folder: 'salon',
-          resource_type: 'auto'
+          resource_type: isVideo ? 'video' : 'image'
+        });
+        
+        console.log('Upload success:', { 
+          public_id: result.public_id,
+          url: result.secure_url,
+          resource_type: result.resource_type
         });
         
         return res.status(200).json({
           success: true,
           filePath: result.secure_url,
           fileType: result.resource_type,
-          originalName: result.original_filename,
+          originalName: req.body.fileName || result.original_filename || 'uploaded-file',
           size: result.bytes,
           url: result.secure_url
         });
@@ -89,11 +115,10 @@ module.exports = async (req, res) => {
         });
       }
     } else {
-      // Let Multer handle the upload (custom implementation for serverless)
-      // This requires more setup than a simple API handler can provide
+      console.error('No file data found in request body');
       return res.status(400).json({
         success: false,
-        message: 'Direct file upload not yet implemented for serverless functions. Use the base64 upload method.'
+        message: 'No file data found in request. Send file as base64 in the "file" field of the JSON body.'
       });
     }
   } catch (error) {

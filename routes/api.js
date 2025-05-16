@@ -146,6 +146,49 @@ router.post('/upload', adminAuth, (req, res) => {
   }
 });
 
+// Debug upload route for troubleshooting upload issues
+router.post('/debug-upload', adminAuth, async (req, res) => {
+  try {
+    console.log('Debug upload request received');
+    console.log('Headers:', req.headers);
+    console.log('Body type:', typeof req.body);
+    console.log('Body keys:', req.body ? Object.keys(req.body) : 'none');
+    
+    // Check if this is a formdata or JSON request
+    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+      console.log('Multipart form data request detected');
+      if (req.file) {
+        console.log('File received:', req.file.originalname, req.file.mimetype, req.file.size);
+      } else {
+        console.log('No file in request');
+      }
+    } else if (req.headers['content-type'] && req.headers['content-type'].includes('application/json')) {
+      console.log('JSON request detected');
+      if (req.body && req.body.file) {
+        console.log('Base64 file received, length:', req.body.file.length);
+      } else {
+        console.log('No file in JSON body');
+      }
+    }
+    
+    // Return success
+    return res.json({
+      success: true,
+      message: 'Debug data logged to server console',
+      received: {
+        contentType: req.headers['content-type'],
+        hasFile: req.file ? true : (req.body && req.body.file ? true : false)
+      }
+    });
+  } catch (error) {
+    console.error('Error in debug upload:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 // SERVICE ROUTES
 router.get('/services', serviceController.getAllServices);
 router.get('/services/visible', serviceController.getVisibleServices);
