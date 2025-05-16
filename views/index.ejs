@@ -5,8 +5,8 @@
             <div class="brand-banner">
                 <h1 class="banner-text">NandiniJ</h1>
             </div>
-            <h1 class="hero-title"><%= siteInfo.heroTitle || 'Makeup Studio' %></h1>
-            <p class="hero-text"><%= siteInfo.heroSubtitle || 'Experience luxury beauty services at our studio. Our expert stylists will help you look and feel your best.' %></p>
+            <h1 class="hero-title"><%= (siteInfo && siteInfo.heroTitle) || 'Makeup Studio' %></h1>
+            <p class="hero-text"><%= (siteInfo && siteInfo.heroSubtitle) || 'Experience luxury beauty services at our studio. Our expert stylists will help you look and feel your best.' %></p>
             <a href="/contact" class="btn">Book an Appointment</a>
         </div>
     </div>

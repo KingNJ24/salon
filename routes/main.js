@@ -9,6 +9,27 @@ router.get('/', async (req, res, next) => {
     
     siteInfo = await SiteInfo.findOne();
     
+    // If no siteInfo exists, create a default one
+    if (!siteInfo) {
+      try {
+        console.log('No site info found, creating default...');
+        siteInfo = new SiteInfo({
+          salonName: 'NandiniJ Makeup Studio',
+          address: '123 Main Street, City, State 12345',
+          phone: '(123) 456-7890',
+          email: 'info@nandinijstudio.com',
+          heroTitle: 'Makeup Studio',
+          heroSubtitle: 'Experience luxury beauty services at our studio. Our expert stylists will help you look and feel your best.',
+          aboutText: 'NandiniJ Makeup Studio was founded with a simple mission: to provide exceptional beauty services in a welcoming and relaxing environment.'
+        });
+        await siteInfo.save();
+        console.log('Default site info created');
+      } catch (error) {
+        console.error('Error creating default site info:', error);
+        // Continue with null siteInfo, views should handle it
+      }
+    }
+    
     // Get services for homepage
     services = await Service.find({ 
       showOnHomepage: true,
@@ -62,7 +83,10 @@ router.get('/services', async (req, res, next) => {
   try {
     const services = await Service.find({ isVisible: { $ne: false } })
       .sort({ displayOrder: 1 });
-    const siteInfo = await SiteInfo.findOne();
+    let siteInfo = await SiteInfo.findOne();
+    
+    // If siteInfo doesn't exist, just proceed with null
+    // The view will handle it with the safety checks
     
     res.render('services', { 
       title: 'Services', 
