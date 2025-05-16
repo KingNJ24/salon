@@ -187,7 +187,7 @@ function initImageUpload() {
     
     // Handle uploads
     if (uploadBtn && fileInput) {
-      uploadBtn.addEventListener('click', function(e) {
+      uploadBtn.addEventListener('click', async function(e) {
         e.preventDefault();
         
         if (!fileInput.files || !fileInput.files[0]) {
@@ -198,23 +198,47 @@ function initImageUpload() {
         const file = fileInput.files[0];
         const isVideo = file.type.startsWith('video/');
         
-        const formData = new FormData();
-        formData.append('file', file);
-        
         uploadBtn.disabled = true;
         uploadBtn.textContent = 'Uploading...';
         
-        fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        })
-        .then(response => {
+        try {
+          let response;
+          
+          // Choose endpoint based on file type
+          if (isVideo) {
+            // For videos, use the dedicated video upload endpoint with base64
+            const base64Data = await readFileAsBase64(file);
+            
+            // Use the video upload endpoint
+            response = await fetch('/api/upload-video', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ 
+                file: base64Data,
+                fileName: file.name,
+                fileType: file.type
+              })
+            });
+          } else {
+            // For images, use the regular upload endpoint with FormData
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            response = await fetch('/api/upload', {
+              method: 'POST',
+              body: formData,
+            });
+          }
+          
+          // Process response
           if (!response.ok) {
             throw new Error(`Server returned ${response.status}: ${response.statusText}`);
           }
-          return response.json();
-        })
-        .then(data => {
+          
+          const data = await response.json();
+          
           if (data.success) {
             showNotification('File uploaded successfully', 'success');
             if (urlInput) {
@@ -236,20 +260,27 @@ function initImageUpload() {
               }
             }
           } else {
-            showNotification('Failed to upload file', 'error');
+            showNotification('Failed to upload file: ' + (data.message || 'Unknown error'), 'error');
           }
-          
-          uploadBtn.disabled = false;
-          uploadBtn.textContent = 'Upload';
-        })
-        .catch(error => {
+        } catch (error) {
           console.error('Error:', error);
-          showNotification('An error occurred during upload', 'error');
+          showNotification('An error occurred during upload: ' + error.message, 'error');
+        } finally {
           uploadBtn.disabled = false;
           uploadBtn.textContent = 'Upload';
-        });
+        }
       });
     }
+  });
+}
+
+// Helper function to convert file to base64
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
   });
 }
 

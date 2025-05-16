@@ -361,7 +361,7 @@
                 }
             });
             
-            videoUploadBtn.addEventListener('click', function(e) {
+            videoUploadBtn.addEventListener('click', async function(e) {
                 e.preventDefault();
                 
                 if (!videoFileInput.files || !videoFileInput.files[0]) {
@@ -369,53 +369,54 @@
                     return;
                 }
                 
-                const formData = new FormData();
-                formData.append('file', videoFileInput.files[0]);
-                
                 videoUploadBtn.disabled = true;
                 videoUploadBtn.textContent = 'Uploading...';
                 
-                fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData,
-                })
-                .then(response => {
+                try {
+                    // Convert file to base64 for Vercel compatibility
+                    const file = videoFileInput.files[0];
+                    const reader = new FileReader();
+                    
+                    const base64Data = await new Promise((resolve, reject) => {
+                        reader.onload = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                    
+                    // Use the dedicated video upload endpoint
+                    const response = await fetch('/api/upload-video', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            file: base64Data,
+                            fileName: file.name,
+                            fileType: file.type
+                        })
+                    });
+                    
                     if (!response.ok) {
                         throw new Error(`Server returned ${response.status}: ${response.statusText}`);
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        showNotification('Video uploaded successfully', 'success');
-                        if (serviceVideoUrlInput) {
-                            serviceVideoUrlInput.value = data.filePath;
-                        }
-                        
-                        // Auto-generate thumbnail if none exists
-                        if ((!thumbnailInput || !thumbnailInput.value || thumbnailInput.value === '') && 
-                            generateThumbnailBtn) {
-                            // Wait for video to load
-                            if (videoPlayer) {
-                                videoPlayer.addEventListener('loadeddata', function loadHandler() {
-                                    videoPlayer.removeEventListener('loadeddata', loadHandler);
-                                    generateThumbnailBtn.click();
-                                });
-                            }
-                        }
-                    } else {
-                        showNotification('Failed to upload video', 'error');
-                    }
                     
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        videoUrlInput.value = data.filePath || data.url;
+                        videoPreview.src = data.filePath || data.url;
+                        videoPreview.load();
+                        showNotification('Video uploaded successfully', 'success');
+                    } else {
+                        throw new Error(data.message || 'Failed to upload video');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showNotification('Error uploading video: ' + error.message, 'error');
+                } finally {
                     videoUploadBtn.disabled = false;
                     videoUploadBtn.textContent = 'Upload Video';
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('An error occurred during upload', 'error');
-                    videoUploadBtn.disabled = false;
-                    videoUploadBtn.textContent = 'Upload Video';
-                });
+                }
             });
         }
         
