@@ -5,6 +5,23 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Gallery Editor loaded');
     
+    // Default admin credentials (these will be overridden by server-provided values)
+    let adminUsername = '';
+    let adminPassword = '';
+    
+    // Try to get credentials from server
+    fetch('/api/get-upload-auth')
+        .then(response => response.json())
+        .then(data => {
+            if (data.credentials) {
+                adminUsername = data.credentials.username;
+                adminPassword = data.credentials.password;
+            }
+        })
+        .catch(err => {
+            console.error('Could not get upload credentials:', err);
+        });
+    
     // Find the generate thumbnail button
     const generateThumbnailBtn = document.getElementById('generate-thumbnail-btn');
     if (generateThumbnailBtn) {
@@ -333,122 +350,136 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Handle video upload
-    if (videoFileInput && videoUploadBtn) {
-        videoFileInput.addEventListener('change', function() {
-            if (this.files && this.files[0]) {
-                const file = this.files[0];
-                
-                // Validate file size first (client-side check)
-                const maxSize = 50 * 1024 * 1024; // 50MB in bytes
-                if (file.size > maxSize) {
-                    showError('Video file is too large. Maximum size is 50MB.');
-                    return;
-                }
-                
-                // Validate file type
-                const validTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
-                if (!validTypes.includes(file.type)) {
-                    showError('Please select a valid video file (MP4, WebM, or MOV).');
-                    return;
-                }
-                
-                // Create object URL for preview
-                const videoURL = URL.createObjectURL(file);
-                const videoPreview = document.getElementById('video-preview');
-                if (videoPreview) {
-                    videoPreview.src = videoURL;
-                    videoPreview.load();
-                    document.querySelector('.video-preview').style.display = 'block';
-                }
-            }
+    // For Vercel deployments, we need to convert files to base64 for upload
+    function readFileAsBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
         });
-        
-        videoUploadBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            if (!videoFileInput.files || !videoFileInput.files[0]) {
-                showError('Please select a video file to upload.');
-                return;
-            }
-            
-            const file = videoFileInput.files[0];
-            
-            // Additional client-side validation
-            const maxSize = 50 * 1024 * 1024; // 50MB in bytes
-            if (file.size > maxSize) {
-                showError('Video file is too large. Maximum size is 50MB.');
-                return;
-            }
-            
+    }
+
+    // Function to handle file upload with Vercel compatibility
+    async function uploadFile(file, isVercel = false) {
+        try {
             const formData = new FormData();
-            formData.append('file', file);
             
-            // Show upload progress
-            videoUploadBtn.disabled = true;
-            videoUploadBtn.textContent = 'Uploading...';
-            
-            // Add status message
-            const statusMsg = document.createElement('p');
-            statusMsg.className = 'upload-status';
-            statusMsg.textContent = 'Uploading video file...';
-            videoUploadBtn.parentNode.appendChild(statusMsg);
-            
-            fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => {
+            if (isVercel) {
+                // Vercel deployment - send as base64
+                const base64Data = await readFileAsBase64(file);
+                // Use fetch with JSON payload
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic ' + btoa(`${adminUsername}:${adminPassword}`)
+                    },
+                    body: JSON.stringify({ file: base64Data })
+                });
+                
                 if (!response.ok) {
-                    return response.json().then(errorData => {
-                        throw new Error(errorData.message || `Server returned ${response.status}: ${response.statusText}`);
-                    });
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `Server returned ${response.status}: ${response.statusText}`);
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Success handling
-                    statusMsg.textContent = 'Video uploaded successfully!';
-                    statusMsg.style.color = 'green';
-                    
-                    // Update the video URL input field
-                    const videoUrlInput = document.getElementById('gallery-video-url');
-                    if (videoUrlInput) {
-                        videoUrlInput.value = data.filePath;
-                    }
-                    
-                    // Update form state to indicate it's a video
-                    const typeInput = document.getElementById('gallery-type');
-                    if (typeInput) {
-                        typeInput.value = 'video';
-                    }
-                    
-                    // Show the container
-                    document.querySelector('.video-preview').style.display = 'block';
-                    
-                    setTimeout(() => {
-                        statusMsg.remove();
-                    }, 5000);
-                } else {
-                    throw new Error(data.message || 'Failed to upload video.');
+                
+                return await response.json();
+            } else {
+                // Local development - use regular form data
+                formData.append('file', file);
+                
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `Server returned ${response.status}: ${response.statusText}`);
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                statusMsg.textContent = `Error: ${error.message}`;
-                statusMsg.style.color = 'red';
+                
+                return await response.json();
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            throw error;
+        }
+    }
+
+    // Modify the video upload function
+    videoUploadBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        
+        if (!videoFileInput.files || !videoFileInput.files[0]) {
+            showError('Please select a video file to upload.');
+            return;
+        }
+        
+        const file = videoFileInput.files[0];
+        
+        // Additional client-side validation
+        const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+        if (file.size > maxSize) {
+            showError('Video file is too large. Maximum size is 50MB.');
+            return;
+        }
+        
+        // Show upload progress
+        videoUploadBtn.disabled = true;
+        videoUploadBtn.textContent = 'Uploading...';
+        
+        // Add status message
+        const statusMsg = document.createElement('p');
+        statusMsg.className = 'upload-status';
+        statusMsg.textContent = 'Uploading video file...';
+        videoUploadBtn.parentNode.appendChild(statusMsg);
+        
+        try {
+            // Detect if we're on Vercel by checking hostname
+            const isVercel = window.location.hostname.includes('vercel.app') || 
+                            !window.location.hostname.includes('localhost');
+            
+            const data = await uploadFile(file, isVercel);
+            
+            if (data.success) {
+                // Success handling
+                statusMsg.textContent = 'Video uploaded successfully!';
+                statusMsg.style.color = 'green';
+                
+                // Update the video URL input field
+                const videoUrlInput = document.getElementById('gallery-video-url');
+                if (videoUrlInput) {
+                    videoUrlInput.value = data.filePath || data.url;
+                }
+                
+                // Update form state to indicate it's a video
+                const typeInput = document.getElementById('gallery-type');
+                if (typeInput) {
+                    typeInput.value = 'video';
+                }
+                
+                // Show the container
+                document.querySelector('.video-preview').style.display = 'block';
                 
                 setTimeout(() => {
                     statusMsg.remove();
-                }, 10000);
-            })
-            .finally(() => {
-                videoUploadBtn.disabled = false;
-                videoUploadBtn.textContent = 'Upload Video';
-            });
-        });
-    }
+                }, 5000);
+            } else {
+                throw new Error(data.message || 'Failed to upload video.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            statusMsg.textContent = `Error: ${error.message}`;
+            statusMsg.style.color = 'red';
+            
+            setTimeout(() => {
+                statusMsg.remove();
+            }, 10000);
+        } finally {
+            videoUploadBtn.disabled = false;
+            videoUploadBtn.textContent = 'Upload Video';
+        }
+    });
     
     // Helper function to show errors
     function showError(message) {
