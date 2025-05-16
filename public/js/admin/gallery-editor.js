@@ -360,13 +360,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Function to detect if we're running on Vercel
+    function isVercelEnvironment() {
+        return window.location.hostname.endsWith('vercel.app') || 
+               !window.location.hostname.includes('localhost');
+    }
+
     // Function to handle file upload with Vercel compatibility
-    async function uploadFile(file, isVercel = false) {
+    async function uploadFile(file, forcedVercel = null) {
+        // Determine if we're in Vercel environment
+        const isVercel = forcedVercel !== null ? forcedVercel : isVercelEnvironment();
+        
         console.log('Uploading file:', { 
             fileName: file.name, 
             fileSize: file.size, 
             fileType: file.type,
-            isVercel: isVercel 
+            isVercel: isVercel,
+            hostname: window.location.hostname
         });
         
         try {
@@ -465,9 +475,8 @@ document.addEventListener('DOMContentLoaded', function() {
         videoUploadBtn.parentNode.appendChild(statusMsg);
         
         try {
-            // Detect if we're on Vercel by checking hostname
-            const isVercel = window.location.hostname.endsWith('vercel.app') || 
-                            !window.location.hostname.includes('localhost');
+            // Detect if we're on Vercel using the dedicated function
+            const isVercel = isVercelEnvironment();
             
             console.log('Upload environment:', { 
                 hostname: window.location.hostname,
