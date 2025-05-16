@@ -101,14 +101,30 @@
             // Check if we have homepage gallery items from the server
             if (typeof homepageGallery !== 'undefined' && homepageGallery && homepageGallery.length > 0) {
                 // Use gallery items marked for homepage display
+                console.log('Homepage gallery items:', homepageGallery.length);
                 homepageGallery.slice(0, 4).forEach(function(item) { %>
                     <div class="gallery-item">
                         <div class="gallery-image">
                             <% if (item.type === 'video') { %>
                                 <!-- Video thumbnail with play button -->
                                 <div class="video-thumbnail" data-video-src="<%= item.videoUrl %>">
-                                    <img src="<%= item.image %>" alt="<%= item.title %>" 
-                                         onerror="this.src='https://via.placeholder.com/250x250?text=Video'">
+                                    <% if (item.image === item.videoUrl) { %>
+                                        <!-- Use video element as poster -->
+                                        <video muted loop preload="metadata" poster="/images/video-placeholder.jpg">
+                                            <source src="<%= item.videoUrl %>" type="video/mp4">
+                                        </video>
+                                    <% } else { %>
+                                        <!-- Use provided image as thumbnail -->
+                                        <img src="<%= item.image %>" alt="<%= item.title %>" 
+                                             onerror="this.src='https://via.placeholder.com/250x250?text=Video'">
+                                    <% } %>
+                                    
+                                    <!-- Preview video that plays on hover -->
+                                    <video class="preview-video" muted loop preload="none" 
+                                           poster="<%= item.image %>">
+                                        <source src="<%= item.videoUrl %>" type="video/mp4">
+                                    </video>
+                                    
                                     <div class="play-button">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white">
                                             <path d="M8 5v14l11-7z"/>
