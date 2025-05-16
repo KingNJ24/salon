@@ -128,4 +128,23 @@ router.post('/booking/create', async (req, res) => {
   }
 });
 
+router.post('/booking/update/:id', adminAuth, async (req, res) => {
+  try {
+    const updatedBooking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+    
+    if (!updatedBooking) {
+      return res.status(404).json({ success: false, message: 'Booking not found' });
+    }
+    
+    return res.json({ success: true, booking: updatedBooking });
+  } catch (error) {
+    console.error('Error updating booking:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router; 

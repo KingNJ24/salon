@@ -95,6 +95,29 @@ const updateItem = async (req, res, next) => {
   try {
     console.log('Updating gallery item with data:', req.body);
     
+    // Fix boolean conversions
+    if ('isVisible' in req.body) {
+      // Convert string 'true'/'false' to boolean if needed
+      if (typeof req.body.isVisible === 'string') {
+        req.body.isVisible = req.body.isVisible === 'true';
+      }
+      console.log(`Setting isVisible to ${req.body.isVisible} (${typeof req.body.isVisible}) for item ${req.params.id}`);
+    }
+    
+    if ('showOnHomepage' in req.body) {
+      // Convert string 'true'/'false' to boolean if needed
+      if (typeof req.body.showOnHomepage === 'string') {
+        req.body.showOnHomepage = req.body.showOnHomepage === 'true';
+      }
+      console.log(`Setting showOnHomepage to ${req.body.showOnHomepage} (${typeof req.body.showOnHomepage}) for item ${req.params.id}`);
+    }
+    
+    // If making invisible, ensure it's not on homepage
+    if (req.body.isVisible === false && !('showOnHomepage' in req.body)) {
+      req.body.showOnHomepage = false;
+      console.log('Item being made invisible, setting showOnHomepage to false');
+    }
+    
     // Fix videoUrl path if needed (remove leading slashes)
     if (req.body.videoUrl && req.body.videoUrl.startsWith('//')) {
       req.body.videoUrl = 'https:' + req.body.videoUrl;
@@ -114,6 +137,8 @@ const updateItem = async (req, res, next) => {
       console.log('Using placeholder for video item with no thumbnail');
       req.body.image = '/images/video-placeholder.jpg';
     }
+    
+    console.log('Final update data:', req.body);
     
     const updatedItem = await Gallery.findByIdAndUpdate(
       req.params.id,

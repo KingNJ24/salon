@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { adminAuth } = require('../middlewares/auth');
 const { upload } = require('../utils/upload');
-const { Service, Gallery, Team, SiteInfo } = require('../models');
+const { Service, Gallery, Team, SiteInfo, Booking } = require('../models');
 
 // Admin login page
 router.get('/', (req, res) => {
@@ -11,7 +11,26 @@ router.get('/', (req, res) => {
   }
   res.render('admin/login', { 
     title: 'Admin Login', 
-    layout: 'layouts/admin'
+    layout: 'layouts/admin',
+    error: null
+  });
+});
+
+// Login POST handler (for form submitting to /admin directly)
+router.post('/', (req, res) => {
+  const { username, password } = req.body;
+  const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'nikhil';
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '123456';
+  
+  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    req.session.isAuthenticated = true;
+    return res.redirect('/admin/dashboard');
+  }
+  
+  res.render('admin/login', { 
+    title: 'Admin Login', 
+    layout: 'layouts/admin', 
+    error: 'Invalid credentials' 
   });
 });
 
@@ -40,11 +59,19 @@ router.get('/logout', (req, res) => {
 });
 
 // Admin dashboard
-router.get('/dashboard', adminAuth, async (req, res) => {
+router.get('/dashboard', adminAuth, async (req, res, next) => {
   try {
+    // Get counts for dashboard
+    const services = await Service.find();
+    const gallery = await Gallery.find();
+    const bookings = await Booking.find();
+    
     res.render('admin/dashboard', { 
       title: 'Admin Dashboard', 
-      layout: 'layouts/admin' 
+      layout: 'layouts/admin',
+      services,
+      gallery,
+      bookings
     });
   } catch (error) {
     next(error);
@@ -101,6 +128,21 @@ router.get('/settings', adminAuth, async (req, res, next) => {
       title: 'Site Settings', 
       layout: 'layouts/admin', 
       siteInfo 
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Bookings admin page
+router.get('/bookings', adminAuth, async (req, res, next) => {
+  try {
+    const bookings = await Booking.find();
+    
+    res.render('admin/bookings', { 
+      title: 'Manage Bookings', 
+      layout: 'layouts/admin', 
+      bookings 
     });
   } catch (error) {
     next(error);

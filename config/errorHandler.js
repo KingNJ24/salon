@@ -2,6 +2,8 @@
  * Global error handler
  */
 
+const { SiteInfo } = require('../models');
+
 // 404 Not Found handler
 const notFound = (req, res, next) => {
   const error = new Error(`Not Found - ${req.originalUrl}`);
@@ -10,7 +12,7 @@ const notFound = (req, res, next) => {
 };
 
 // Error handler
-const errorHandler = (err, req, res, next) => {
+const errorHandler = async (err, req, res, next) => {
   // Default to 500 - Internal Server Error if status code is not already set
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   
@@ -24,6 +26,15 @@ const errorHandler = (err, req, res, next) => {
     path: req.path,
     method: req.method
   });
+  
+  // Get site info for layout
+  let siteInfo;
+  try {
+    siteInfo = await SiteInfo.findOne();
+  } catch (e) {
+    console.error('Error fetching siteInfo for error page:', e);
+    siteInfo = {};
+  }
   
   // If it's an API request
   if (req.path.startsWith('/api/')) {
@@ -40,7 +51,9 @@ const errorHandler = (err, req, res, next) => {
       title: '404 Not Found',
       statusCode,
       message: 'Page not found',
-      layout: 'layouts/main'
+      layout: 'layouts/main',
+      page: 'error',
+      siteInfo
     });
   }
   
@@ -48,7 +61,9 @@ const errorHandler = (err, req, res, next) => {
     title: 'Error',
     statusCode,
     message: err.message,
-    layout: 'layouts/main'
+    layout: 'layouts/main',
+    page: 'error',
+    siteInfo
   });
 };
 

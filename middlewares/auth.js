@@ -9,12 +9,7 @@ const adminAuth = (req, res, next) => {
     return next();
   }
   
-  // For GET requests, allow access to login page
-  if (req.method === 'GET' && req.path === '/admin') {
-    return next();
-  }
-  
-  // Redirect to login if not authenticated
+  // For GET requests, redirect to login page
   return res.redirect('/admin');
 };
 

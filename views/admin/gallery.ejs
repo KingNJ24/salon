@@ -66,14 +66,10 @@
                             </svg>
                         </div>
                         
-                        <!-- Homepage toggle button -->
-                        <div class="homepage-toggle" style="position: absolute; top: 10px; right: 10px; z-index: 5; cursor: pointer; background-color: <%= item.showOnHomepage ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)' %>; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" data-homepage="<%= item.showOnHomepage || 'false' %>">
+                        <!-- Homepage indicator (not a toggle button) -->
+                        <div class="homepage-indicator" style="position: absolute; top: 10px; right: 10px; z-index: 5; cursor: pointer; background-color: <%= item.isVisible && item.showOnHomepage ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.3)' %>; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
-                                <% if (item.showOnHomepage) { %>
-                                    <path d="M2 2v13.5a.5.5 0 0 0 .74.439L8 13.069l5.26 2.87A.5.5 0 0 0 14 15.5V2a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/>
-                                <% } else { %>
                                     <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/>
-                                <% } %>
                             </svg>
                         </div>
                         
@@ -194,7 +190,7 @@
                 <div class="image-preview" style="margin-bottom: 10px;">
                     <img src="" alt="Preview" style="max-width: 100%; max-height: 200px; display: none;">
                 </div>
-                <input type="file" accept="image/*" class="form-control">
+                <input type="file" accept="image/*" class="form-control" id="image-file-input">
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                     <button type="button" class="btn upload-btn">Upload</button>
                     <input type="text" id="gallery-image" name="image" class="image-url-input" style="flex: 1;" placeholder="Image URL">
@@ -229,6 +225,9 @@
         </form>
     </div>
 </div>
+
+<!-- Include the gallery editor script -->
+<script src="/js/admin/gallery-editor.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -267,7 +266,7 @@
             galleryCount.textContent = itemsCount;
         }
         
-        // Initialize event handlers for visibility and homepage toggles
+        // Initialize event handlers for visibility and homepage
         initToggleHandlers();
         
         // Filter gallery items by category
@@ -327,55 +326,85 @@
         // Initialize delete buttons
         initDeleteButtons();
         
-        // Handle form submission
+        // Handle gallery form submit
         galleryForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Show loading state
-            saveGalleryButton.textContent = 'Saving...';
+            const formData = new FormData(this);
+            const formObject = {};
+            
+            // Convert FormData to object
+            formData.forEach((value, key) => {
+                if (key === 'isVisible' || key === 'showOnHomepage') {
+                    formObject[key] = true; // Checkbox values (checked = true)
+                } else {
+                    formObject[key] = value;
+                }
+            });
+            
+            // Check for unchecked checkboxes (they don't get included in formData)
+            if (!formData.has('isVisible')) {
+                formObject.isVisible = false;
+            }
+            
+            if (!formData.has('showOnHomepage')) {
+                formObject.showOnHomepage = false;
+            }
+            
+            // If item is not visible, it can't be on homepage
+            if (formObject.isVisible === false) {
+                formObject.showOnHomepage = false;
+            }
+            
+            // Get the endpoint from the form
+            const endpoint = this.getAttribute('data-endpoint');
+            
+            // Show saving indicator
             saveGalleryButton.disabled = true;
+            saveGalleryButton.textContent = 'Saving...';
             
-            // Get form data
-            const formData = new FormData(galleryForm);
-            const data = Object.fromEntries(formData.entries());
-            
-            // Convert boolean values from checkboxes
-            data.isVisible = !!formData.get('isVisible');
-            data.showOnHomepage = !!formData.get('showOnHomepage');
-            
-            // Determine endpoint
-            const endpoint = editingId 
-                ? `/api/gallery/update/${editingId}` 
-                : '/api/gallery/create';
-            
-            // Submit form data
+            // Send data to server
             fetch(endpoint, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(formObject)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    // Reload the page to show changes
+                    console.log('Gallery item saved successfully');
+                    
+                    // Update UI or redirect
+                    saveGalleryButton.textContent = 'Saved!';
+                    
+                    // Close modal and reload page
+                    setTimeout(() => {
+                        modal.style.display = 'none';
                     window.location.reload();
+                    }, 500);
                 } else {
-                    alert('Error: ' + (data.message || 'Failed to save'));
-                    saveGalleryButton.textContent = 'Save';
+                    console.error('Error saving gallery item:', data.message);
+                    saveGalleryButton.textContent = 'Error';
+                    alert(`Failed to save: ${data.message || 'Unknown error'}`);
                     saveGalleryButton.disabled = false;
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Error: ' + error.message);
-                saveGalleryButton.textContent = 'Save';
+                console.error('Error submitting form:', error);
+                saveGalleryButton.textContent = 'Error';
+                alert(`Failed to save: ${error.message}`);
                 saveGalleryButton.disabled = false;
             });
         });
         
-        // Function to initialize visibility and homepage toggle handlers
+        // Initialize toggle handlers for visibility and homepage
         function initToggleHandlers() {
             // Visibility toggles
             document.querySelectorAll('.visibility-toggle').forEach(toggle => {
@@ -390,12 +419,21 @@
                     // Update UI immediately for better UX
                     this.setAttribute('data-visible', newVisibility);
                     this.style.backgroundColor = newVisibility ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
-                    this.innerHTML = newVisibility ? 
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/></svg>' : 
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/><path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/></svg>';
+                    
+                    if (newVisibility) {
+                        this.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/></svg>';
+                    } else {
+                        this.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/><path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/></svg>';
+                    }
                     
                     // Update image opacity
                     galleryItem.querySelector('.gallery-admin-image').style.opacity = newVisibility ? 1 : 0.5;
+                    
+                    // Also update homepage indicator - when not visible, item can't be on homepage
+                    const homepageIndicator = galleryItem.querySelector('.homepage-indicator');
+                    if (!newVisibility) {
+                        homepageIndicator.style.backgroundColor = 'rgba(108, 117, 125, 0.3)';
+                    }
                     
                     // Send update to server
                     fetch(`/api/gallery/update/${itemId}`, {
@@ -403,7 +441,11 @@
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ isVisible: newVisibility })
+                        body: JSON.stringify({ 
+                            isVisible: newVisibility,
+                            // When making item invisible, also remove from homepage
+                            ...(newVisibility ? {} : { showOnHomepage: false })
+                        })
                     })
                     .then(response => response.json())
                     .then(data => {
@@ -425,22 +467,31 @@
                 });
             });
             
-            // Homepage toggles
-            document.querySelectorAll('.homepage-toggle').forEach(toggle => {
-                toggle.addEventListener('click', function() {
+            // Homepage indicators
+            document.querySelectorAll('.homepage-indicator').forEach(indicator => {
+                indicator.addEventListener('click', function() {
                     const galleryItem = this.closest('.gallery-admin-item');
                     const itemId = galleryItem.getAttribute('data-id');
-                    const showOnHomepage = this.getAttribute('data-homepage') === 'true';
+                    const visibilityToggle = galleryItem.querySelector('.visibility-toggle');
+                    const isVisible = visibilityToggle.getAttribute('data-visible') === 'true';
+                    
+                    // Only allow changing homepage status for visible items
+                    if (!isVisible) {
+                        alert('Item must be visible to appear on homepage. Click the eye icon first.');
+                        return;
+                    }
+                    
+                    // Get current homepage state - use computed style to detect current state
+                    const currentColor = window.getComputedStyle(this).backgroundColor;
+                    const showOnHomepage = currentColor.includes('220') || currentColor.includes('rgb(220');
                     
                     // Toggle homepage state
                     const newHomepageState = !showOnHomepage;
                     
                     // Update UI immediately for better UX
-                    this.setAttribute('data-homepage', newHomepageState);
-                    this.style.backgroundColor = newHomepageState ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
-                    this.innerHTML = newHomepageState ? 
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="M2 2v13.5a.5.5 0 0 0 .74.439L8 13.069l5.26 2.87A.5.5 0 0 0 14 15.5V2a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>' : 
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/></svg>';
+                    this.style.backgroundColor = newHomepageState ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.3)';
+                    
+                    console.log('Setting showOnHomepage to', newHomepageState, 'for item', itemId);
                     
                     // Send update to server
                     fetch(`/api/gallery/update/${itemId}`, {
@@ -448,22 +499,22 @@
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ showOnHomepage: newHomepageState })
+                        body: JSON.stringify({ 
+                            showOnHomepage: newHomepageState 
+                        })
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (!data.success) {
                             // Revert UI if failed
                             console.error('Failed to update homepage visibility');
-                            this.setAttribute('data-homepage', showOnHomepage);
-                            this.style.backgroundColor = showOnHomepage ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
+                            this.style.backgroundColor = showOnHomepage ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.3)';
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
                         // Revert UI on error
-                        this.setAttribute('data-homepage', showOnHomepage);
-                        this.style.backgroundColor = showOnHomepage ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
+                        this.style.backgroundColor = showOnHomepage ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.3)';
                     });
                 });
             });
