@@ -50,6 +50,13 @@ app.use((req, res, next) => {
   next();
 });
 
+// Connect to MongoDB when app starts
+connectDB().then(connected => {
+  console.log(`MongoDB ${connected ? 'connected' : 'not connected, using fallback data'}`);
+}).catch(err => {
+  console.error('MongoDB connection error:', err);
+});
+
 // Route handlers
 app.use('/', mainRoutes);
 app.use('/admin', adminRoutes);
@@ -59,41 +66,42 @@ app.use('/api', apiRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-// Start server function
-const startServer = async () => {
-  try {
-    // Connect to MongoDB
-    const connected = await connectDB();
-    
-    // Get port from environment or default to 3000
-    const port = process.env.PORT || 3000;
-    
-    // Start the server
-    const server = app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
-      console.log(`MongoDB ${connected ? 'connected' : 'not connected, using fallback data'}`);
-    });
-    
-    // Handle server errors
-    server.on('error', (error) => {
-      if (error.code === 'EADDRINUSE') {
-        console.log(`Port ${port} is already in use, trying ${port + 1}`);
-        setTimeout(() => {
-          server.close();
-          // Try the next port
-          app.listen(port + 1, () => {
-            console.log(`Server running on port ${port + 1}`);
-          });
-        }, 1000);
-      } else {
-        console.error('Server error:', error);
-      }
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-};
+// Start server only if not running in serverless environment (Vercel)
+if (process.env.NODE_ENV !== 'production') {
+  const startServer = async () => {
+    try {
+      // Get port from environment or default to 3000
+      const port = process.env.PORT || 3000;
+      
+      // Start the server
+      const server = app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+      });
+      
+      // Handle server errors
+      server.on('error', (error) => {
+        if (error.code === 'EADDRINUSE') {
+          console.log(`Port ${port} is already in use, trying ${port + 1}`);
+          setTimeout(() => {
+            server.close();
+            // Try the next port
+            app.listen(port + 1, () => {
+              console.log(`Server running on port ${port + 1}`);
+            });
+          }, 1000);
+        } else {
+          console.error('Server error:', error);
+        }
+      });
+    } catch (error) {
+      console.error('Failed to start server:', error);
+      process.exit(1);
+    }
+  };
 
-// Run the server
-startServer(); 
+  // Run the server locally
+  startServer();
+}
+
+// Export app for serverless environment
+module.exports = app; 
