@@ -309,6 +309,16 @@ router.post('/settings/update', adminAuth, async (req, res) => {
   }
 });
 
+// Add a test endpoint to the router
+router.get('/test-express', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Express router API endpoint working',
+    timestamp: new Date().toISOString(),
+    handler: 'Express router'
+  });
+});
+
 // BOOKING ROUTES
 router.post('/booking/create', async (req, res) => {
   try {

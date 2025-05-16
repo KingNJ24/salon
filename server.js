@@ -57,6 +57,17 @@ connectDB().then(connected => {
   console.error('MongoDB connection error:', err);
 });
 
+// Add direct test API endpoint
+app.get('/api/server-test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Server-side API endpoint working',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    vercel: process.env.VERCEL || 'not-vercel'
+  });
+});
+
 // Route handlers
 app.use('/', mainRoutes);
 app.use('/admin', adminRoutes);
