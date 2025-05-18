@@ -21,9 +21,9 @@
                 <source src="<%= siteInfo.homeVideo || '/videos/salon-ad.mp4' %>" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
-            <div id="video-fallback" style="display: none; position: relative;">
-                <img src="/images/about.jpg" alt="Salon Video Placeholder" style="width: 100%; display: block;">
-                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.5); color: white; text-align: center; padding: 20px;">
+            <div id="video-fallback" class="video-fallback">
+                <img src="/images/about.jpg" alt="Salon Video Placeholder" class="fallback-img">
+                <div class="fallback-message">
                     <p>Our salon video is coming soon! Visit us to experience our luxury beauty services firsthand.</p>
                 </div>
             </div>
@@ -474,5 +474,31 @@
         color: white;
         font-size: 30px;
         cursor: pointer;
+    }
+    
+    /* Video fallback styles */
+    .video-fallback {
+        display: none;
+        position: relative;
+    }
+    
+    .fallback-img {
+        width: 100%;
+        display: block;
+    }
+    
+    .fallback-message {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0,0,0,0.5);
+        color: white;
+        text-align: center;
+        padding: 20px;
     }
 </style> 

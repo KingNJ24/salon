@@ -250,6 +250,14 @@
                     captureFrameAndReturn();
                 });
                 
+                // Add error handling for video loading
+                videoElement.addEventListener('error', function onError() {
+                    videoElement.removeEventListener('error', onError);
+                    videoElement.removeEventListener('loadeddata', onLoaded);
+                    // Try server-side approach for CORS issues
+                    useServerProxyForThumbnail(videoElement.src, callback);
+                });
+                
                 // Make sure video loads
                 videoElement.load();
             } else {
@@ -257,36 +265,87 @@
             }
             
             function captureFrameAndReturn() {
-                // Go to 1 second into the video (or beginning if shorter)
-                const targetTime = Math.min(1, videoElement.duration || 1);
-                videoElement.currentTime = targetTime;
-                
-                videoElement.addEventListener('seeked', function onSeeked() {
-                    videoElement.removeEventListener('seeked', onSeeked);
-                    
-                    try {
-                        // Create canvas and draw frame
-                        const canvas = document.createElement('canvas');
-                        // Reduce the size to 640px wide maximum (maintaining aspect ratio)
-                        const maxWidth = 640;
-                        const scaleFactor = maxWidth / (videoElement.videoWidth || 640);
-                        canvas.width = Math.min(maxWidth, videoElement.videoWidth || 640);
-                        canvas.height = Math.floor((videoElement.videoHeight || 480) * scaleFactor);
-                        
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-                        
-                        // Get data URL with reduced quality (0.7 instead of 0.8)
-                        const dataURL = canvas.toDataURL('image/jpeg', 0.7);
-                        
-                        // Call back with the data URL
-                        callback(dataURL);
-                    } catch (err) {
-                        console.error('Error capturing video frame:', err);
-                        callback(null);
+                try {
+                    // Check if video dimensions are available
+                    if (!videoElement.videoWidth || !videoElement.videoHeight) {
+                        console.error('Video dimensions not available');
+                        // Try server-side approach for CORS issues
+                        useServerProxyForThumbnail(videoElement.src, callback);
+                        return;
                     }
-                });
+                    
+                    // Go to 1 second into the video (or beginning if shorter)
+                    const targetTime = Math.min(1, videoElement.duration || 1);
+                    videoElement.currentTime = targetTime;
+                    
+                    videoElement.addEventListener('seeked', function onSeeked() {
+                        videoElement.removeEventListener('seeked', onSeeked);
+                        
+                        try {
+                            // Create canvas and draw frame
+                            const canvas = document.createElement('canvas');
+                            // Reduce the size to 640px wide maximum (maintaining aspect ratio)
+                            const maxWidth = 640;
+                            const scaleFactor = maxWidth / (videoElement.videoWidth || 640);
+                            canvas.width = Math.min(maxWidth, videoElement.videoWidth || 640);
+                            canvas.height = Math.floor((videoElement.videoHeight || 480) * scaleFactor);
+                            
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                            
+                            // Get data URL with reduced quality (0.7 instead of 0.8)
+                            const dataURL = canvas.toDataURL('image/jpeg', 0.7);
+                            
+                            // Call back with the data URL
+                            callback(dataURL);
+                        } catch (err) {
+                            console.error('Error capturing video frame:', err);
+                            // Try server-side approach for any errors
+                            useServerProxyForThumbnail(videoElement.src, callback);
+                        }
+                    });
+                    
+                    // Add error handling for seeking
+                    videoElement.addEventListener('error', function onSeekError() {
+                        videoElement.removeEventListener('error', onSeekError);
+                        videoElement.removeEventListener('seeked', onSeeked);
+                        // Try server-side approach for CORS issues
+                        useServerProxyForThumbnail(videoElement.src, callback);
+                    });
+                } catch (error) {
+                    console.error('Error in captureFrameAndReturn:', error);
+                    // Try server-side approach for any errors
+                    useServerProxyForThumbnail(videoElement.src, callback);
+                }
             }
+        }
+        
+        // Function to use server proxy for thumbnail generation when client-side fails
+        function useServerProxyForThumbnail(videoUrl, callback) {
+            console.log('Trying server-side thumbnail generation for:', videoUrl);
+            
+            // Make a request to the server-side endpoint that will handle the CORS issue
+            fetch('/api/generate-thumbnail', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ videoUrl: videoUrl })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.thumbnailUrl) {
+                    console.log('Server proxy thumbnail generated successfully:', data.thumbnailUrl);
+                    // Call back with the thumbnail URL
+                    callback(data.thumbnailUrl);
+                } else {
+                    throw new Error(data.message || 'Failed to generate thumbnail');
+                }
+            })
+            .catch(error => {
+                console.error('Server proxy thumbnail error:', error);
+                callback(null);
+            });
         }
         
         // Generate thumbnail button click handler
@@ -324,7 +383,7 @@
                         showNotification('Thumbnail generated successfully', 'success');
                     } else {
                         if (thumbnailStatus) {
-                            thumbnailStatus.textContent = 'Failed to generate thumbnail';
+                            thumbnailStatus.textContent = 'Failed to generate thumbnail. Try uploading an image manually.';
                             thumbnailStatus.style.color = '#dc3545';
                         }
                         

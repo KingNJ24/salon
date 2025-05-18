@@ -24,8 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Find the generate thumbnail button and ensure it exists
     const generateThumbnailBtn = document.getElementById('generate-thumbnail-btn');
-    const videoUrlInput = document.getElementById('gallery-video-url');
-    const imageInput = document.getElementById('gallery-image');
+    // Define these as let instead of const for global access across functions
+    let videoUrlInput = document.getElementById('gallery-video-url');
+    let imageInput = document.getElementById('gallery-image');
     
     if (generateThumbnailBtn) {
         console.log('Generate thumbnail button found');
@@ -55,9 +56,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateThumbnailFromVideo() {
         console.log('Generating thumbnail from video');
         
-        // Get elements
-        const videoUrlInput = document.getElementById('gallery-video-url');
-        const imageInput = document.getElementById('gallery-image');
+        // Get fresh references to the elements
+        videoUrlInput = document.getElementById('gallery-video-url');
+        imageInput = document.getElementById('gallery-image');
         const previewImage = document.querySelector('.image-preview img');
         const thumbnailStatus = document.getElementById('thumbnail-status');
         const videoPreview = document.getElementById('video-preview');
@@ -173,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to use server proxy for thumbnail generation when client-side fails
     function useServerProxyForThumbnail(videoUrl) {
         const previewImage = document.querySelector('.image-preview img');
-        const imageInput = document.getElementById('gallery-image');
+        imageInput = document.getElementById('gallery-image');
         const thumbnailStatus = document.getElementById('thumbnail-status');
         
         if (thumbnailStatus) {
@@ -268,7 +269,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Add event listener for video preview
-    const videoUrlInput = document.getElementById('gallery-video-url');
+    // Refresh reference to videoUrlInput
+    videoUrlInput = document.getElementById('gallery-video-url');
     if (videoUrlInput) {
         videoUrlInput.addEventListener('change', function() {
             const videoPreview = document.getElementById('video-preview');
