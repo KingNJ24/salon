@@ -264,11 +264,10 @@ document.addEventListener('DOMContentLoaded', function() {
             video.removeEventListener('loadedmetadata', onMetadataLoaded);
             video.removeEventListener('timeupdate', captureFrame);
             
-            if (thumbnailStatus) {
-                thumbnailStatus.textContent = 'Timeout loading video. Try another URL or upload manually.';
-                thumbnailStatus.style.color = '#dc3545';
-            }
-        }, 10000); // 10 second timeout
+            // Instead of just showing an error, use the server-side proxy
+            console.log('Attempting server-side thumbnail generation due to timeout');
+            useServerProxyForThumbnail(videoUrl);
+        }, 15000); // Increase timeout from 10 to 15 seconds
         
         // When video metadata is loaded, capture a frame
         function onMetadataLoaded() {
@@ -288,12 +287,9 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Video error:', video.error);
             clearTimeout(timeoutId);
             
-            // Update status instead of showing an alert
-            if (thumbnailStatus) {
-                thumbnailStatus.textContent = 'Error loading video. Please check the URL. Error code: ' + 
-                    (video.error ? video.error.code : 'unknown');
-                thumbnailStatus.style.color = '#dc3545';
-            }
+            // Instead of showing error, try server-side proxy
+            console.log('Video error occurred, attempting server-side thumbnail generation');
+            useServerProxyForThumbnail(videoUrl);
             
             // Remove the timeupdate event listener if it hasn't fired yet
             video.removeEventListener('timeupdate', captureFrame);

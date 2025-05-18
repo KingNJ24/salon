@@ -507,14 +507,45 @@ router.post('/generate-thumbnail', adminAuth, async (req, res) => {
     
     console.log('Server-side thumbnail generation for:', videoUrl);
     
+    // For YouTube videos
+    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+      try {
+        // Extract video ID
+        let videoId = '';
+        if (videoUrl.includes('youtube.com/watch')) {
+          videoId = new URL(videoUrl).searchParams.get('v');
+        } else if (videoUrl.includes('youtu.be/')) {
+          videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
+        }
+        
+        if (videoId) {
+          // Use YouTube thumbnail directly
+          const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+          return res.json({
+            success: true,
+            thumbnailUrl: thumbnailUrl,
+            message: 'Using YouTube thumbnail'
+          });
+        }
+      } catch (error) {
+        console.error('YouTube thumbnail extraction error:', error);
+        // Continue to fallback methods
+      }
+    }
+    
+    // Set a timeout for Cloudinary request
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Thumbnail generation timed out')), 20000)
+    );
+    
     // For videos on external domains (not our own server)
     if (videoUrl.startsWith('http') && !videoUrl.includes(req.headers.host)) {
       try {
         // Get thumbnail from video using server-side tools
         const { cloudinary } = require('../utils/cloudinary');
         
-        // Upload to Cloudinary which can handle the video and generate a thumbnail
-        const uploadResult = await cloudinary.uploader.upload(videoUrl, {
+        // Race between Cloudinary upload and timeout
+        const uploadPromise = cloudinary.uploader.upload(videoUrl, {
           resource_type: 'video',
           folder: 'salon/thumbnails',
           eager: [
@@ -522,6 +553,9 @@ router.post('/generate-thumbnail', adminAuth, async (req, res) => {
           ],
           eager_async: false
         });
+        
+        // Use Promise.race to handle timeouts
+        const uploadResult = await Promise.race([uploadPromise, timeoutPromise]);
         
         console.log('Thumbnail generated via Cloudinary:', uploadResult);
         
@@ -538,7 +572,7 @@ router.post('/generate-thumbnail', adminAuth, async (req, res) => {
         return res.json({
           success: true,
           thumbnailUrl: '/images/video-placeholder.jpg',
-          message: 'Using placeholder image due to CORS restrictions'
+          message: 'Using placeholder image due to timeout or CORS restrictions'
         });
       }
     } 
@@ -554,17 +588,20 @@ router.post('/generate-thumbnail', adminAuth, async (req, res) => {
         });
       } catch (error) {
         console.error('Error handling local video thumbnail:', error);
-        return res.status(500).json({
-          success: false,
-          message: 'Error generating thumbnail: ' + error.message
+        return res.json({
+          success: true,
+          thumbnailUrl: '/images/video-placeholder.jpg',
+          message: 'Using placeholder image as fallback'
         });
       }
     }
   } catch (error) {
     console.error('Thumbnail generation error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Server error: ' + error.message
+    // Always return success with a fallback image instead of an error
+    return res.json({
+      success: true,
+      thumbnailUrl: '/images/video-placeholder.jpg',
+      message: 'Using placeholder image due to error'
     });
   }
 });
