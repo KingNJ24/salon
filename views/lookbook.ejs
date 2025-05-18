@@ -1,8 +1,8 @@
 <!-- Lookbook Header -->
 <section class="section lookbook-header">
     <div class="container">
-        <h1>Our Lookbook</h1>
-        <p>From natural looks to highly stylized creations, here are some looks by our salon team featuring the very best in hair, makeup and style.</p>
+        <h1 class="text-center">Our Lookbook</h1>
+        <p class="text-center">From natural looks to highly stylized creations, here are some looks by our salon team featuring the very best in hair, makeup and style.</p>
     </div>
 </section>
 
@@ -15,7 +15,8 @@
             <% }); %>
         </div>
         
-        <div class="gallery-grid">
+        <!-- Mobile detection for responsive layout -->
+        <div class="gallery-grid lookbook-mobile-container">
             <% 
             // Filter only visible items and sort by display order
             const visibleItems = galleryItems.filter(item => item.isVisible !== false);
@@ -27,7 +28,7 @@
                 </div>
             <% } else {
                 visibleItems.forEach(function(item) { %>
-                    <div class="gallery-item" data-category="<%= item.category %>">
+                    <div class="gallery-item animate-fade-in" data-category="<%= item.category %>">
                         <div class="gallery-image">
                             <% if (item.type === 'video') { %>
                                 <!-- Video items with hover-to-play -->
@@ -66,6 +67,12 @@
                     </div>
                 <% });
             } %>
+            <!-- Scroll indicator for mobile -->
+            <div class="scroll-indicator">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </div>
         </div>
     </div>
 </section>
@@ -83,7 +90,7 @@
 <!-- CTA Section -->
 <section class="section" style="background-color: var(--color-light);">
     <div class="container text-center">
-        <h2>Inspired by What You See?</h2>
+        <h2 class="section-title">Inspired by What You See?</h2>
         <p>Book an appointment today and let our expert stylists help you achieve the look you want.</p>
         <a href="/contact" class="btn">Book an Appointment</a>
     </div>
@@ -210,6 +217,39 @@
 <!-- JavaScript for video handling and category filtering -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Toggle between grid and horizontal scroll based on screen width
+    function adjustGalleryLayout() {
+        const galleryContainer = document.querySelector('.lookbook-mobile-container');
+        const isMobile = window.innerWidth <= 768;
+        
+        if (isMobile) {
+            galleryContainer.classList.add('lookbook-scrollable');
+            galleryContainer.classList.remove('gallery-grid');
+            document.querySelector('.scroll-indicator').style.display = 'flex';
+        } else {
+            galleryContainer.classList.remove('lookbook-scrollable');
+            galleryContainer.classList.add('gallery-grid');
+            document.querySelector('.scroll-indicator').style.display = 'none';
+        }
+    }
+    
+    // Run on load
+    adjustGalleryLayout();
+    
+    // Run on resize
+    window.addEventListener('resize', adjustGalleryLayout);
+    
+    // Hide scroll indicator after user has scrolled
+    const scrollContainer = document.querySelector('.lookbook-mobile-container');
+    scrollContainer.addEventListener('scroll', function() {
+        if (scrollContainer.scrollLeft > 50) {
+            document.querySelector('.scroll-indicator').style.opacity = '0';
+            setTimeout(() => {
+                document.querySelector('.scroll-indicator').style.display = 'none';
+            }, 500);
+        }
+    });
+    
     // Video modal functionality
     const videoModal = document.getElementById('video-modal');
     const videoPlayer = document.getElementById('video-player');
@@ -241,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Category filtering
+    // Category filtering with enhanced animations
     const categoryButtons = document.querySelectorAll('.category-filter');
     const galleryItems = document.querySelectorAll('.gallery-item');
     
@@ -253,11 +293,20 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const category = this.getAttribute('data-category');
             
+            // Apply filtering with smooth animations
             galleryItems.forEach(item => {
                 if (category === 'All' || item.getAttribute('data-category') === category) {
                     item.style.display = '';
+                    setTimeout(() => {
+                        item.style.opacity = '1';
+                        item.style.transform = '';
+                    }, 50);
                 } else {
-                    item.style.display = 'none';
+                    item.style.opacity = '0';
+                    item.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        item.style.display = 'none';
+                    }, 300);
                 }
             });
         });
