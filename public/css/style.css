@@ -397,6 +397,22 @@ p {
 }
 
 /*----------------------------------------------------------
+  BOOKING FORM
+----------------------------------------------------------*/
+.booking-form {
+  background-color: var(--color-light);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+/*----------------------------------------------------------
   RESPONSIVE
 ----------------------------------------------------------*/
 @media (max-width: 992px) {
@@ -487,6 +503,24 @@ p {
   .social {
     justify-content: center;
   }
+  
+  /* Make contact form grid stack on mobile */
+  .container .grid[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Adjust form spacing on mobile */
+  #contact-form {
+    margin-top: 30px;
+  }
+  
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .booking-form {
+    margin-top: var(--spacing-md);
+  }
 }
 
 @media (max-width: 576px) {
@@ -508,5 +542,21 @@ p {
     width: 40px;
     border-radius: 50%;
     object-fit: cover;
+  }
+  
+  /* Hide lookbook section on mobile */
+  section.section:has(.section-title:contains('Our Lookbook')) {
+    display: none;
+  }
+}
+
+/* CSS doesn't support :has with :contains, so we'll add a specific class to identify the lookbook section */
+.lookbook-home-section {
+  display: block;
+}
+
+@media (max-width: 576px) {
+  .lookbook-home-section {
+    display: none;
   }
 } 

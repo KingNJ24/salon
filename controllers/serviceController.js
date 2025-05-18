@@ -48,6 +48,19 @@ const createService = async (req, res, next) => {
       req.body.image = saveBase64Image(req.body.image) || '/images/placeholder.jpg';
     }
     
+    // Convert checkbox values to booleans
+    if (req.body.isVisible === 'on') {
+      req.body.isVisible = true;
+    } else if (req.body.isVisible === undefined || req.body.isVisible === '') {
+      req.body.isVisible = false;
+    }
+    
+    if (req.body.showOnHomepage === 'on') {
+      req.body.showOnHomepage = true;
+    } else if (req.body.showOnHomepage === undefined || req.body.showOnHomepage === '') {
+      req.body.showOnHomepage = false;
+    }
+    
     const newService = new Service(req.body);
     await newService.save();
     return res.json({ success: true, service: newService });
@@ -62,6 +75,19 @@ const updateService = async (req, res, next) => {
     // Process base64 image if present
     if (req.body.image && req.body.image.startsWith('data:image/')) {
       req.body.image = saveBase64Image(req.body.image) || req.body.image;
+    }
+    
+    // Convert checkbox values to booleans
+    if (req.body.isVisible === 'on') {
+      req.body.isVisible = true;
+    } else if (req.body.isVisible === undefined || req.body.isVisible === '') {
+      req.body.isVisible = false;
+    }
+    
+    if (req.body.showOnHomepage === 'on') {
+      req.body.showOnHomepage = true;
+    } else if (req.body.showOnHomepage === undefined || req.body.showOnHomepage === '') {
+      req.body.showOnHomepage = false;
     }
     
     const updatedService = await Service.findByIdAndUpdate(
