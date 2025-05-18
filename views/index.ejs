@@ -37,7 +37,7 @@
         <h2 class="section-title text-center">Our Services</h2>
         <p class="text-center">We offer a wide range of services to meet all your beauty needs.</p>
         
-        <div class="services-grid">
+        <div class="services-grid home-services-container">
             <% services.forEach(service => { %>
                 <div class="service-card">
                     <div class="service-image">
@@ -65,7 +65,7 @@
                     </div>
                     <div class="service-content">
                         <h3 class="service-title"><%= service.name %></h3>
-                        <p>
+                        <p class="service-description">
                             <% const maxLength = 120; %>
                             <% const desc = service.description; %>
                             <% if (desc.length > maxLength) { %>
@@ -74,11 +74,18 @@
                                 <%= desc %>
                             <% } %>
                         </p>
-                        <div style="margin-bottom: var(--spacing-sm);"><strong><%= siteInfo.currencySymbol || '₹' %><%= service.price %></strong></div>
+                        <div class="service-price"><strong><%= siteInfo.currencySymbol || '₹' %><%= service.price %></strong></div>
                         <a href="/services" class="btn">Learn More</a>
                     </div>
                 </div>
             <% }); %>
+            
+            <!-- Scroll indicator for mobile -->
+            <div class="scroll-indicator services-scroll-indicator">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </div>
         </div>
     </div>
 </section>
@@ -105,7 +112,7 @@
         <h2 class="section-title text-center">Our Lookbook</h2>
         <p class="text-center">Browse our gallery of styles created by our talented team.</p>
         
-        <div class="gallery-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="gallery-grid home-lookbook-container" style="grid-template-columns: repeat(4, 1fr);">
             <% 
             // Check if we have homepage gallery items from the server
             if (typeof homepageGallery !== 'undefined' && homepageGallery && homepageGallery.length > 0) {
@@ -144,6 +151,9 @@
                                      onerror="this.src='https://via.placeholder.com/250x250?text=<%= item.category %>'">
                             <% } %>
                         </div>
+                        <div class="gallery-title">
+                            <h3><%= item.title || 'Gallery Item' %></h3>
+                        </div>
                     </div>
                 <% });
             } else { %>
@@ -152,23 +162,42 @@
                     <div class="gallery-image">
                         <img src="/images/colors2.jpg" alt="Hair Color" onerror="this.src='https://via.placeholder.com/250x250?text=Hair+Color'">
                     </div>
+                    <div class="gallery-title">
+                        <h3>Hair Color</h3>
+                    </div>
                 </div>
                 <div class="gallery-item">
                     <div class="gallery-image">
                         <img src="/images/cuts2.jpg" alt="Hair Cut" onerror="this.src='https://via.placeholder.com/250x250?text=Hair+Cut'">
+                    </div>
+                    <div class="gallery-title">
+                        <h3>Hair Cut</h3>
                     </div>
                 </div>
                 <div class="gallery-item">
                     <div class="gallery-image">
                         <img src="/images/texture1.jpg" alt="Hair Texture" onerror="this.src='https://via.placeholder.com/250x250?text=Hair+Texture'">
                     </div>
+                    <div class="gallery-title">
+                        <h3>Hair Texture</h3>
+                    </div>
                 </div>
                 <div class="gallery-item">
                     <div class="gallery-image">
                         <img src="/images/makeup1.jpg" alt="Makeup" onerror="this.src='https://via.placeholder.com/250x250?text=Makeup'">
                     </div>
+                    <div class="gallery-title">
+                        <h3>Makeup</h3>
+                    </div>
                 </div>
             <% } %>
+            
+            <!-- Scroll indicator for mobile -->
+            <div class="scroll-indicator">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </div>
         </div>
         
         <div class="text-center" style="margin-top: var(--spacing-lg);">
@@ -338,6 +367,116 @@
                 }
             });
         }
+        
+        // Toggle between grid and horizontal scroll for lookbook based on screen width
+        function adjustHomeLookbookLayout() {
+            const lookbookContainer = document.querySelector('.home-lookbook-container');
+            const isMobile = window.innerWidth <= 768;
+            const scrollIndicator = document.querySelector('.lookbook-home-section .scroll-indicator');
+            
+            if (lookbookContainer) {
+                if (isMobile) {
+                    lookbookContainer.classList.add('lookbook-scrollable');
+                    lookbookContainer.classList.remove('gallery-grid');
+                    if (scrollIndicator) scrollIndicator.style.display = 'flex';
+                } else {
+                    lookbookContainer.classList.remove('lookbook-scrollable');
+                    lookbookContainer.classList.add('gallery-grid');
+                    if (scrollIndicator) scrollIndicator.style.display = 'none';
+                }
+            }
+        }
+        
+        // Toggle between grid and horizontal scroll for services based on screen width
+        function adjustHomeServicesLayout() {
+            const servicesContainer = document.querySelector('.home-services-container');
+            const isMobile = window.innerWidth <= 768;
+            const scrollIndicator = document.querySelector('.services-scroll-indicator');
+            
+            if (servicesContainer) {
+                if (isMobile) {
+                    servicesContainer.classList.add('services-scrollable');
+                    servicesContainer.classList.remove('services-grid');
+                    if (scrollIndicator) scrollIndicator.style.display = 'flex';
+                } else {
+                    servicesContainer.classList.remove('services-scrollable');
+                    servicesContainer.classList.add('services-grid');
+                    if (scrollIndicator) scrollIndicator.style.display = 'none';
+                }
+            }
+        }
+        
+        // Run layout adjustment on page load
+        adjustHomeLookbookLayout();
+        adjustHomeServicesLayout();
+        
+        // Run layout adjustment when window is resized
+        window.addEventListener('resize', function() {
+            adjustHomeLookbookLayout();
+            adjustHomeServicesLayout();
+        });
+        
+        // Hide scroll indicator after user has scrolled
+        const homeLookbookContainer = document.querySelector('.home-lookbook-container');
+        if (homeLookbookContainer) {
+            homeLookbookContainer.addEventListener('scroll', function() {
+                const scrollIndicator = document.querySelector('.lookbook-home-section .scroll-indicator');
+                if (this.scrollLeft > 50 && scrollIndicator) {
+                    scrollIndicator.style.opacity = '0';
+                    setTimeout(() => {
+                        scrollIndicator.style.display = 'none';
+                    }, 500);
+                }
+            });
+        }
+        
+        // Hide services scroll indicator after user has scrolled
+        const homeServicesContainer = document.querySelector('.home-services-container');
+        if (homeServicesContainer) {
+            homeServicesContainer.addEventListener('scroll', function() {
+                const scrollIndicator = document.querySelector('.services-scroll-indicator');
+                if (this.scrollLeft > 50 && scrollIndicator) {
+                    scrollIndicator.style.opacity = '0';
+                    setTimeout(() => {
+                        scrollIndicator.style.display = 'none';
+                    }, 500);
+                }
+            });
+        }
+        
+        // Fix video playback issues
+        document.querySelectorAll('.video-thumbnail').forEach(thumbnail => {
+            const previewVideo = thumbnail.querySelector('.preview-video');
+            const videoSrc = thumbnail.getAttribute('data-video-src');
+            
+            // Make sure video has proper source
+            if (previewVideo && videoSrc && !previewVideo.querySelector('source[src="' + videoSrc + '"]')) {
+                previewVideo.innerHTML = `<source src="${videoSrc}" type="video/mp4">`;
+            }
+            
+            // Enhanced hover behavior with more reliable playback
+            thumbnail.addEventListener('mouseenter', function() {
+                if (previewVideo && previewVideo.readyState >= 2) {
+                    previewVideo.style.opacity = '1';
+                    previewVideo.play().catch(err => console.error('Preview play error:', err));
+                } else if (previewVideo) {
+                    // If video is not ready, load it first
+                    previewVideo.addEventListener('loadeddata', function loadHandler() {
+                        previewVideo.style.opacity = '1';
+                        previewVideo.play().catch(err => console.error('Preview play error after load:', err));
+                        previewVideo.removeEventListener('loadeddata', loadHandler);
+                    });
+                    previewVideo.load();
+                }
+            });
+            
+            thumbnail.addEventListener('mouseleave', function() {
+                if (previewVideo) {
+                    previewVideo.style.opacity = '0';
+                    previewVideo.pause();
+                }
+            });
+        });
     });
 </script>
 
@@ -497,16 +636,180 @@
     
     .fallback-message {
         position: absolute;
-        top: 0;
+        bottom: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: rgba(0,0,0,0.5);
+        right: 0;
+        background: rgba(0,0,0,0.7);
         color: white;
         text-align: center;
-        padding: 20px;
+        padding: 15px;
+    }
+    
+    /* Mobile horizontal scrolling for lookbook */
+    @media (max-width: 768px) {
+        .lookbook-scrollable {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            gap: var(--spacing-md);
+            padding-bottom: var(--spacing-md);
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+        }
+        
+        .lookbook-scrollable .gallery-item {
+            flex: 0 0 280px;
+            scroll-snap-align: start;
+            margin-right: var(--spacing-sm);
+        }
+        
+        .lookbook-scrollable::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .lookbook-scrollable::-webkit-scrollbar-track {
+            background: var(--color-light-gray);
+            border-radius: 10px;
+        }
+        
+        .lookbook-scrollable::-webkit-scrollbar-thumb {
+            background: var(--color-primary);
+            border-radius: 10px;
+        }
+        
+        .lookbook-scrollable .gallery-item {
+            transform: scale(0.95);
+            transition: transform var(--transition-normal) ease, box-shadow var(--transition-normal) ease;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .lookbook-scrollable .gallery-item:hover {
+            transform: scale(1);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .lookbook-home-section .scroll-indicator {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+            box-shadow: var(--shadow-md);
+            z-index: 5;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        
+        .lookbook-home-section .scroll-indicator svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: var(--color-primary);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            animation: slideRight 1.5s infinite;
+        }
+        
+        /* Services horizontal scroll styles */
+        .services-scrollable {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: var(--spacing-md);
+            scroll-snap-type: x mandatory;
+            gap: var(--spacing-md);
+            scroll-behavior: smooth;
+        }
+        
+        .services-scrollable .service-card {
+            flex: 0 0 300px;
+            scroll-snap-align: start;
+            margin-right: var(--spacing-sm);
+            display: flex;
+            flex-direction: column;
+            height: auto;
+        }
+        
+        .services-scrollable::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .services-scrollable::-webkit-scrollbar-track {
+            background: var(--color-light-gray);
+            border-radius: 10px;
+        }
+        
+        .services-scrollable::-webkit-scrollbar-thumb {
+            background: var(--color-primary);
+            border-radius: 10px;
+        }
+        
+        .services-scrollable .service-card {
+            transform: scale(0.95);
+            transition: transform var(--transition-normal) ease, box-shadow var(--transition-normal) ease;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .services-scrollable .service-card:hover {
+            transform: scale(1);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .services-scroll-indicator {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+            box-shadow: var(--shadow-md);
+            z-index: 5;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        
+        .services-scroll-indicator svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: var(--color-primary);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            animation: slideRight 1.5s infinite;
+        }
+        
+        @keyframes slideRight {
+            0%, 100% {
+                transform: translateX(-5px);
+            }
+            50% {
+                transform: translateX(5px);
+            }
+        }
+    }
+    
+    /* Service price styling */
+    .service-price {
+        margin-bottom: var(--spacing-sm);
+        font-weight: bold;
+    }
+    
+    .service-description {
+        flex-grow: 1;
     }
 </style> 
