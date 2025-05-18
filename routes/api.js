@@ -518,6 +518,17 @@ router.post('/settings/update', adminAuth, async (req, res) => {
   try {
     let siteInfo = await SiteInfo.findOne();
     
+    // Validate map embed URL if provided
+    if (req.body.mapEmbedUrl) {
+      // Ensure it's a valid Google Maps embed URL
+      if (!req.body.mapEmbedUrl.includes('google.com/maps/embed')) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Invalid Google Maps embed URL format' 
+        });
+      }
+    }
+    
     if (siteInfo) {
       // Update existing settings
       Object.keys(req.body).forEach(key => {
