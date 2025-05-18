@@ -331,12 +331,13 @@ router.post('/express-upload-video', adminAuth, async (req, res) => {
 });
 
 // SERVICE ROUTES
-router.get('/services', serviceController.getAllServices);
+router.get('/services/list', serviceController.getAllServices);
 router.get('/services/visible', serviceController.getVisibleServices);
 router.get('/services/:id', serviceController.getServiceById);
 router.post('/service/create', adminAuth, serviceController.createService);
 router.post('/service/update/:id', adminAuth, serviceController.updateService);
 router.post('/service/delete/:id', adminAuth, serviceController.deleteService);
+router.get('/services', serviceController.getAllServices);
 
 // SERVICE CATEGORY ROUTES
 router.get('/service-categories', async (req, res) => {
