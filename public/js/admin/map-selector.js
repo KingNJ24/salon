@@ -137,10 +137,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // Update location information and embed URL
+    // Update location information and embed URL    
     function updateLocationInfo(lat, lng, address) {
         // Store selected place
         selectedPlace = { lat, lng, address };
+        
+        // Update lat/lng hidden inputs if they exist
+        const latInput = document.getElementById('map-lat');
+        const lngInput = document.getElementById('map-lng');
+        
+        if (latInput) latInput.value = lat;
+        if (lngInput) lngInput.value = lng;
         
         // Update address field if available
         if (address && addressInput) {

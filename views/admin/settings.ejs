@@ -71,9 +71,13 @@
                     
                     <label for="map-embed-url">Embed URL</label>
                     <input type="text" id="map-embed-url" name="mapEmbedUrl" value="<%= siteInfo.mapEmbedUrl %>" style="width: 100%;" class="form-control">
+                    
+                    <!-- Hidden inputs for storing map coordinates -->
+                    <input type="hidden" id="map-lat" name="mapLat" value="<%= siteInfo.mapLat || '' %>">
+                    <input type="hidden" id="map-lng" name="mapLng" value="<%= siteInfo.mapLng || '' %>">
+                    
                     <p class="help-text">
-                        The map URL is automatically generated when selecting a location, 
-                        but you can also manually enter a Google Maps embed URL.
+                        The map URL and coordinates are automatically generated when selecting a location.
                     </p>
                     <button type="button" id="preview-map-btn" class="btn" style="margin-top: 10px;">Preview Embed</button>
                 </div>
