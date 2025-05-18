@@ -44,6 +44,23 @@
                 <input type="email" id="salon-email" name="email" value="<%= siteInfo.email %>" required>
             </div>
             
+            <div class="form-group">
+                <label for="currency-symbol">Currency Symbol</label>
+                <select id="currency-symbol" name="currencySymbol">
+                    <option value="₹" <%= siteInfo.currencySymbol === '₹' ? 'selected' : '' %>>₹ (Rupee)</option>
+                    <option value="$" <%= siteInfo.currencySymbol === '$' ? 'selected' : '' %>>$ (Dollar)</option>
+                    <option value="€" <%= siteInfo.currencySymbol === '€' ? 'selected' : '' %>>€ (Euro)</option>
+                    <option value="£" <%= siteInfo.currencySymbol === '£' ? 'selected' : '' %>>£ (Pound)</option>
+                    <option value="¥" <%= siteInfo.currencySymbol === '¥' ? 'selected' : '' %>>¥ (Yen)</option>
+                    <option value="₽" <%= siteInfo.currencySymbol === '₽' ? 'selected' : '' %>>₽ (Ruble)</option>
+                    <option value="₩" <%= siteInfo.currencySymbol === '₩' ? 'selected' : '' %>>₩ (Won)</option>
+                    <option value="₪" <%= siteInfo.currencySymbol === '₪' ? 'selected' : '' %>>₪ (Shekel)</option>
+                    <option value="د.إ" <%= siteInfo.currencySymbol === 'د.إ' ? 'selected' : '' %>>د.إ (Dirham)</option>
+                    <option value="R" <%= siteInfo.currencySymbol === 'R' ? 'selected' : '' %>>R (Rand)</option>
+                </select>
+                <p class="help-text">This symbol will be displayed next to prices across the website.</p>
+            </div>
+            
             <!-- Social Media Links -->
             <h3>Social Media</h3>
             

@@ -27,6 +27,11 @@ const siteInfoSchema = new mongoose.Schema({
     default: '/images/logo.png',
     trim: true
   },
+  currencySymbol: {
+    type: String,
+    default: '₹',
+    trim: true
+  },
   // Social media links
   socialMedia: {
     facebook: {

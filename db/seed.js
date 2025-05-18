@@ -1,6 +1,6 @@
 require('dotenv').config();
 const connectDB = require('./connect');
-const { Service, Gallery, Team, SiteInfo } = require('../models');
+const { Service, Gallery, Team, SiteInfo, ServiceCategory } = require('../models');
 
 // Initial services data
 const services = [
@@ -10,6 +10,15 @@ const services = [
   { name: 'Balayage', price: '150+', description: 'Beautiful, natural-looking highlights and color gradients', image: '/images/colors2.jpg', category: 'Coloring' },
   { name: 'Bridal Styling', price: '120+', description: 'Make your special day even more memorable with our bridal services', image: '/images/bridal1.jpg', category: 'Styling' },
   { name: 'Hair Treatments', price: '45+', description: 'Revitalize your hair with our professional treatments', image: '/images/texture1.jpg', category: 'Treatment' }
+];
+
+// Default service categories
+const serviceCategories = [
+  { name: 'Haircut', displayOrder: 0 },
+  { name: 'Coloring', displayOrder: 1 },
+  { name: 'Treatment', displayOrder: 2 },
+  { name: 'Styling', displayOrder: 3 },
+  { name: 'Other', displayOrder: 4 }
 ];
 
 // Initial gallery data
@@ -48,23 +57,44 @@ const siteInfo = {
   }
 };
 
-// Seed the database
-const seedDatabase = async () => {
+// Function to seed the database
+const seedData = async () => {
   try {
-    // Connect to database
+    // Connect to MongoDB
     await connectDB();
+    console.log('Connected to MongoDB');
     
-    // Clear existing data
-    await Service.deleteMany({});
-    await Gallery.deleteMany({});
-    await Team.deleteMany({});
-    await SiteInfo.deleteMany({});
+    // Check if service categories already exist
+    const serviceCategoryCount = await ServiceCategory.countDocuments();
+    if (serviceCategoryCount === 0) {
+      // Seed service categories
+      await ServiceCategory.insertMany(serviceCategories);
+      console.log('Service categories seeded successfully');
+    } else {
+      console.log(`Service categories already exist: ${serviceCategoryCount} found`);
+    }
     
-    console.log('Cleared existing data');
+    // Check if services already exist
+    const serviceCount = await Service.countDocuments();
+    if (serviceCount === 0) {
+      // Seed services
+      await Service.insertMany(services);
+      console.log('Services seeded successfully');
+    } else {
+      console.log(`Services already exist: ${serviceCount} found`);
+    }
+    
+    // Check if gallery items already exist
+    const galleryCount = await Gallery.countDocuments();
+    if (galleryCount === 0) {
+      // Seed gallery
+      await Gallery.insertMany(galleryImages);
+      console.log('Gallery seeded successfully');
+    } else {
+      console.log(`Gallery items already exist: ${galleryCount} found`);
+    }
     
     // Insert new data
-    await Service.insertMany(services);
-    await Gallery.insertMany(galleryImages);
     await Team.insertMany(team);
     await SiteInfo.create(siteInfo);
     
@@ -77,4 +107,4 @@ const seedDatabase = async () => {
 };
 
 // Run the seed function
-seedDatabase(); 
+seedData(); 

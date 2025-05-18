@@ -4,7 +4,7 @@ const { adminAuth } = require('../middlewares/auth');
 const { upload, saveBase64Image } = require('../utils/upload');
 const serviceController = require('../controllers/serviceController');
 const galleryController = require('../controllers/galleryController');
-const { Team, SiteInfo, Booking } = require('../models');
+const { Team, SiteInfo, Booking, ServiceCategory } = require('../models');
 
 // File upload endpoint
 router.post('/upload', adminAuth, (req, res) => {
@@ -337,6 +337,62 @@ router.get('/services/:id', serviceController.getServiceById);
 router.post('/service/create', adminAuth, serviceController.createService);
 router.post('/service/update/:id', adminAuth, serviceController.updateService);
 router.post('/service/delete/:id', adminAuth, serviceController.deleteService);
+
+// SERVICE CATEGORY ROUTES
+router.get('/service-categories', async (req, res) => {
+  try {
+    const categories = await ServiceCategory.find().sort({ displayOrder: 1 });
+    return res.json({ success: true, categories });
+  } catch (error) {
+    console.error('Error fetching service categories:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/service-category/create', adminAuth, async (req, res) => {
+  try {
+    const newCategory = new ServiceCategory(req.body);
+    await newCategory.save();
+    return res.json({ success: true, category: newCategory });
+  } catch (error) {
+    console.error('Error creating service category:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/service-category/update/:id', adminAuth, async (req, res) => {
+  try {
+    const updatedCategory = await ServiceCategory.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+    
+    if (!updatedCategory) {
+      return res.status(404).json({ success: false, message: 'Category not found' });
+    }
+    
+    return res.json({ success: true, category: updatedCategory });
+  } catch (error) {
+    console.error('Error updating service category:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/service-category/delete/:id', adminAuth, async (req, res) => {
+  try {
+    const result = await ServiceCategory.findByIdAndDelete(req.params.id);
+    
+    if (!result) {
+      return res.status(404).json({ success: false, message: 'Category not found' });
+    }
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting service category:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 // GALLERY ROUTES
 router.get('/gallery', galleryController.getAllItems);

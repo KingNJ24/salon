@@ -65,7 +65,16 @@
                     </div>
                     <div class="service-content">
                         <h3 class="service-title"><%= service.name %></h3>
-                        <p><%= service.description %></p>
+                        <p>
+                            <% const maxLength = 120; %>
+                            <% const desc = service.description; %>
+                            <% if (desc.length > maxLength) { %>
+                                <%= desc.substring(0, maxLength) %>... 
+                            <% } else { %>
+                                <%= desc %>
+                            <% } %>
+                        </p>
+                        <div style="margin-bottom: var(--spacing-sm);"><strong><%= siteInfo.currencySymbol || '₹' %><%= service.price %></strong></div>
                         <a href="/services" class="btn">Learn More</a>
                     </div>
                 </div>

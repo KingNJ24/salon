@@ -81,11 +81,14 @@ router.get('/dashboard', adminAuth, async (req, res, next) => {
 // Services admin page
 router.get('/services', adminAuth, async (req, res, next) => {
   try {
-    const services = await Service.find();
+    const services = await Service.find().sort({ displayOrder: 1 });
+    const siteInfo = await SiteInfo.findOne();
+    
     res.render('admin/services', { 
-      title: 'Manage Services', 
-      layout: 'layouts/admin', 
-      services 
+      title: 'Services Admin', 
+      layout: 'layouts/admin',
+      services,
+      siteInfo
     });
   } catch (error) {
     next(error);

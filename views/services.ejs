@@ -39,8 +39,20 @@
                         </div>
                         <div class="service-content">
                             <h3 class="service-title"><%= service.name %></h3>
-                            <p><%= service.description %></p>
-                            <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> <%= service.price %></p>
+                            <p>
+                                <% 
+                                const maxLength = 150;
+                                const desc = service.description;
+                                if (desc.length > maxLength) { 
+                                %>
+                                    <%= desc.substring(0, maxLength) %>... 
+                                    <span class="view-more" style="color: var(--color-primary); cursor: pointer; text-decoration: underline;" 
+                                          data-desc="<%= desc %>">View more</span>
+                                <% } else { %>
+                                    <%= desc %>
+                                <% } %>
+                            </p>
+                            <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> <%= siteInfo.currencySymbol || '₹' %><%= service.price %></p>
                             <a href="/contact" class="btn">Book Now</a>
                         </div>
                     </div>
@@ -283,5 +295,62 @@
                 }
             });
         }
+
+        // View more functionality for description
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('view-more')) {
+                const fullDesc = e.target.getAttribute('data-desc');
+                
+                // Create modal for displaying full description
+                const modal = document.createElement('div');
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                modal.style.display = 'flex';
+                modal.style.alignItems = 'center';
+                modal.style.justifyContent = 'center';
+                modal.style.zIndex = '1000';
+                
+                const content = document.createElement('div');
+                content.style.maxWidth = '600px';
+                content.style.width = '90%';
+                content.style.backgroundColor = 'white';
+                content.style.padding = '20px';
+                content.style.borderRadius = '4px';
+                content.style.maxHeight = '80vh';
+                content.style.overflow = 'auto';
+                
+                // Add close button
+                const closeButton = document.createElement('button');
+                closeButton.textContent = 'Close';
+                closeButton.style.marginTop = '15px';
+                closeButton.style.padding = '8px 16px';
+                closeButton.style.backgroundColor = 'var(--color-primary)';
+                closeButton.style.color = 'white';
+                closeButton.style.border = 'none';
+                closeButton.style.borderRadius = '4px';
+                closeButton.style.cursor = 'pointer';
+                
+                content.innerHTML = `<h3>Full Description</h3><p>${fullDesc}</p>`;
+                content.appendChild(closeButton);
+                modal.appendChild(content);
+                document.body.appendChild(modal);
+                
+                // Close modal on button click
+                closeButton.addEventListener('click', function() {
+                    document.body.removeChild(modal);
+                });
+                
+                // Close modal when clicking outside
+                modal.addEventListener('click', function(event) {
+                    if (event.target === modal) {
+                        document.body.removeChild(modal);
+                    }
+                });
+            }
+        });
     });
 </script> 
