@@ -1,4 +1,4 @@
-// Google Maps Location Selector for Salon Website
+// OpenStreetMap Location Selector for Salon Website
 document.addEventListener('DOMContentLoaded', function() {
     // Elements
     const mapContainer = document.getElementById('map-selector-container');
@@ -10,98 +10,81 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let map;
     let marker;
-    let geocoder;
     let selectedPlace = null;
     
-    // Initialize Google Maps
+    // Initialize map
     function initMap() {
         if (!mapContainer) return;
         
+        // Add Leaflet CSS if not already added
+        if (!document.querySelector('link[href*="leaflet.css"]')) {
+            const leafletCSS = document.createElement('link');
+            leafletCSS.rel = 'stylesheet';
+            leafletCSS.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            leafletCSS.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+            leafletCSS.crossOrigin = '';
+            document.head.appendChild(leafletCSS);
+        }
+        
+        // Add Leaflet JS if not already added
+        if (typeof L === 'undefined') {
+            const leafletScript = document.createElement('script');
+            leafletScript.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            leafletScript.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+            leafletScript.crossOrigin = '';
+            document.head.appendChild(leafletScript);
+            
+            leafletScript.onload = initLeafletMap;
+        } else {
+            initLeafletMap();
+        }
+    }
+    
+    function initLeafletMap() {
         // Default location (New Delhi, India)
-        const defaultLocation = { lat: 28.6139, lng: 77.2090 };
+        const defaultLocation = [28.6139, 77.2090];
         
-        // Initialize map
-        map = new google.maps.Map(mapContainer, {
-            center: defaultLocation,
-            zoom: 13,
-            mapTypeControl: true,
-            fullscreenControl: true,
-            streetViewControl: true,
-            mapTypeId: google.maps.MapTypeId.ROADMAP
-        });
+        // Initialize the map
+        map = L.map(mapContainer).setView(defaultLocation, 13);
         
-        // Initialize geocoder
-        geocoder = new google.maps.Geocoder();
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
         
-        // Create a marker that can be moved
-        marker = new google.maps.Marker({
-            position: defaultLocation,
-            map: map,
-            draggable: true,
-            animation: google.maps.Animation.DROP
-        });
-        
-        // Create search box
-        const searchBox = new google.maps.places.SearchBox(mapSearchInput);
-        
-        // Bias search results to current map view
-        map.addListener('bounds_changed', function() {
-            searchBox.setBounds(map.getBounds());
-        });
-        
-        // Listen for search results
-        searchBox.addListener('places_changed', function() {
-            const places = searchBox.getPlaces();
-            
-            if (places.length === 0) return;
-            
-            // Get first place
-            const place = places[0];
-            selectedPlace = place;
-            
-            if (!place.geometry || !place.geometry.location) return;
-            
-            // If the place has a geometry, center the map
-            map.setCenter(place.geometry.location);
-            map.setZoom(17);
-            
-            // Update marker position
-            marker.setPosition(place.geometry.location);
-            
-            // Update address field if available
-            if (place.formatted_address && addressInput) {
-                addressInput.value = place.formatted_address;
-            }
-            
-            // Create embed URL from selected place
-            updateEmbedUrl(place.geometry.location.lat(), place.geometry.location.lng(), place.place_id);
-        });
+        // Add a marker that can be moved
+        marker = L.marker(defaultLocation, {
+            draggable: true
+        }).addTo(map);
         
         // Handle marker drag events
-        marker.addListener('dragend', function() {
-            const position = marker.getPosition();
-            
-            // Update address via geocoding
-            geocoder.geocode({ location: position }, function(results, status) {
-                if (status === 'OK' && results[0]) {
-                    selectedPlace = results[0];
-                    
-                    // Update address field
-                    if (addressInput) {
-                        addressInput.value = results[0].formatted_address;
-                    }
-                    
-                    // Create embed URL from marker position
-                    updateEmbedUrl(position.lat(), position.lng(), results[0].place_id);
+        marker.on('dragend', function() {
+            const position = marker.getLatLng();
+            updateLocationInfo(position.lat, position.lng);
+        });
+        
+        // Handle clicks on the map
+        map.on('click', function(e) {
+            marker.setLatLng(e.latlng);
+            updateLocationInfo(e.latlng.lat, e.latlng.lng);
+        });
+        
+        // Add search functionality using OpenStreetMap Nominatim
+        if (mapSearchInput) {
+            mapSearchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchLocation(mapSearchInput.value);
                 }
             });
-        });
+        }
         
         // Select location button
         if (selectLocationBtn) {
             selectLocationBtn.addEventListener('click', function() {
                 if (!selectedPlace) {
-                    alert('Please search for a location or drag the marker to select a place.');
+                    alert('Please search for a location or click on the map to select a place.');
                     return;
                 }
                 
@@ -116,39 +99,81 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Create Google Maps embed URL from coordinates and place ID
-    function updateEmbedUrl(lat, lng, placeId) {
+    // Search for a location using OpenStreetMap Nominatim
+    function searchLocation(query) {
+        if (!query) return;
+        
+        // Show loading state
+        mapSearchInput.setAttribute('disabled', true);
+        mapSearchInput.value = 'Searching...';
+        
+        // Use Nominatim API to search for the location
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const result = data[0];
+                    const lat = parseFloat(result.lat);
+                    const lng = parseFloat(result.lon);
+                    
+                    // Update the map
+                    map.setView([lat, lng], 16);
+                    marker.setLatLng([lat, lng]);
+                    
+                    // Update location info
+                    updateLocationInfo(lat, lng, result.display_name);
+                } else {
+                    alert('Location not found. Please try a different search term.');
+                }
+            })
+            .catch(error => {
+                console.error('Error searching location:', error);
+                alert('Error searching for location. Please try again.');
+            })
+            .finally(() => {
+                // Restore search input
+                mapSearchInput.removeAttribute('disabled');
+                mapSearchInput.value = query;
+            });
+    }
+    
+    // Update location information and embed URL
+    function updateLocationInfo(lat, lng, address) {
+        // Store selected place
+        selectedPlace = { lat, lng, address };
+        
+        // Update address field if available
+        if (address && addressInput) {
+            addressInput.value = address;
+        } else if (addressInput) {
+            // Reverse geocode to get address
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.display_name) {
+                        addressInput.value = data.display_name;
+                        selectedPlace.address = data.display_name;
+                    }
+                })
+                .catch(error => console.error('Error in reverse geocoding:', error));
+        }
+        
+        // Create embed URL
+        updateEmbedUrl(lat, lng);
+    }
+    
+    // Create OpenStreetMap embed URL
+    function updateEmbedUrl(lat, lng) {
         if (!mapEmbedUrlInput) return;
         
-        let embedUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3000!2d${lng}!3d${lat}`;
-        
-        if (placeId) {
-            // Add place ID if available for better accuracy
-            embedUrl += `!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s${placeId}!2s!5e0!3m2!1sen!2sin!4v${Date.now()}!5m2!1sen!2sin`;
-        } else {
-            // Generic embed without place ID
-            embedUrl += `!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s!5e0!3m2!1sen!2sin!4v${Date.now()}!5m2!1sen!2sin`;
-        }
+        // Create OpenStreetMap embed URL
+        const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01}%2C${lat-0.01}%2C${lng+0.01}%2C${lat+0.01}&layer=mapnik&marker=${lat}%2C${lng}`;
         
         mapEmbedUrlInput.value = embedUrl;
     }
     
-    // Load Google Maps API when needed
+    // Initialize the map if container exists
     if (mapContainer) {
-        // Check if Google Maps API is already loaded
-        if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
-            // Load Google Maps API
-            const script = document.createElement('script');
-            script.src = 'https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initMapSelector';
-            script.async = true;
-            script.defer = true;
-            document.head.appendChild(script);
-            
-            // Define callback function in global scope
-            window.initMapSelector = initMap;
-        } else {
-            // API already loaded, initialize map directly
-            initMap();
-        }
+        initMap();
     }
 }); 
