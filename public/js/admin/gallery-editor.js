@@ -193,11 +193,34 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success && data.thumbnailUrl) {
+                console.log('Received thumbnail URL:', data.thumbnailUrl);
+                
+                // Validate that the URL is an image and not a video
+                if (data.thumbnailUrl.endsWith('.mp4') || data.thumbnailUrl.endsWith('.webm') || data.thumbnailUrl.endsWith('.mov')) {
+                    console.warn('Received video URL instead of image, applying transformation');
+                    // Convert video URL to image URL using Cloudinary transformation
+                    if (data.thumbnailUrl.includes('cloudinary')) {
+                        data.thumbnailUrl = data.thumbnailUrl.replace('/upload/', '/upload/w_300,h_300,c_fill,f_jpg,so_0/');
+                    } else {
+                        // If not a Cloudinary URL, use fallback
+                        data.thumbnailUrl = '/images/video-placeholder.jpg';
+                    }
+                }
+                
                 // Update the image preview
                 if (previewImage) {
                     previewImage.src = data.thumbnailUrl;
                     previewImage.style.display = 'block';
                     console.log('Preview image updated from server proxy');
+                    
+                    // Add error handler in case the image fails to load
+                    previewImage.onerror = function() {
+                        console.error('Failed to load thumbnail image');
+                        previewImage.src = '/images/video-placeholder.jpg';
+                        if (imageInput) {
+                            imageInput.value = '/images/video-placeholder.jpg';
+                        }
+                    };
                 }
                 
                 // Update the hidden image input with the data URL or URL

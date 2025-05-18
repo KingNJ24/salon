@@ -336,6 +336,19 @@
             .then(data => {
                 if (data.success && data.thumbnailUrl) {
                     console.log('Server proxy thumbnail generated successfully:', data.thumbnailUrl);
+                    
+                    // Check if the URL is a video rather than an image
+                    if (data.thumbnailUrl.endsWith('.mp4') || data.thumbnailUrl.endsWith('.webm') || data.thumbnailUrl.endsWith('.mov')) {
+                        console.warn('Received video URL instead of image, applying transformation');
+                        // Convert video URL to image URL using Cloudinary transformation
+                        if (data.thumbnailUrl.includes('cloudinary')) {
+                            data.thumbnailUrl = data.thumbnailUrl.replace('/upload/', '/upload/w_300,h_300,c_fill,f_jpg,so_0/');
+                        } else {
+                            // If not a Cloudinary URL, use fallback
+                            data.thumbnailUrl = '/images/video-placeholder.jpg';
+                        }
+                    }
+                    
                     // Call back with the thumbnail URL
                     callback(data.thumbnailUrl);
                 } else {
