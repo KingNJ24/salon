@@ -79,7 +79,7 @@
     <div class="container">
         <div class="grid" style="grid-template-columns: 1fr 1fr; gap: var(--spacing-lg); align-items: center;">
             <div>
-                <img src="/images/about.jpg" alt="About <%= siteInfo.salonName %>" onerror="this.src='https://via.placeholder.com/500x300?text=About+Our+Salon'">
+                <img src="<%= siteInfo.aboutImage || '/images/about.jpg' %>" alt="About <%= siteInfo.salonName %>" onerror="this.src='https://via.placeholder.com/500x300?text=About+Our+Salon'">
             </div>
             <div>
                 <h2>About <%= siteInfo.salonName %></h2>
@@ -108,15 +108,14 @@
                             <% if (item.type === 'video') { %>
                                 <!-- Video thumbnail with play button -->
                                 <div class="video-thumbnail" data-video-src="<%= item.videoUrl %>">
-                                    <% if (item.image === item.videoUrl) { %>
-                                        <!-- Use video element as poster -->
-                                        <video muted loop preload="metadata" poster="/images/video-placeholder.jpg">
-                                            <source src="<%= item.videoUrl %>" type="video/mp4">
-                                        </video>
+                                    <% if (!item.image || item.image === item.videoUrl) { %>
+                                        <!-- Use video element as poster or fallback to placeholder -->
+                                        <img src="/images/video-placeholder.jpg" alt="<%= item.title %>" 
+                                             onerror="this.src='/images/video-placeholder.jpg'">
                                     <% } else { %>
                                         <!-- Use provided image as thumbnail -->
                                         <img src="<%= item.image %>" alt="<%= item.title %>" 
-                                             onerror="this.src='https://via.placeholder.com/250x250?text=Video'">
+                                             onerror="this.src='/images/video-placeholder.jpg'">
                                     <% } %>
                                     
                                     <!-- Preview video that plays on hover -->

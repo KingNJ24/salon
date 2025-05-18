@@ -32,15 +32,14 @@
                             <% if (item.type === 'video') { %>
                                 <!-- Video items with hover-to-play -->
                                 <div class="video-thumbnail" data-video-src="<%= item.videoUrl %>">
-                                    <% if (item.image === item.videoUrl) { %>
+                                    <% if (!item.image || item.image === item.videoUrl) { %>
                                         <!-- Use video element as poster -->
-                                        <video muted loop preload="metadata" poster="/images/video-placeholder.jpg">
-                                            <source src="<%= item.videoUrl %>" type="video/mp4">
-                                        </video>
+                                        <img src="/images/video-placeholder.jpg" alt="<%= item.title %>" 
+                                             onerror="this.src='/images/video-placeholder.jpg'">
                                     <% } else { %>
                                         <!-- Use provided image as thumbnail -->
                                         <img src="<%= item.image %>" alt="<%= item.title %>" 
-                                             onerror="this.src='https://via.placeholder.com/300x300?text=Video+Thumbnail'">
+                                             onerror="this.src='/images/video-placeholder.jpg'">
                                     <% } %>
                                     
                                     <!-- Preview video that plays on hover -->

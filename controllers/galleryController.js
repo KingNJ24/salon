@@ -3,6 +3,7 @@
  */
 const { Gallery } = require('../models');
 const { saveBase64Image } = require('../utils/upload');
+const mongoose = require('mongoose');
 
 // Get all gallery items
 const getAllItems = async (req, res, next) => {
@@ -59,10 +60,13 @@ const createItem = async (req, res, next) => {
       }
       req.body.image = savedImagePath;
     }
-    // For video items, use a placeholder if no image is provided
-    else if (req.body.type === 'video' && (!req.body.image || req.body.image === '')) {
-      console.log('Using placeholder for video item with no thumbnail');
-      req.body.image = '/images/video-placeholder.jpg';
+    // For video items, ensure thumbnail exists
+    else if (req.body.type === 'video') {
+      // If no image provided or it's the same as videoUrl, use placeholder
+      if (!req.body.image || req.body.image === '' || req.body.image === req.body.videoUrl) {
+        console.log('Using placeholder for video item with no thumbnail');
+        req.body.image = '/images/video-placeholder.jpg';
+      }
     }
     // For regular items, check if image is provided
     else if (!req.body.image || req.body.image === '') {
@@ -90,32 +94,13 @@ const createItem = async (req, res, next) => {
   }
 };
 
-// Update gallery item by ID
+// Update gallery item
 const updateItem = async (req, res, next) => {
   try {
-    console.log('Updating gallery item with data:', req.body);
+    const { id } = req.params;
     
-    // Fix boolean conversions
-    if ('isVisible' in req.body) {
-      // Convert string 'true'/'false' to boolean if needed
-      if (typeof req.body.isVisible === 'string') {
-        req.body.isVisible = req.body.isVisible === 'true';
-      }
-      console.log(`Setting isVisible to ${req.body.isVisible} (${typeof req.body.isVisible}) for item ${req.params.id}`);
-    }
-    
-    if ('showOnHomepage' in req.body) {
-      // Convert string 'true'/'false' to boolean if needed
-      if (typeof req.body.showOnHomepage === 'string') {
-        req.body.showOnHomepage = req.body.showOnHomepage === 'true';
-      }
-      console.log(`Setting showOnHomepage to ${req.body.showOnHomepage} (${typeof req.body.showOnHomepage}) for item ${req.params.id}`);
-    }
-    
-    // If making invisible, ensure it's not on homepage
-    if (req.body.isVisible === false && !('showOnHomepage' in req.body)) {
-      req.body.showOnHomepage = false;
-      console.log('Item being made invisible, setting showOnHomepage to false');
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
     }
     
     // Fix videoUrl path if needed (remove leading slashes)
@@ -132,25 +117,31 @@ const updateItem = async (req, res, next) => {
       }
       req.body.image = savedImagePath;
     }
-    // For video items, use a placeholder if no image is provided
-    else if (req.body.type === 'video' && (!req.body.image || req.body.image === '')) {
-      console.log('Using placeholder for video item with no thumbnail');
-      req.body.image = '/images/video-placeholder.jpg';
+    // For video items, ensure thumbnail exists
+    else if (req.body.type === 'video') {
+      // If no image provided or it's the same as videoUrl, use placeholder
+      if (!req.body.image || req.body.image === '' || req.body.image === req.body.videoUrl) {
+        console.log('Using placeholder for video item with no thumbnail');
+        req.body.image = '/images/video-placeholder.jpg';
+      }
     }
     
-    console.log('Final update data:', req.body);
+    // Handle removing image
+    if (req.body.removeImage) {
+      req.body.image = '';
+      delete req.body.removeImage;
+    }
     
     const updatedItem = await Gallery.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
-      { new: true, runValidators: false }
+      id,
+      req.body,
+      { new: true, runValidators: true }
     );
     
     if (!updatedItem) {
       return res.status(404).json({ success: false, message: 'Gallery item not found' });
     }
     
-    console.log('Gallery item updated successfully:', updatedItem);
     return res.json({ success: true, item: updatedItem });
   } catch (error) {
     console.error('Error updating gallery item:', error);

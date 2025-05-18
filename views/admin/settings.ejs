@@ -144,6 +144,22 @@
                 <textarea id="about-text" name="aboutText" rows="4"><%= siteInfo.aboutText || 'We are a team of passionate stylists dedicated to helping you look and feel your best. With years of experience and a commitment to excellence, we provide top-quality hair services in a welcoming environment.' %></textarea>
             </div>
             
+            <!-- About Image Upload -->
+            <div class="form-group">
+                <label>About Section Image</label>
+                <div class="image-upload">
+                    <div class="image-preview">
+                        <img src="<%= siteInfo.aboutImage || '/images/about.jpg' %>" alt="About Image Preview" style="max-width: 100%; max-height: 200px; display: block; margin-bottom: 10px; border-radius: 4px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    </div>
+                    <input type="file" accept="image/*">
+                    <div style="display: flex; margin-top: 10px;">
+                        <input type="text" name="aboutImage" class="image-url-input" value="<%= siteInfo.aboutImage || '/images/about.jpg' %>" placeholder="Image URL">
+                        <button type="button" class="btn upload-btn">Upload</button>
+                    </div>
+                    <p class="help-text">Upload an about section image or provide a URL. This image will be shown in the about section on your website.</p>
+                </div>
+            </div>
+            
             <!-- Homepage Image Upload -->
             <div class="form-group">
                 <label>Homepage Image</label>

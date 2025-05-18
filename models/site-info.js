@@ -92,6 +92,11 @@ const siteInfoSchema = new mongoose.Schema({
     default: '/images/salon-homepage.jpg',
     trim: true
   },
+  aboutImage: {
+    type: String,
+    default: '/images/about.jpg',
+    trim: true
+  },
   hours: {
     monday: {
       type: String,
