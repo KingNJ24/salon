@@ -4,7 +4,7 @@ const { adminAuth } = require('../middlewares/auth');
 const { upload, saveBase64Image } = require('../utils/upload');
 const serviceController = require('../controllers/serviceController');
 const galleryController = require('../controllers/galleryController');
-const { Team, SiteInfo, Booking, ServiceCategory } = require('../models');
+const { Team, SiteInfo, Booking, ServiceCategory, GalleryCategory } = require('../models');
 
 // File upload endpoint
 router.post('/upload', adminAuth, (req, res) => {
@@ -402,6 +402,62 @@ router.get('/gallery/:id', galleryController.getItemById);
 router.post('/gallery/create', adminAuth, galleryController.createItem);
 router.post('/gallery/update/:id', adminAuth, galleryController.updateItem);
 router.post('/gallery/delete/:id', adminAuth, galleryController.deleteItem);
+
+// GALLERY CATEGORY ROUTES
+router.get('/gallery-categories', async (req, res) => {
+  try {
+    const categories = await GalleryCategory.find().sort({ displayOrder: 1 });
+    return res.json({ success: true, categories });
+  } catch (error) {
+    console.error('Error fetching gallery categories:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/gallery-category/create', adminAuth, async (req, res) => {
+  try {
+    const newCategory = new GalleryCategory(req.body);
+    await newCategory.save();
+    return res.json({ success: true, category: newCategory });
+  } catch (error) {
+    console.error('Error creating gallery category:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/gallery-category/update/:id', adminAuth, async (req, res) => {
+  try {
+    const updatedCategory = await GalleryCategory.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+    
+    if (!updatedCategory) {
+      return res.status(404).json({ success: false, message: 'Category not found' });
+    }
+    
+    return res.json({ success: true, category: updatedCategory });
+  } catch (error) {
+    console.error('Error updating gallery category:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.post('/gallery-category/delete/:id', adminAuth, async (req, res) => {
+  try {
+    const result = await GalleryCategory.findByIdAndDelete(req.params.id);
+    
+    if (!result) {
+      return res.status(404).json({ success: false, message: 'Category not found' });
+    }
+    
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting gallery category:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 // TEAM ROUTES
 router.post('/team/update/:id', adminAuth, async (req, res) => {

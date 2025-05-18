@@ -4,6 +4,7 @@ const Gallery = require('./gallery');
 const Team = require('./team');
 const SiteInfo = require('./site-info');
 const ServiceCategory = require('./service-category');
+const GalleryCategory = require('./gallery-category');
 
 module.exports = {
   Booking,
@@ -11,5 +12,6 @@ module.exports = {
   Gallery,
   Team,
   SiteInfo,
-  ServiceCategory
+  ServiceCategory,
+  GalleryCategory
 }; 

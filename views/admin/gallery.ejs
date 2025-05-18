@@ -5,6 +5,7 @@
         <button class="btn" id="add-video-btn" style="margin-left: 10px; background-color: #d4a373;">Add New Video</button>
     </div>
     <div>
+        <button class="btn" id="manage-categories-btn" style="background-color: #17a2b8; margin-right: 10px;">Manage Categories</button>
         <button class="btn" id="reorder-mode-btn" style="background-color: #6c757d;">Enable Reorder Mode</button>
         <button class="btn" id="save-order-btn" style="background-color: #28a745; display: none;">Save Order</button>
     </div>
@@ -225,6 +226,75 @@
         </form>
     </div>
 </div>
+
+<!-- Category Management Modal -->
+<div id="categories-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <span class="close">&times;</span>
+        <h2>Manage Gallery Categories</h2>
+        
+        <div style="margin-bottom: 20px;">
+            <form id="add-category-form" class="admin-form" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <div style="flex: 1;">
+                    <input type="text" id="new-category-name" placeholder="New category name" required>
+                </div>
+                <button type="submit" class="btn" style="background-color: #28a745;">Add Category</button>
+            </form>
+            
+            <div class="table-container">
+                <table id="categories-table">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Category Name</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categories-tbody">
+                        <tr>
+                            <td colspan="4" class="text-center">Loading categories...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <button type="button" class="btn btn-secondary close-modal">Close</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Category management styles */
+    #categories-table .deleting {
+        opacity: 0.5;
+        background-color: #ffdddd;
+    }
+    
+    .edit-category-name {
+        width: 100%;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    
+    #categories-modal .table-container {
+        max-height: 400px;
+        overflow-y: auto;
+        margin-bottom: 15px;
+    }
+    
+    #categories-table th, #categories-table td {
+        padding: 8px;
+        vertical-align: middle;
+    }
+    
+    .edit-category-btn, .delete-category-btn, .save-category-btn, .cancel-edit-btn {
+        margin: 0 2px;
+    }
+</style>
 
 <!-- Include the gallery editor script -->
 <script src="/js/admin/gallery-editor.js"></script>
