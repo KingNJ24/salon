@@ -13,16 +13,16 @@ const siteInfoSchema = new mongoose.Schema({
   },
   mapEmbedUrl: {
     type: String,
-    default: 'https://www.openstreetmap.org/export/embed.html?bbox=77.2959%2C29.4350%2C77.3159%2C29.4550&layer=mapnik&marker=29.4450669%2C77.30589979999999',
+    default: 'https://www.openstreetmap.org/export/embed.html?bbox=77.2959%2C29.4350%2C77.3159%2C29.4550&layer=mapnik&marker=29.4450833%2C77.3059167',
     trim: true
   },
   mapLat: {
     type: Number,
-    default: 29.4450669
+    default: 29.4450833
   },
   mapLng: {
     type: Number,
-    default: 77.30589979999999
+    default: 77.3059167
   },
   servicesViewMode: {
     type: String,

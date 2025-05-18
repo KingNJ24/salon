@@ -520,11 +520,11 @@ router.post('/settings/update', adminAuth, async (req, res) => {
     
     // Validate map embed URL if provided
     if (req.body.mapEmbedUrl) {
-      // Ensure it's a valid Google Maps embed URL
-      if (!req.body.mapEmbedUrl.includes('google.com/maps/embed')) {
+      // Ensure it's a valid map embed URL (Google Maps or OpenStreetMap)
+      if (!req.body.mapEmbedUrl.includes('google.com/maps/embed') && !req.body.mapEmbedUrl.includes('openstreetmap.org/export/embed')) {
         return res.status(400).json({ 
           success: false, 
-          message: 'Invalid Google Maps embed URL format' 
+          message: 'Invalid map embed URL format. Must be from Google Maps or OpenStreetMap.' 
         });
       }
     }

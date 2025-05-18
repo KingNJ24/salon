@@ -22,8 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to initialize map after Leaflet is loaded
     function initMap() {
-        // Create map
-        const map = L.map(mapContainer).setView([lat, lng], 16);
+        // Create map - use zoom level 18 for more detailed view
+        const map = L.map(mapContainer).setView([lat, lng], 18);
         
         // Add tile layer (OpenStreetMap)
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
