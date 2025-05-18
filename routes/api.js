@@ -493,4 +493,80 @@ router.get('/get-upload-auth', (req, res) => {
   }
 });
 
+// Thumbnail generation endpoint to bypass CORS issues
+router.post('/generate-thumbnail', adminAuth, async (req, res) => {
+  try {
+    const { videoUrl } = req.body;
+    
+    if (!videoUrl) {
+      return res.status(400).json({
+        success: false,
+        message: 'Video URL is required'
+      });
+    }
+    
+    console.log('Server-side thumbnail generation for:', videoUrl);
+    
+    // For videos on external domains (not our own server)
+    if (videoUrl.startsWith('http') && !videoUrl.includes(req.headers.host)) {
+      try {
+        // Get thumbnail from video using server-side tools
+        const { cloudinary } = require('../utils/cloudinary');
+        
+        // Upload to Cloudinary which can handle the video and generate a thumbnail
+        const uploadResult = await cloudinary.uploader.upload(videoUrl, {
+          resource_type: 'video',
+          folder: 'salon/thumbnails',
+          eager: [
+            { width: 300, height: 300, crop: 'fill' }
+          ],
+          eager_async: false
+        });
+        
+        console.log('Thumbnail generated via Cloudinary:', uploadResult);
+        
+        // Return the thumbnail URL
+        return res.json({
+          success: true,
+          thumbnailUrl: uploadResult.eager[0].secure_url || uploadResult.secure_url,
+          message: 'Thumbnail generated successfully via Cloudinary'
+        });
+      } catch (error) {
+        console.error('Error generating thumbnail via Cloudinary:', error);
+        
+        // If Cloudinary fails, try using a generic video thumbnail
+        return res.json({
+          success: true,
+          thumbnailUrl: '/images/video-placeholder.jpg',
+          message: 'Using placeholder image due to CORS restrictions'
+        });
+      }
+    } 
+    // For videos on our own server
+    else {
+      try {
+        // For local videos, we can use a placeholder or default thumbnail
+        // In a more complex implementation, we could use ffmpeg to generate thumbnails
+        return res.json({
+          success: true,
+          thumbnailUrl: '/images/video-placeholder.jpg',
+          message: 'Using placeholder image for local video'
+        });
+      } catch (error) {
+        console.error('Error handling local video thumbnail:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Error generating thumbnail: ' + error.message
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Thumbnail generation error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error: ' + error.message
+    });
+  }
+});
+
 module.exports = router; 

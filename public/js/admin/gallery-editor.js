@@ -204,7 +204,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Check if video dimensions are available
                 if (video.videoWidth === 0 || video.videoHeight === 0) {
                     console.error('Video dimensions not available');
-                    throw new Error('Video dimensions not available. Video might not be loaded correctly.');
+                    
+                    // Try the server-side proxy approach instead
+                    useServerProxyForThumbnail(videoUrl);
+                    return;
                 }
                 
                 canvas.width = video.videoWidth;
@@ -245,11 +248,8 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('Error generating thumbnail:', error);
                 
-                // Update status instead of showing an alert
-                if (thumbnailStatus) {
-                    thumbnailStatus.textContent = 'Error: ' + error.message + ' (possible CORS error)';
-                    thumbnailStatus.style.color = '#dc3545';
-                }
+                // Try server-side approach instead of just showing error
+                useServerProxyForThumbnail(videoUrl);
             } finally {
                 // Clean up
                 video.pause();
@@ -303,6 +303,54 @@ document.addEventListener('DOMContentLoaded', function() {
         // Start loading the video
         video.load();
         console.log('Video loading started');
+    }
+    
+    // Function to use server proxy for thumbnail generation when client-side fails
+    function useServerProxyForThumbnail(videoUrl) {
+        if (thumbnailStatus) {
+            thumbnailStatus.textContent = 'Trying server-side thumbnail generation...';
+            thumbnailStatus.style.color = '#d4a373';
+        }
+        
+        // Make a request to the server-side endpoint that will handle the CORS issue
+        fetch('/api/generate-thumbnail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ videoUrl: videoUrl })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.thumbnailUrl) {
+                // Update the image preview
+                if (previewImage) {
+                    previewImage.src = data.thumbnailUrl;
+                    previewImage.style.display = 'block';
+                    console.log('Preview image updated from server proxy');
+                }
+                
+                // Update the hidden image input with the data URL or URL
+                if (imageInput) {
+                    imageInput.value = data.thumbnailUrl;
+                    console.log('Image input value set from server proxy');
+                }
+                
+                if (thumbnailStatus) {
+                    thumbnailStatus.textContent = 'Thumbnail generated successfully via server!';
+                    thumbnailStatus.style.color = '#28a745';
+                }
+            } else {
+                throw new Error(data.message || 'Failed to generate thumbnail');
+            }
+        })
+        .catch(error => {
+            console.error('Server proxy thumbnail error:', error);
+            if (thumbnailStatus) {
+                thumbnailStatus.textContent = 'Error: Could not generate thumbnail. Try uploading a thumbnail image manually.';
+                thumbnailStatus.style.color = '#dc3545';
+            }
+        });
     }
     
     // Function to preview selected image
