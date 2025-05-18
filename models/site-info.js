@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+    const mongoose = require('mongoose');
 
 const siteInfoSchema = new mongoose.Schema({
   salonName: {
@@ -10,6 +10,16 @@ const siteInfoSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
+  },
+  mapEmbedUrl: {
+    type: String,
+    default: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3506.459789013035!2d77.21124261508594!3d28.495020382470996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce8f85439b3d9%3A0x95c071cbe44f332e!2sRRST(Royal%20Raj%20School%20Trust)!5e0!3m2!1sen!2sin!4v1685908163202!5m2!1sen!2sin',
+    trim: true
+  },
+  servicesViewMode: {
+    type: String,
+    enum: ['grid', 'catalog'],
+    default: 'grid',
   },
   phone: {
     type: String,

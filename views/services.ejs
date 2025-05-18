@@ -9,105 +9,148 @@
 <!-- Services List -->
 <section class="section" style="padding-top: 0;">
     <div class="container">
-        <div class="services-grid">
-            <% if (services && services.length > 0) { %>
-                <% services.forEach(service => { %>
+        <% if (siteInfo.servicesViewMode === 'catalog') { %>
+            <!-- Catalog View (Text Only) -->
+            <div class="services-catalog">
+                <% if (services && services.length > 0) { %>
+                    <table class="services-table">
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Description</th>
+                                <th>Price</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% services.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)).forEach(service => { %>
+                                <tr>
+                                    <td class="service-name"><strong><%= service.name %></strong></td>
+                                    <td class="service-description">
+                                        <% 
+                                        const maxLength = 100;
+                                        const desc = service.description;
+                                        if (desc.length > maxLength) { 
+                                        %>
+                                            <%= desc.substring(0, maxLength) %>... 
+                                            <span class="view-more" style="color: var(--color-primary); cursor: pointer; text-decoration: underline;" 
+                                                data-desc="<%= desc %>">View more</span>
+                                        <% } else { %>
+                                            <%= desc %>
+                                        <% } %>
+                                    </td>
+                                    <td class="service-price"><%= siteInfo.currencySymbol || '₹' %><%= service.price %></td>
+                                    <td class="service-action"><a href="/contact" class="btn btn-sm">Book</a></td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                <% } else { %>
+                    <p class="text-center">No services available at the moment. Please check back later.</p>
+                <% } %>
+            </div>
+        <% } else { %>
+            <!-- Grid View (Default with Images/Videos) -->
+            <div class="services-grid">
+                <% if (services && services.length > 0) { %>
+                    <% services.forEach(service => { %>
+                        <div class="service-card">
+                            <div class="service-image">
+                                <% if (service.type === 'video') { %>
+                                    <!-- Video thumbnail with hover-to-play -->
+                                    <div class="video-thumbnail" data-video-src="<%= service.videoUrl %>">
+                                        <img src="<%= service.image %>" alt="<%= service.name %>" 
+                                            onerror="this.src='https://via.placeholder.com/300x200?text=<%= service.name.replace(/ /g, '+') %>'">
+                                        
+                                        <!-- Preview video that plays on hover -->
+                                        <video class="preview-video" muted loop preload="none" 
+                                            poster="<%= service.image %>">
+                                            <source src="<%= service.videoUrl %>" type="video/mp4">
+                                        </video>
+                                        
+                                        <div class="play-button">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white">
+                                                <path d="M8 5v14l11-7z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                <% } else { %>
+                                    <!-- Regular image -->
+                                    <img src="<%= service.image %>" alt="<%= service.name %>" onerror="this.src='https://via.placeholder.com/300x200?text=<%= service.name.replace(/ /g, '+') %>'">
+                                <% } %>
+                            </div>
+                            <div class="service-content">
+                                <h3 class="service-title"><%= service.name %></h3>
+                                <p>
+                                    <% 
+                                    const maxLength = 150;
+                                    const desc = service.description;
+                                    if (desc.length > maxLength) { 
+                                    %>
+                                        <%= desc.substring(0, maxLength) %>... 
+                                        <span class="view-more" style="color: var(--color-primary); cursor: pointer; text-decoration: underline;" 
+                                            data-desc="<%= desc %>">View more</span>
+                                    <% } else { %>
+                                        <%= desc %>
+                                    <% } %>
+                                </p>
+                                <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> <%= siteInfo.currencySymbol || '₹' %><%= service.price %></p>
+                                <a href="/contact" class="btn">Book Now</a>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <!-- Fallback service cards if no services are found -->
                     <div class="service-card">
                         <div class="service-image">
-                            <% if (service.type === 'video') { %>
-                                <!-- Video thumbnail with hover-to-play -->
-                                <div class="video-thumbnail" data-video-src="<%= service.videoUrl %>">
-                                    <img src="<%= service.image %>" alt="<%= service.name %>" 
-                                         onerror="this.src='https://via.placeholder.com/300x200?text=<%= service.name.replace(/ /g, '+') %>'">
-                                    
-                                    <!-- Preview video that plays on hover -->
-                                    <video class="preview-video" muted loop preload="none" 
-                                           poster="<%= service.image %>">
-                                        <source src="<%= service.videoUrl %>" type="video/mp4">
-                                    </video>
-                                    
-                                    <div class="play-button">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white">
-                                            <path d="M8 5v14l11-7z"/>
-                                        </svg>
-                                    </div>
-                                </div>
-                            <% } else { %>
-                                <!-- Regular image -->
-                                <img src="<%= service.image %>" alt="<%= service.name %>" onerror="this.src='https://via.placeholder.com/300x200?text=<%= service.name.replace(/ /g, '+') %>'">
-                            <% } %>
+                            <img src="/images/cuts1.jpg" alt="Hair Cutting" onerror="this.src='https://via.placeholder.com/300x200?text=Hair+Cutting'">
                         </div>
                         <div class="service-content">
-                            <h3 class="service-title"><%= service.name %></h3>
-                            <p>
-                                <% 
-                                const maxLength = 150;
-                                const desc = service.description;
-                                if (desc.length > maxLength) { 
-                                %>
-                                    <%= desc.substring(0, maxLength) %>... 
-                                    <span class="view-more" style="color: var(--color-primary); cursor: pointer; text-decoration: underline;" 
-                                          data-desc="<%= desc %>">View more</span>
-                                <% } else { %>
-                                    <%= desc %>
-                                <% } %>
-                            </p>
-                            <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> <%= siteInfo.currencySymbol || '₹' %><%= service.price %></p>
+                            <h3 class="service-title">Hair Cutting</h3>
+                            <p>Our skilled stylists provide personalized haircuts tailored to your face shape and lifestyle.</p>
+                            <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> $40+</p>
                             <a href="/contact" class="btn">Book Now</a>
                         </div>
                     </div>
-                <% }); %>
-            <% } else { %>
-                <!-- Fallback service cards if no services are found -->
-                <div class="service-card">
-                    <div class="service-image">
-                        <img src="/images/cuts1.jpg" alt="Hair Cutting" onerror="this.src='https://via.placeholder.com/300x200?text=Hair+Cutting'">
+                    
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="/images/colors1.jpg" alt="Hair Coloring" onerror="this.src='https://via.placeholder.com/300x200?text=Hair+Coloring'">
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Hair Coloring</h3>
+                            <p>Our expert colorists can help you achieve the perfect shade to complement your skin tone and style.</p>
+                            <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> $80+</p>
+                            <a href="/contact" class="btn">Book Now</a>
+                        </div>
                     </div>
-                    <div class="service-content">
-                        <h3 class="service-title">Hair Cutting</h3>
-                        <p>Our skilled stylists provide personalized haircuts tailored to your face shape and lifestyle.</p>
-                        <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> $40+</p>
-                        <a href="/contact" class="btn">Book Now</a>
+                    
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="/images/texture1.jpg" alt="Hair Treatments" onerror="this.src='https://via.placeholder.com/300x200?text=Hair+Treatments'">
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Hair Treatments</h3>
+                            <p>Revitalize your hair with our professional treatments designed to improve its health and appearance.</p>
+                            <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> $30+</p>
+                            <a href="/contact" class="btn">Book Now</a>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="service-card">
-                    <div class="service-image">
-                        <img src="/images/colors1.jpg" alt="Hair Coloring" onerror="this.src='https://via.placeholder.com/300x200?text=Hair+Coloring'">
+                    
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="/images/bridal1.jpg" alt="Hair Styling" onerror="this.src='https://via.placeholder.com/300x200?text=Hair+Styling'">
+                        </div>
+                        <div class="service-content">
+                            <h3 class="service-title">Hair Styling</h3>
+                            <p>From everyday styles to special occasion looks, our stylists can create the perfect style for any event.</p>
+                            <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> $45+</p>
+                            <a href="/contact" class="btn">Book Now</a>
+                        </div>
                     </div>
-                    <div class="service-content">
-                        <h3 class="service-title">Hair Coloring</h3>
-                        <p>Our expert colorists can help you achieve the perfect shade to complement your skin tone and style.</p>
-                        <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> $80+</p>
-                        <a href="/contact" class="btn">Book Now</a>
-                    </div>
-                </div>
-                
-                <div class="service-card">
-                    <div class="service-image">
-                        <img src="/images/texture1.jpg" alt="Hair Treatments" onerror="this.src='https://via.placeholder.com/300x200?text=Hair+Treatments'">
-                    </div>
-                    <div class="service-content">
-                        <h3 class="service-title">Hair Treatments</h3>
-                        <p>Revitalize your hair with our professional treatments designed to improve its health and appearance.</p>
-                        <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> $30+</p>
-                        <a href="/contact" class="btn">Book Now</a>
-                    </div>
-                </div>
-                
-                <div class="service-card">
-                    <div class="service-image">
-                        <img src="/images/bridal1.jpg" alt="Hair Styling" onerror="this.src='https://via.placeholder.com/300x200?text=Hair+Styling'">
-                    </div>
-                    <div class="service-content">
-                        <h3 class="service-title">Hair Styling</h3>
-                        <p>From everyday styles to special occasion looks, our stylists can create the perfect style for any event.</p>
-                        <p style="margin-bottom: var(--spacing-md);"><strong>Price:</strong> $45+</p>
-                        <a href="/contact" class="btn">Book Now</a>
-                    </div>
-                </div>
-            <% } %>
-        </div>
+                <% } %>
+            </div>
+        <% } %>
     </div>
 </section>
 
@@ -225,6 +268,59 @@
         color: white;
         font-size: 30px;
         cursor: pointer;
+    }
+    
+    .services-catalog {
+        width: 100%;
+        overflow-x: auto;
+    }
+    
+    .services-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+    }
+    
+    .services-table th {
+        background-color: var(--color-primary);
+        color: white;
+        text-align: left;
+        padding: 12px 15px;
+    }
+    
+    .services-table td {
+        padding: 10px 15px;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .services-table tr:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    .services-table tr:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    .service-name {
+        width: 20%;
+    }
+    
+    .service-description {
+        width: 50%;
+    }
+    
+    .service-price {
+        width: 15%;
+    }
+    
+    .service-action {
+        width: 15%;
+        text-align: right;
+    }
+    
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 0.9em;
     }
 </style>
 
