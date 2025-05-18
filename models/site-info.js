@@ -53,6 +53,11 @@ const siteInfoSchema = new mongoose.Schema({
       type: String,
       default: '',
       trim: true
+    },
+    whatsapp: {
+      type: String,
+      default: '',
+      trim: true
     }
   },
   // Homepage featured services
@@ -80,6 +85,11 @@ const siteInfoSchema = new mongoose.Schema({
   homeVideo: {
     type: String,
     default: '/videos/salon-ad.mp4',
+    trim: true
+  },
+  homepageImage: {
+    type: String,
+    default: '/images/salon-homepage.jpg',
     trim: true
   },
   hours: {

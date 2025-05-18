@@ -22,8 +22,11 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Could not get upload credentials:', err);
         });
     
-    // Find the generate thumbnail button
+    // Find the generate thumbnail button and ensure it exists
     const generateThumbnailBtn = document.getElementById('generate-thumbnail-btn');
+    const videoUrlInput = document.getElementById('gallery-video-url');
+    const imageInput = document.getElementById('gallery-image');
+    
     if (generateThumbnailBtn) {
         console.log('Generate thumbnail button found');
         generateThumbnailBtn.addEventListener('click', function() {
@@ -32,6 +35,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     } else {
         console.error('Generate thumbnail button not found');
+    }
+    
+    // Auto-generate thumbnail when video URL is entered
+    if (videoUrlInput) {
+        videoUrlInput.addEventListener('change', function() {
+            // Wait a brief moment for the video to load
+            setTimeout(() => {
+                // Auto-generate thumbnail if video URL is provided
+                if (videoUrlInput.value && (!imageInput || !imageInput.value || imageInput.value === '')) {
+                    console.log('Auto-generating thumbnail after video URL change');
+                    generateThumbnailFromVideo();
+                }
+            }, 1500);
+        });
     }
     
     // Function to generate thumbnail from video
@@ -54,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!videoUrlInput || !videoUrlInput.value) {
             console.error('No video URL provided');
-            alert('Please enter a video URL first');
+            showError('Please enter a video URL first');
             if (thumbnailStatus) {
                 thumbnailStatus.textContent = 'Failed: No video URL provided';
                 thumbnailStatus.style.color = '#dc3545';
@@ -63,6 +80,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         console.log('Video URL:', videoUrlInput.value);
+        
+        // Create a flag to track if we've successfully generated a thumbnail
+        let thumbnailGenerated = false;
         
         // Try to capture from the existing video player first if it's an uploaded local video
         if (videoPreview && videoPreview.readyState >= 2) {
@@ -95,42 +115,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     thumbnailStatus.style.color = '#28a745';
                 }
                 
+                thumbnailGenerated = true;
                 return;
             } catch (error) {
                 console.error('Error capturing from existing video player:', error);
-                // Fall through to the normal method
+                // Continue to next method
             }
-        }
-        
-        // Create a temporary video element
-        const video = document.createElement('video');
-        video.crossOrigin = 'anonymous'; // Try to avoid CORS issues
-        
-        // Fix URL if needed
-        let videoUrl = videoUrlInput.value;
-        if (videoUrl.startsWith('//')) {
-            videoUrl = 'https:' + videoUrl;
-        }
-        
-        // For local files, add a timestamp to bust cache
-        if (videoUrl.startsWith('/')) {
-            videoUrl = videoUrl + '?t=' + new Date().getTime();
         }
         
         // Check if it's a YouTube URL and handle it specially
-        if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+        if (videoUrlInput.value.includes('youtube.com') || videoUrlInput.value.includes('youtu.be')) {
             console.log('YouTube URL detected');
-            if (thumbnailStatus) {
-                thumbnailStatus.textContent = 'YouTube videos need manual thumbnails due to security restrictions';
-                thumbnailStatus.style.color = '#d4a373';
-            }
             
             // Get YouTube video ID
             let videoId = '';
-            if (videoUrl.includes('youtube.com/watch')) {
-                videoId = new URL(videoUrl).searchParams.get('v');
-            } else if (videoUrl.includes('youtu.be/')) {
-                videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
+            if (videoUrlInput.value.includes('youtube.com/watch')) {
+                const url = new URL(videoUrlInput.value);
+                videoId = url.searchParams.get('v');
+            } else if (videoUrlInput.value.includes('youtu.be/')) {
+                videoId = videoUrlInput.value.split('youtu.be/')[1].split('?')[0];
             }
             
             if (videoId) {
@@ -138,171 +141,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
                 console.log('Using YouTube thumbnail URL:', thumbnailUrl);
                 
-                // Create an image to load the YouTube thumbnail
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = function() {
-                    // Create canvas and draw the image
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-                    
-                    try {
-                        // Get data URL
-                        const dataUrl = canvas.toDataURL('image/jpeg');
-                        
-                        // Update preview and value
-                        if (previewImage) {
-                            previewImage.src = dataUrl;
-                            previewImage.style.display = 'block';
-                        }
-                        if (imageInput) {
-                            imageInput.value = dataUrl;
-                        }
-                        
-                        if (thumbnailStatus) {
-                            thumbnailStatus.textContent = 'YouTube thumbnail generated successfully!';
-                            thumbnailStatus.style.color = '#28a745';
-                        }
-                    } catch (error) {
-                        console.error('Error creating YouTube thumbnail:', error);
-                        if (thumbnailStatus) {
-                            thumbnailStatus.textContent = 'Error: ' + error.message;
-                            thumbnailStatus.style.color = '#dc3545';
-                        }
-                    }
-                };
+                // Simply use the YouTube thumbnail URL directly rather than trying to process it
+                if (previewImage) {
+                    previewImage.src = thumbnailUrl;
+                    previewImage.style.display = 'block';
+                    previewImage.onerror = function() {
+                        // Fallback to medium quality if high quality not available
+                        previewImage.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+                    };
+                }
                 
-                img.onerror = function() {
-                    console.error('Error loading YouTube thumbnail');
-                    if (thumbnailStatus) {
-                        thumbnailStatus.textContent = 'Error loading YouTube thumbnail. Try a different video or upload manually.';
-                        thumbnailStatus.style.color = '#dc3545';
-                    }
-                };
+                if (imageInput) {
+                    imageInput.value = thumbnailUrl;
+                }
                 
-                img.src = thumbnailUrl;
+                if (thumbnailStatus) {
+                    thumbnailStatus.textContent = 'YouTube thumbnail generated successfully!';
+                    thumbnailStatus.style.color = '#28a745';
+                }
+                
+                thumbnailGenerated = true;
                 return;
             }
         }
         
-        video.src = videoUrl;
-        console.log('Video element created with src:', video.src);
-        
-        // Create a one-time timeupdate handler to avoid multiple captures
-        function captureFrame() {
-            console.log('Video time updated, capturing frame');
-            // Remove this event listener after it runs once
-            video.removeEventListener('timeupdate', captureFrame);
-            
-            try {
-                // Create a canvas to capture the frame
-                const canvas = document.createElement('canvas');
-                
-                // Check if video dimensions are available
-                if (video.videoWidth === 0 || video.videoHeight === 0) {
-                    console.error('Video dimensions not available');
-                    
-                    // Try the server-side proxy approach instead
-                    useServerProxyForThumbnail(videoUrl);
-                    return;
-                }
-                
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                
-                console.log('Canvas created with dimensions:', canvas.width, 'x', canvas.height);
-                
-                // Draw the video frame to the canvas
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                // Convert canvas to data URL
-                const dataUrl = canvas.toDataURL('image/jpeg');
-                console.log('Thumbnail data URL generated:', dataUrl.substring(0, 50) + '...');
-                
-                // Update the image preview
-                if (previewImage) {
-                    previewImage.src = dataUrl;
-                    previewImage.style.display = 'block'; // Make sure the preview is visible
-                    console.log('Preview image updated');
-                } else {
-                    console.error('Preview image element not found');
-                }
-                
-                // Update the hidden image input with the data URL
-                if (imageInput) {
-                    imageInput.value = dataUrl;
-                    console.log('Image input value set');
-                } else {
-                    console.error('Image input element not found');
-                }
-                
-                // Update status
-                if (thumbnailStatus) {
-                    thumbnailStatus.textContent = 'Thumbnail generated successfully!';
-                    thumbnailStatus.style.color = '#28a745';
-                }
-            } catch (error) {
-                console.error('Error generating thumbnail:', error);
-                
-                // Try server-side approach instead of just showing error
-                useServerProxyForThumbnail(videoUrl);
-            } finally {
-                // Clean up
-                video.pause();
-                video.removeAttribute('src');
-                video.load();
-            }
-        }
-        
-        // Set timeout to handle cases where metadata never loads
-        const timeoutId = setTimeout(() => {
-            console.error('Timeout waiting for video metadata');
-            video.removeEventListener('loadedmetadata', onMetadataLoaded);
-            video.removeEventListener('timeupdate', captureFrame);
-            
-            // Instead of just showing an error, use the server-side proxy
-            console.log('Attempting server-side thumbnail generation due to timeout');
-            useServerProxyForThumbnail(videoUrl);
-        }, 15000); // Increase timeout from 10 to 15 seconds
-        
-        // When video metadata is loaded, capture a frame
-        function onMetadataLoaded() {
-            console.log('Video metadata loaded');
-            clearTimeout(timeoutId);
-            // Set video to a specific time (e.g., 1 second in)
-            video.currentTime = 1;
-        }
-        
-        video.addEventListener('loadedmetadata', onMetadataLoaded);
-        
-        // Add the timeupdate event listener
-        video.addEventListener('timeupdate', captureFrame);
-        
-        // Handle errors
-        video.addEventListener('error', function() {
-            console.error('Video error:', video.error);
-            clearTimeout(timeoutId);
-            
-            // Instead of showing error, try server-side proxy
-            console.log('Video error occurred, attempting server-side thumbnail generation');
-            useServerProxyForThumbnail(videoUrl);
-            
-            // Remove the timeupdate event listener if it hasn't fired yet
-            video.removeEventListener('timeupdate', captureFrame);
-            video.removeEventListener('loadedmetadata', onMetadataLoaded);
-        });
-        
-        // Start loading the video
-        video.load();
-        console.log('Video loading started');
+        // If we've reached here, try using the server proxy method directly
+        console.log('Using server-side proxy for thumbnail generation');
+        useServerProxyForThumbnail(videoUrlInput.value);
     }
     
     // Function to use server proxy for thumbnail generation when client-side fails
     function useServerProxyForThumbnail(videoUrl) {
+        const previewImage = document.querySelector('.image-preview img');
+        const imageInput = document.getElementById('gallery-image');
+        const thumbnailStatus = document.getElementById('thumbnail-status');
+        
         if (thumbnailStatus) {
             thumbnailStatus.textContent = 'Trying server-side thumbnail generation...';
             thumbnailStatus.style.color = '#d4a373';
@@ -336,6 +209,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     thumbnailStatus.textContent = 'Thumbnail generated successfully via server!';
                     thumbnailStatus.style.color = '#28a745';
                 }
+                
+                // Update form type to ensure it's recognized as a video
+                const typeInput = document.getElementById('gallery-type');
+                if (typeInput) {
+                    typeInput.value = 'video';
+                }
             } else {
                 throw new Error(data.message || 'Failed to generate thumbnail');
             }
@@ -345,6 +224,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (thumbnailStatus) {
                 thumbnailStatus.textContent = 'Error: Could not generate thumbnail. Try uploading a thumbnail image manually.';
                 thumbnailStatus.style.color = '#dc3545';
+            }
+            
+            // Set placeholder image as fallback
+            if (previewImage && imageInput) {
+                previewImage.src = '/images/video-placeholder.jpg';
+                previewImage.style.display = 'block';
+                imageInput.value = '/images/video-placeholder.jpg';
+                console.log('Using placeholder image as fallback');
+                
+                // Let the user know that a fallback was used but the video will still work
+                if (thumbnailStatus) {
+                    thumbnailStatus.textContent = 'Used placeholder image. Your video will still work!';
+                    thumbnailStatus.style.color = '#ffc107';
+                }
             }
         });
     }
@@ -389,6 +282,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     source.src = videoUrl;
                     videoPreview.load();
                     document.querySelector('.video-preview').style.display = 'block';
+                    
+                    // Auto-set to video type if there's a video URL
+                    const typeInput = document.getElementById('gallery-type');
+                    if (typeInput) {
+                        typeInput.value = 'video';
+                    }
                 }
             }
         });
@@ -551,13 +450,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.querySelector('.video-preview').style.display = 'block';
                     
                     // Automatically generate a thumbnail after successful upload
-                    const generateThumbnailBtn = document.getElementById('generate-thumbnail-btn');
-                    if (generateThumbnailBtn) {
-                        // Wait a moment for the video to load
+                    // Make three attempts with increasing delays to ensure video is loaded
+                    setTimeout(() => {
+                        console.log('First thumbnail generation attempt');
+                        generateThumbnailFromVideo();
+                        
+                        // Try again after another second if needed
                         setTimeout(() => {
-                            generateThumbnailBtn.click();
-                        }, 1000);
-                    }
+                            // Check if we have a thumbnail already
+                            const imageInput = document.getElementById('gallery-image');
+                            if (!imageInput || !imageInput.value || imageInput.value === '') {
+                                console.log('Second thumbnail generation attempt');
+                                generateThumbnailFromVideo();
+                            }
+                        }, 2000);
+                    }, 1000);
                     
                     setTimeout(() => {
                         statusMsg.remove();
