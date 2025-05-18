@@ -127,10 +127,12 @@ router.get('/lookbook', async (req, res, next) => {
 router.get('/contact', async (req, res, next) => {
   try {
     const siteInfo = await SiteInfo.findOne();
+    const services = await Service.find({ isVisible: { $ne: false } }).sort({ displayOrder: 1 });
     
     res.render('contact', { 
       title: 'Contact Us', 
       siteInfo,
+      services,
       page: 'contact'
     });
   } catch (error) {

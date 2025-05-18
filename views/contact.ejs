@@ -67,12 +67,51 @@
                         <label for="service" style="display: block; margin-bottom: 5px;">Service *</label>
                         <select id="service" name="service" required style="width: 100%; padding: 10px; border: 1px solid var(--color-gray); border-radius: var(--border-radius);">
                             <option value="">Select a Service</option>
-                            <option value="Haircut">Haircut</option>
-                            <option value="Coloring">Hair Coloring</option>
-                            <option value="Treatment">Hair Treatment</option>
-                            <option value="Styling">Hair Styling</option>
+                            <!-- Dynamically loaded services will appear here -->
                         </select>
                     </div>
+                    
+                    <!-- Load services from database -->
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // Fetch services from the API
+                            fetch('/api/services/visible')
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success && data.services && data.services.length > 0) {
+                                        const serviceSelect = document.getElementById('service');
+                                        
+                                        // Group services by category
+                                        const servicesByCategory = {};
+                                        data.services.forEach(service => {
+                                            if (!servicesByCategory[service.category]) {
+                                                servicesByCategory[service.category] = [];
+                                            }
+                                            servicesByCategory[service.category].push(service);
+                                        });
+                                        
+                                        // Add services to dropdown by category
+                                        Object.keys(servicesByCategory).forEach(category => {
+                                            // Add category optgroup
+                                            const optgroup = document.createElement('optgroup');
+                                            optgroup.label = category;
+                                            serviceSelect.appendChild(optgroup);
+                                            
+                                            // Add services within the category
+                                            servicesByCategory[category].forEach(service => {
+                                                const option = document.createElement('option');
+                                                option.value = service.name;
+                                                option.textContent = `${service.name} (${service.price})`;
+                                                optgroup.appendChild(option);
+                                            });
+                                        });
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error loading services:', error);
+                                });
+                        });
+                    </script>
                     
                     <div style="margin-bottom: var(--spacing-sm);">
                         <label for="date" style="display: block; margin-bottom: 5px;">Preferred Date *</label>
