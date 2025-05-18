@@ -35,7 +35,8 @@ router.post('/upload', adminAuth, (req, res) => {
           // Upload directly to Cloudinary
           cloudinary.uploader.upload(req.body.file, {
             folder: 'salon',
-            resource_type: isVideo ? 'video' : 'image'
+            resource_type: 'auto', 
+            allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
           })
           .then(result => {
             return res.json({
@@ -257,7 +258,8 @@ router.post('/express-upload', adminAuth, async (req, res) => {
     // Upload to Cloudinary
     const result = await cloudinary.uploader.upload(req.body.file, {
       folder: 'salon',
-      resource_type: isVideo ? 'video' : 'image'
+      resource_type: isVideo ? 'video' : 'auto',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'webm']
     });
     
     return res.json({
@@ -307,7 +309,8 @@ router.post('/express-upload-video', adminAuth, async (req, res) => {
     // Force video resource type
     const result = await cloudinary.uploader.upload(req.body.file, {
       folder: 'salon',
-      resource_type: 'video'
+      resource_type: 'video',
+      allowed_formats: ['mp4', 'mov', 'webm']
     });
     
     return res.json({
@@ -548,6 +551,7 @@ router.post('/generate-thumbnail', adminAuth, async (req, res) => {
         const uploadPromise = cloudinary.uploader.upload(videoUrl, {
           resource_type: 'video',
           folder: 'salon/thumbnails',
+          allowed_formats: ['mp4', 'mov', 'webm'],
           eager: [
             { width: 300, height: 300, crop: 'fill' }
           ],

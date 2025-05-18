@@ -54,7 +54,7 @@ try {
     cloudinary: cloudinary,
     params: {
       folder: 'salon',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov', 'webm'],
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov', 'webm', 'webp'],
       resource_type: 'auto',
     },
   });
@@ -115,14 +115,15 @@ const isVercelProduction = () => {
 // Function to upload base64 image to Cloudinary
 const uploadBase64ToCloudinary = async (base64String) => {
   try {
-    if (!base64String || !base64String.startsWith('data:image/')) {
+    if (!base64String || !base64String.startsWith('data:')) {
       console.error('Invalid base64 string');
       return null;
     }
 
     const result = await cloudinary.uploader.upload(base64String, {
       folder: 'salon',
-      resource_type: 'image'
+      resource_type: 'auto',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp']
     });
 
     return result.secure_url;

@@ -86,7 +86,8 @@ module.exports = async (req, res) => {
         // Direct file upload to Cloudinary with explicit video type
         const result = await cloudinary.uploader.upload(req.body.file, {
           folder: 'salon/videos',
-          resource_type: 'video'
+          resource_type: 'video',
+          allowed_formats: ['mp4', 'mov', 'webm']
         });
         
         console.log('Video upload success:', { 

@@ -75,7 +75,7 @@ module.exports = async (req, res) => {
         
         const fileType = fileDataParts[0];
         // Check if it's an allowed file type
-        const allowedImageTypes = ['data:image/jpeg', 'data:image/jpg', 'data:image/png', 'data:image/gif'];
+        const allowedImageTypes = ['data:image/jpeg', 'data:image/jpg', 'data:image/png', 'data:image/gif', 'data:image/webp'];
         const allowedVideoTypes = ['data:video/mp4', 'data:video/webm', 'data:video/quicktime'];
         
         if (!allowedImageTypes.includes(fileType) && !allowedVideoTypes.includes(fileType)) {
@@ -93,7 +93,8 @@ module.exports = async (req, res) => {
         // Direct file upload to Cloudinary with explicit resource type
         const result = await cloudinary.uploader.upload(req.body.file, {
           folder: 'salon',
-          resource_type: isVideo ? 'video' : 'image'
+          resource_type: isVideo ? 'video' : 'auto',
+          allowed_formats: isVideo ? ['mp4', 'mov', 'webm'] : ['jpg', 'jpeg', 'png', 'gif', 'webp']
         });
         
         console.log('Upload success in serverless function:', { 
