@@ -9,11 +9,11 @@
 <!-- About Content -->
 <section class="section" style="padding-top: 0;">
     <div class="container">
-        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: var(--spacing-lg); align-items: center;">
-            <div>
+        <div class="about-story-grid">
+            <div class="about-image">
                 <img src="<%= siteInfo.aboutImage || '/images/about.jpg' %>" alt="About Our Salon" onerror="this.src='https://via.placeholder.com/500x300?text=About+Our+Salon'">
             </div>
-            <div>
+            <div class="about-text">
                 <h2>Our Story</h2>
                 <p>Your Salon was founded in 2010 with a simple mission: to provide exceptional hair care services in a welcoming and relaxing environment. What started as a small studio with just two stylists has grown into a full-service salon with a team of talented professionals.</p>
                 <p>We believe that everyone deserves to look and feel their best, and we are dedicated to helping our clients achieve their beauty goals through personalized services and expert advice.</p>
@@ -26,16 +26,16 @@
 <section class="section" style="background-color: var(--color-light);">
     <div class="container">
         <h2 class="text-center">Our Values</h2>
-        <div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: var(--spacing-lg); margin-top: var(--spacing-lg);">
-            <div class="text-center">
+        <div class="about-values-grid">
+            <div class="value-item">
                 <h3>Quality</h3>
                 <p>We use only the finest products and techniques to ensure the best results for our clients.</p>
             </div>
-            <div class="text-center">
+            <div class="value-item">
                 <h3>Expertise</h3>
                 <p>Our stylists regularly participate in training to stay up-to-date with the latest trends and techniques.</p>
             </div>
-            <div class="text-center">
+            <div class="value-item">
                 <h3>Integrity</h3>
                 <p>We believe in honest communication and always put our clients' needs and preferences first.</p>
             </div>
@@ -49,34 +49,34 @@
         <h2 class="text-center">Meet Our Team</h2>
         <p class="text-center">Our talented team of professionals is dedicated to helping you look and feel your best.</p>
         
-        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-lg); margin-top: var(--spacing-lg);">
+        <div class="team-grid">
             <!-- Team Member 1 -->
-            <div class="text-center">
-                <div style="height: 250px; overflow: hidden; margin-bottom: var(--spacing-sm);">
-                    <img src="/images/stylist1.jpg" alt="Sarah Johnson" onerror="this.src='https://via.placeholder.com/250x250?text=Sarah+Johnson'" style="width: 100%; height: 100%; object-fit: cover;">
+            <div class="team-member">
+                <div class="team-photo">
+                    <img src="/images/stylist1.jpg" alt="Sarah Johnson" onerror="this.src='https://via.placeholder.com/250x250?text=Sarah+Johnson'">
                 </div>
                 <h3>Sarah Johnson</h3>
-                <p>Founder & Master Stylist</p>
+                <p class="team-role">Founder & Master Stylist</p>
                 <p>Specializing in precision cuts and color transformations.</p>
             </div>
             
             <!-- Team Member 2 -->
-            <div class="text-center">
-                <div style="height: 250px; overflow: hidden; margin-bottom: var(--spacing-sm);">
-                    <img src="/images/stylist2.jpg" alt="Michael Brown" onerror="this.src='https://via.placeholder.com/250x250?text=Michael+Brown'" style="width: 100%; height: 100%; object-fit: cover;">
+            <div class="team-member">
+                <div class="team-photo">
+                    <img src="/images/stylist2.jpg" alt="Michael Brown" onerror="this.src='https://via.placeholder.com/250x250?text=Michael+Brown'">
                 </div>
                 <h3>Michael Brown</h3>
-                <p>Senior Stylist</p>
+                <p class="team-role">Senior Stylist</p>
                 <p>Expert in modern men's cuts and styling techniques.</p>
             </div>
             
             <!-- Team Member 3 -->
-            <div class="text-center">
-                <div style="height: 250px; overflow: hidden; margin-bottom: var(--spacing-sm);">
-                    <img src="/images/stylist3.jpg" alt="Emily Davis" onerror="this.src='https://via.placeholder.com/250x250?text=Emily+Davis'" style="width: 100%; height: 100%; object-fit: cover;">
+            <div class="team-member">
+                <div class="team-photo">
+                    <img src="/images/stylist3.jpg" alt="Emily Davis" onerror="this.src='https://via.placeholder.com/250x250?text=Emily+Davis'">
                 </div>
                 <h3>Emily Davis</h3>
-                <p>Color Specialist</p>
+                <p class="team-role">Color Specialist</p>
                 <p>Known for creating stunning balayage and color melts.</p>
             </div>
         </div>
@@ -90,4 +90,99 @@
         <p>Experience the Your Salon difference for yourself. Book an appointment today!</p>
         <a href="/contact" class="btn" style="background-color: var(--color-white); color: var(--color-primary);">Book an Appointment</a>
     </div>
-</section> 
+</section>
+
+<style>
+    /* About page responsive grid layouts */
+    .about-story-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-lg);
+        align-items: center;
+    }
+    
+    .about-values-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-lg);
+        margin-top: var(--spacing-lg);
+    }
+    
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: var(--spacing-lg);
+        margin-top: var(--spacing-lg);
+    }
+    
+    .about-image img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .value-item {
+        text-align: center;
+        background: var(--color-white);
+        padding: var(--spacing-md);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-sm);
+        transition: transform var(--transition-normal) ease, box-shadow var(--transition-normal) ease;
+    }
+    
+    .value-item:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .team-member {
+        text-align: center;
+    }
+    
+    .team-photo {
+        height: 250px;
+        overflow: hidden;
+        margin-bottom: var(--spacing-sm);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .team-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform var(--transition-normal) ease;
+    }
+    
+    .team-member:hover .team-photo img {
+        transform: scale(1.05);
+    }
+    
+    .team-role {
+        color: var(--color-primary);
+        font-weight: 500;
+        margin-bottom: var(--spacing-xs);
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .about-story-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .about-values-grid {
+            grid-template-columns: 1fr;
+            gap: var(--spacing-md);
+        }
+        
+        .about-text {
+            margin-top: var(--spacing-md);
+        }
+        
+        .team-grid {
+            gap: var(--spacing-xl);
+        }
+    }
+</style> 

@@ -91,13 +91,13 @@
 </section>
 
 <!-- About Section -->
-<section class="section" style="background-color: var(--color-light);">
+<section class="section about-home-section">
     <div class="container">
-        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: var(--spacing-lg); align-items: center;">
-            <div>
+        <div class="about-home-grid">
+            <div class="about-home-image">
                 <img src="<%= siteInfo.aboutImage || '/images/about.jpg' %>" alt="About <%= siteInfo.salonName %>" onerror="this.src='https://via.placeholder.com/500x300?text=About+Our+Salon'">
             </div>
-            <div>
+            <div class="about-home-text">
                 <h2>About <%= siteInfo.salonName %></h2>
                 <p><%= siteInfo.aboutText || 'Our salon was founded with a simple mission: to provide exceptional hair care services in a welcoming and relaxing environment.' %></p>
                 <a href="/about" class="btn">Learn More About Us</a>
@@ -811,5 +811,36 @@
     
     .service-description {
         flex-grow: 1;
+    }
+    
+    /* About section styling */
+    .about-home-section {
+        background-color: var(--color-light);
+    }
+    
+    /* About home grid layout */
+    .about-home-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-lg);
+        align-items: center;
+    }
+    
+    .about-home-image img {
+        width: 100%;
+        height: auto;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+    }
+    
+    /* Mobile responsiveness for about section */
+    @media (max-width: 768px) {
+        .about-home-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .about-home-text {
+            margin-top: var(--spacing-md);
+        }
     }
 </style> 

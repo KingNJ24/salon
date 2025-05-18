@@ -256,30 +256,82 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeModal = document.querySelector('.close-modal');
     const videoThumbnails = document.querySelectorAll('.video-thumbnail');
     
-    // Hide modal when clicking close button or outside modal
-    closeModal.addEventListener('click', function() {
-        videoModal.style.display = 'none';
-        videoPlayer.pause();
-    });
-    
-    // Close modal when clicking outside video container
-    videoModal.addEventListener('click', function(e) {
-        if (e.target === videoModal) {
-            videoModal.style.display = 'none';
-            videoPlayer.pause();
-        }
-    });
-    
-    // Play videos in modal when thumbnail is clicked
+    // Enhanced hover-to-play for videos
     videoThumbnails.forEach(thumbnail => {
+        const previewVideo = thumbnail.querySelector('.preview-video');
+        const videoSrc = thumbnail.getAttribute('data-video-src');
+        
+        // Make sure video has proper source
+        if (previewVideo && videoSrc && !previewVideo.querySelector('source[src="' + videoSrc + '"]')) {
+            previewVideo.innerHTML = `<source src="${videoSrc}" type="video/mp4">`;
+            previewVideo.load();
+        }
+        
+        // Enhanced hover behavior with more reliable playback
+        thumbnail.addEventListener('mouseenter', function() {
+            if (previewVideo && previewVideo.readyState >= 2) {
+                previewVideo.style.opacity = '1';
+                previewVideo.play().catch(err => console.error('Preview play error:', err));
+            } else if (previewVideo) {
+                // If video is not ready, load it first
+                previewVideo.addEventListener('loadeddata', function loadHandler() {
+                    previewVideo.style.opacity = '1';
+                    previewVideo.play().catch(err => console.error('Preview play error after load:', err));
+                    previewVideo.removeEventListener('loadeddata', loadHandler);
+                });
+                previewVideo.load();
+            }
+        });
+        
+        thumbnail.addEventListener('mouseleave', function() {
+            if (previewVideo) {
+                previewVideo.style.opacity = '0';
+                previewVideo.pause();
+            }
+        });
+        
+        // Play video in modal when clicked
         thumbnail.addEventListener('click', function() {
             const videoSrc = this.getAttribute('data-video-src');
-            videoPlayer.innerHTML = `<source src="${videoSrc}" type="video/mp4">Your browser does not support the video tag.`;
-            videoPlayer.load();
-            videoModal.style.display = 'flex';
-            videoPlayer.play().catch(err => console.log('Autoplay failed:', err));
+            if (videoModal && videoPlayer && videoSrc) {
+                // Set video source
+                videoPlayer.innerHTML = `<source src="${videoSrc}" type="video/mp4">Your browser does not support the video tag.`;
+                videoPlayer.load();
+                
+                // Show modal
+                videoModal.style.display = 'flex';
+                
+                // Try playing after loading
+                setTimeout(() => {
+                    videoPlayer.play().catch(err => console.log('Modal video play failed:', err));
+                }, 100);
+            }
         });
     });
+    
+    // Hide modal when clicking close button or outside modal
+    if (closeModal) {
+        closeModal.addEventListener('click', function() {
+            videoModal.style.display = 'none';
+            if (videoPlayer) {
+                videoPlayer.pause();
+                videoPlayer.currentTime = 0;
+            }
+        });
+    }
+    
+    // Close modal when clicking outside video container
+    if (videoModal) {
+        videoModal.addEventListener('click', function(e) {
+            if (e.target === videoModal) {
+                videoModal.style.display = 'none';
+                if (videoPlayer) {
+                    videoPlayer.pause();
+                    videoPlayer.currentTime = 0;
+                }
+            }
+        });
+    }
     
     // Category filtering with enhanced animations
     const categoryButtons = document.querySelectorAll('.category-filter');
