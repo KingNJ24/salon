@@ -684,8 +684,8 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background-color: rgba(255, 255, 255, 0.1);
   transition: all var(--transition-normal) ease;
@@ -697,6 +697,15 @@ p {
   background-color: var(--color-primary);
   transform: translateY(-3px) rotate(8deg);
   box-shadow: var(--shadow-md);
+}
+
+.social-link svg {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .copyright {
@@ -737,14 +746,27 @@ p {
 }
 
 .booking-form h2 {
+  color: var(--color-primary) !important;
   margin-bottom: var(--spacing-md);
-  color: var(--color-primary);
+  text-align: center;
+  font-weight: 600;
 }
 
 .contact-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-lg);
+}
+
+.contact-info {
+  text-align: left;
+  padding: var(--spacing-lg);
+}
+
+.contact-info h2 {
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
+  text-align: center;
 }
 
 .contact-info h3 {
