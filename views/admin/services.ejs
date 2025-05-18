@@ -263,6 +263,36 @@
     </div>
 </div>
 
+<style>
+    /* Category management styles */
+    #categories-table .deleting {
+        opacity: 0.5;
+        background-color: #ffdddd;
+    }
+    
+    .edit-category-name {
+        width: 100%;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    
+    #categories-modal .table-container {
+        max-height: 400px;
+        overflow-y: auto;
+        margin-bottom: 15px;
+    }
+    
+    #categories-table th, #categories-table td {
+        padding: 8px;
+        vertical-align: middle;
+    }
+    
+    .edit-category-btn, .delete-category-btn, .save-category-btn, .cancel-edit-btn {
+        margin: 0 2px;
+    }
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById('service-modal');
@@ -1113,6 +1143,7 @@
                     
                     serviceCategories.forEach((category, index) => {
                         const row = document.createElement('tr');
+                        row.setAttribute('data-id', category._id);
                         row.innerHTML = `
                             <td>${category.displayOrder || index}</td>
                             <td>
@@ -1184,6 +1215,7 @@
                             const row = this.closest('tr');
                             const categoryId = this.getAttribute('data-id');
                             const editInput = row.querySelector('.edit-category-name');
+                            const categoryName = row.querySelector('.category-name');
                             const newName = editInput.value.trim();
                             
                             if (!newName) {
@@ -1197,13 +1229,28 @@
                                     headers: {
                                         'Content-Type': 'application/json'
                                     },
-                                    body: JSON.stringify({ name: newName })
+                                    body: JSON.stringify({ 
+                                        name: newName,
+                                        isActive: true 
+                                    })
                                 });
                                 
                                 const data = await response.json();
                                 
                                 if (data.success) {
+                                    // Update the display and toggle back to view mode
+                                    categoryName.textContent = newName;
+                                    
+                                    // Toggle edit/view mode
+                                    categoryName.style.display = 'inline';
+                                    editInput.style.display = 'none';
+                                    row.querySelector('.edit-category-btn').style.display = 'inline-block';
+                                    row.querySelector('.delete-category-btn').style.display = 'inline-block';
+                                    row.querySelector('.save-category-btn').style.display = 'none';
+                                    row.querySelector('.cancel-edit-btn').style.display = 'none';
+                                    
                                     showNotification('Category updated successfully', 'success');
+                                    // Refresh data
                                     populateCategoriesTable();
                                     loadCategories();
                                 } else {
@@ -1220,27 +1267,46 @@
                     document.querySelectorAll('.delete-category-btn').forEach(button => {
                         button.addEventListener('click', async function() {
                             const categoryId = this.getAttribute('data-id');
-                            const categoryName = this.closest('tr').querySelector('.category-name').textContent;
+                            const row = this.closest('tr');
+                            const categoryName = row.querySelector('.category-name').textContent;
                             
-                            if (confirm(`Are you sure you want to delete the category "${categoryName}"? This may affect existing services.`)) {
-                                try {
-                                    const response = await fetch(`/api/service-category/delete/${categoryId}`, {
-                                        method: 'POST'
-                                    });
-                                    
-                                    const data = await response.json();
-                                    
-                                    if (data.success) {
-                                        showNotification('Category deleted successfully', 'success');
-                                        populateCategoriesTable();
-                                        loadCategories();
-                                    } else {
-                                        throw new Error(data.message || 'Failed to delete category');
+                            // Use confirm dialog to prevent accidental deletion
+                            if (!confirm(`Are you sure you want to delete the category "${categoryName}"? This may affect existing services.`)) {
+                                return; // User canceled
+                            }
+                            
+                            try {
+                                // Show loading indicator
+                                row.classList.add('deleting');
+                                this.textContent = 'Deleting...';
+                                this.disabled = true;
+                                
+                                const response = await fetch(`/api/service-category/delete/${categoryId}`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
                                     }
-                                } catch (error) {
-                                    console.error('Error deleting category:', error);
-                                    showNotification(`Error: ${error.message}`, 'error');
+                                });
+                                
+                                const data = await response.json();
+                                
+                                if (data.success) {
+                                    showNotification(`Category "${categoryName}" deleted successfully`, 'success');
+                                    // Remove the row from the table
+                                    row.remove();
+                                    // Refresh data
+                                    populateCategoriesTable();
+                                    loadCategories();
+                                } else {
+                                    throw new Error(data.message || 'Failed to delete category');
                                 }
+                            } catch (error) {
+                                console.error('Error deleting category:', error);
+                                showNotification(`Error: ${error.message}`, 'error');
+                                // Reset the button
+                                row.classList.remove('deleting');
+                                this.textContent = 'Delete';
+                                this.disabled = false;
                             }
                         });
                     });
