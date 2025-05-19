@@ -199,16 +199,95 @@
                 padding: 1.5rem;
             }
         }
+
+        .services-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .view-mode-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .view-mode-selector select {
+            padding: 0.5rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            background: white;
+        }
+
+        .service-type-selector {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .image-upload, .video-upload {
+            border: 2px dashed var(--color-border);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            background: var(--color-light);
+        }
+
+        .image-preview, .video-preview {
+            text-align: center;
+        }
+
+        .upload-btn {
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .upload-btn:hover {
+            background: var(--color-primary-dark);
+        }
+
+        #generateThumbnailBtn {
+            background: var(--color-secondary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        #generateThumbnailBtn:hover {
+            background: var(--color-secondary-dark);
+        }
     </style>
 </head>
 <body>
     <div class="services-container">
         <div class="services-header">
             <h1 class="services-title">Manage Services</h1>
-            <button class="add-service-btn" onclick="showAddServiceForm()">
-                <i class="fas fa-plus"></i>
-                Add New Service
-            </button>
+            <div class="services-actions">
+                <div class="view-mode-selector">
+                    <label for="viewMode">Display Format:</label>
+                    <select id="viewMode" onchange="updateViewMode(this.value)">
+                        <option value="grid" <%= siteInfo.servicesViewMode !== 'catalog' ? 'selected' : '' %>>Grid View (Images/Videos)</option>
+                        <option value="catalog" <%= siteInfo.servicesViewMode === 'catalog' ? 'selected' : '' %>>Catalog View (Text Only)</option>
+                    </select>
+                </div>
+                <button class="add-service-btn" onclick="showAddServiceForm()">
+                    <i class="fas fa-plus"></i>
+                    Add New Service
+                </button>
+            </div>
         </div>
 
         <div class="services-grid">
@@ -249,33 +328,75 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modalTitle">Add New Service</h2>
-                <button class="close-modal" onclick="closeModal()">&times;</button>
+                <button class="close-modal">&times;</button>
             </div>
-            <form id="serviceForm" class="service-form" onsubmit="handleServiceSubmit(event)">
-                <input type="hidden" id="serviceId" name="serviceId">
+            <form id="serviceForm" class="service-form">
+                <input type="hidden" id="serviceId" name="id">
                 
                 <div class="form-group">
-                    <label class="form-label" for="serviceName">Service Name</label>
+                    <label for="serviceName" class="form-label">Service Name</label>
                     <input type="text" id="serviceName" name="name" class="form-control" required>
                 </div>
-
+                
                 <div class="form-group">
-                    <label class="form-label" for="servicePrice">Price</label>
-                    <input type="number" id="servicePrice" name="price" class="form-control" required min="0" step="0.01">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="serviceDescription">Description</label>
+                    <label for="serviceDescription" class="form-label">Description</label>
                     <textarea id="serviceDescription" name="description" class="form-control" rows="4" required></textarea>
                 </div>
-
+                
                 <div class="form-group">
-                    <label class="form-label" for="serviceImage">Image URL</label>
-                    <input type="url" id="serviceImage" name="image" class="form-control" required>
+                    <label for="servicePrice" class="form-label">Price</label>
+                    <input type="number" id="servicePrice" name="price" class="form-control" required min="0" step="0.01">
                 </div>
-
+                
+                <div class="form-group">
+                    <label class="form-label">Service Type</label>
+                    <div class="service-type-selector">
+                        <label class="radio-label">
+                            <input type="radio" name="type" value="image" checked onchange="toggleMediaType('image')">
+                            Image
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="type" value="video" onchange="toggleMediaType('video')">
+                            Video
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="imageUploadSection" class="form-group">
+                    <label for="serviceImage" class="form-label">Service Image</label>
+                    <div class="image-upload">
+                        <div class="image-preview" style="margin-bottom: 10px;">
+                            <img src="" alt="Preview" style="max-width: 100%; max-height: 200px; display: none;">
+                        </div>
+                        <input type="file" accept="image/*" class="form-control" id="imageFileInput">
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button type="button" class="btn upload-btn">Upload</button>
+                            <input type="text" id="serviceImage" name="image" class="image-url-input" style="flex: 1;" placeholder="Image URL">
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="videoUploadSection" class="form-group" style="display: none;">
+                    <label for="serviceVideo" class="form-label">Service Video</label>
+                    <div class="video-upload">
+                        <div class="video-preview" style="margin-bottom: 10px; max-width: 100%; max-height: 300px; display: none;">
+                            <video id="videoPreview" controls preload="metadata" style="max-width: 100%; max-height: 300px;">
+                                <source src="" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                        <input type="file" accept="video/*" id="videoFileInput" class="form-control">
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button type="button" class="btn upload-btn" id="videoUploadBtn">Upload Video</button>
+                            <input type="text" id="serviceVideo" name="videoUrl" class="video-url-input" style="flex: 1;" placeholder="Video URL">
+                        </div>
+                        <button type="button" class="btn" id="generateThumbnailBtn" style="margin-top: 10px;">Generate Thumbnail from Video</button>
+                        <p id="thumbnailStatus" style="margin-top: 10px; display: none;"></p>
+                    </div>
+                </div>
+                
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Service</button>
                 </div>
             </form>
@@ -365,6 +486,43 @@
             if (event.target === modal) {
                 closeModal();
             }
+        }
+
+        function toggleMediaType(type) {
+            const imageSection = document.getElementById('imageUploadSection');
+            const videoSection = document.getElementById('videoUploadSection');
+            
+            if (type === 'video') {
+                imageSection.style.display = 'none';
+                videoSection.style.display = 'block';
+            } else {
+                imageSection.style.display = 'block';
+                videoSection.style.display = 'none';
+            }
+        }
+
+        function updateViewMode(mode) {
+            fetch('/api/settings/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    servicesViewMode: mode
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to update view mode');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update view mode');
+            });
         }
     </script>
 </body>
