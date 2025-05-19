@@ -727,6 +727,7 @@ router.post('/bookings/bulk-action', adminAuth, async (req, res) => {
 // Add a new route for creating a service that accepts a POST request to /api/services
 router.post('/services', adminAuth, async (req, res) => {
   try {
+    console.log('Received service creation request:', req.body);
     const { name, description, price, videoUrl, isVisible, showOnHomepage, displayOrder, type } = req.body;
     let image = req.body.image;
 
@@ -750,6 +751,7 @@ router.post('/services', adminAuth, async (req, res) => {
       }
     }
 
+    // Create new service
     const newService = new Service({
       name,
       description,
@@ -762,7 +764,10 @@ router.post('/services', adminAuth, async (req, res) => {
       displayOrder: displayOrder || 0
     });
     
+    console.log('Saving new service:', newService);
     await newService.save();
+    console.log('Service saved successfully');
+    
     return res.json({ success: true, service: newService });
   } catch (error) {
     console.error('Error creating service:', error);
