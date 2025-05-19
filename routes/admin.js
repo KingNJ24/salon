@@ -22,16 +22,30 @@ router.post('/', (req, res) => {
   const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
   
+  console.log('Login attempt:', { username, providedPassword: password ? '****' : 'not provided' });
+  
   if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
     req.session.isAuthenticated = true;
-    return res.redirect('/admin/dashboard');
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.render('admin/login', { 
+          title: 'Admin Login', 
+          layout: 'layouts/admin', 
+          error: 'Login failed. Please try again.' 
+        });
+      }
+      console.log('Login successful, redirecting to dashboard');
+      return res.redirect('/admin/dashboard');
+    });
+  } else {
+    console.log('Login failed: Invalid credentials');
+    res.render('admin/login', { 
+      title: 'Admin Login', 
+      layout: 'layouts/admin', 
+      error: 'Invalid username or password' 
+    });
   }
-  
-  res.render('admin/login', { 
-    title: 'Admin Login', 
-    layout: 'layouts/admin', 
-    error: 'Invalid username or password' 
-  });
 });
 
 // Login POST handler
@@ -40,16 +54,30 @@ router.post('/login', (req, res) => {
   const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
   
+  console.log('Login attempt:', { username, providedPassword: password ? '****' : 'not provided' });
+  
   if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
     req.session.isAuthenticated = true;
-    return res.redirect('/admin/dashboard');
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.render('admin/login', { 
+          title: 'Admin Login', 
+          layout: 'layouts/admin', 
+          error: 'Login failed. Please try again.' 
+        });
+      }
+      console.log('Login successful, redirecting to dashboard');
+      return res.redirect('/admin/dashboard');
+    });
+  } else {
+    console.log('Login failed: Invalid credentials');
+    res.render('admin/login', { 
+      title: 'Admin Login', 
+      layout: 'layouts/admin', 
+      error: 'Invalid username or password' 
+    });
   }
-  
-  res.render('admin/login', { 
-    title: 'Admin Login', 
-    layout: 'layouts/admin', 
-    error: 'Invalid username or password' 
-  });
 });
 
 // Logout
