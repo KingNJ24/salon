@@ -688,9 +688,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // Load Google Maps script with error handling
+    // Load Google Maps script with proper loading attributes
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=<%= googleMapsApiKey %>&callback=initMap&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=<%= googleMapsApiKey %>&callback=initMap&libraries=places&v=beta`;
     script.async = true;
     script.defer = true;
     script.onerror = function() {
@@ -704,7 +704,6 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }
     };
-    window.initMap = initMap;
     document.head.appendChild(script);
 });
 
@@ -731,8 +730,8 @@ function initMap() {
             ]
         });
 
-        // Use AdvancedMarkerElement instead of Marker
-        const markerView = new google.maps.marker.AdvancedMarkerElement({
+        // Use regular Marker instead of AdvancedMarkerElement for better compatibility
+        const marker = new google.maps.Marker({
             map,
             position: salonLocation,
             title: 'Nandini J Makeup Studio & Luxury Salon'
@@ -748,8 +747,8 @@ function initMap() {
             `
         });
 
-        markerView.addListener('click', () => {
-            infoWindow.open(map, markerView);
+        marker.addListener('click', () => {
+            infoWindow.open(map, marker);
         });
     } catch (error) {
         console.error('Error initializing map:', error);
