@@ -146,7 +146,7 @@
         <h2 class="section-title text-center">What Our Clients Say</h2>
         <div class="reviews-container">
             <div id="google-reviews" class="reviews-grid">
-                <!-- Google Reviews will be loaded here -->
+                <div class="loading-reviews">Loading reviews...</div>
             </div>
         </div>
     </div>
@@ -575,122 +575,9 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // FAQ Toggle Functionality
-    const faqItems = document.querySelectorAll('.faq-item');
-    
-    faqItems.forEach(item => {
-        const question = item.querySelector('.faq-question');
-        question.addEventListener('click', () => {
-            const isActive = item.classList.contains('active');
-            
-            // Close all other items
-            faqItems.forEach(otherItem => {
-                if (otherItem !== item) {
-                    otherItem.classList.remove('active');
-                }
-            });
-            
-            // Toggle current item
-            item.classList.toggle('active');
-        });
-    });
-    
-    // Google Reviews Integration
-    function loadGoogleReviews() {
-        const reviewsContainer = document.getElementById('google-reviews');
-        reviewsContainer.innerHTML = '<div class="loading-reviews">Loading reviews...</div>';
-        
-        // Get API key from server-side variable
-        const apiKey = '<%= googleMapsApiKey %>';
-        const placeId = '0x390c2f98f7a35099:0x1cc5130c96e9864d'; // Nandini J Makeup Studio & Luxury Salon
-        
-        if (!apiKey) {
-            reviewsContainer.innerHTML = `
-                <div class="review-card">
-                    <p>Google Maps API key is not configured.</p>
-                    <p>Please contact your website administrator for assistance.</p>
-                </div>
-            `;
-            return;
-        }
-
-        // Use server-side proxy to avoid CORS issues
-        fetch(`/api/google-reviews?placeId=${placeId}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                
-                if (data.result && data.result.reviews) {
-                    reviewsContainer.innerHTML = '';
-                    
-                    // Add overall rating summary
-                    const ratingSummary = document.createElement('div');
-                    ratingSummary.className = 'review-card rating-summary';
-                    ratingSummary.innerHTML = `
-                        <div class="overall-rating">
-                            <div class="rating-number">${data.result.rating || 'N/A'}</div>
-                            <div class="rating-stars">${'★'.repeat(Math.round(data.result.rating || 0))}${'☆'.repeat(5-Math.round(data.result.rating || 0))}</div>
-                            <div class="total-reviews">Based on ${data.result.user_ratings_total || 0} reviews</div>
-                        </div>
-                    `;
-                    reviewsContainer.appendChild(ratingSummary);
-                    
-                    // Add individual reviews
-                    if (data.result.reviews.length > 0) {
-                        data.result.reviews.slice(0, 6).forEach(review => {
-                            const reviewCard = document.createElement('div');
-                            reviewCard.className = 'review-card';
-                            reviewCard.innerHTML = `
-                                <div class="review-header">
-                                    <img src="${review.profile_photo_url}" alt="${review.author_name}" class="review-avatar" onerror="this.src='/images/default-avatar.svg'">
-                                    <div>
-                                        <div class="review-author">${review.author_name}</div>
-                                        <div class="review-date">${new Date(review.time * 1000).toLocaleDateString()}</div>
-                                    </div>
-                                </div>
-                                <div class="review-rating">
-                                    ${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}
-                                </div>
-                                <div class="review-text">${review.text}</div>
-                            `;
-                            reviewsContainer.appendChild(reviewCard);
-                        });
-                    } else {
-                        reviewsContainer.innerHTML = `
-                            <div class="review-card">
-                                <p>No reviews available at the moment.</p>
-                            </div>
-                        `;
-                    }
-                } else {
-                    reviewsContainer.innerHTML = `
-                        <div class="review-card">
-                            <p>No reviews available at the moment.</p>
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading Google reviews:', error);
-                reviewsContainer.innerHTML = `
-                    <div class="review-card">
-                        <p>Unable to load reviews at this time. Please try again later.</p>
-                        <p class="error-details">${error.message}</p>
-                    </div>
-                `;
-            });
-    }
-    
     // Load Google Maps script with proper loading attributes
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=<%= googleMapsApiKey %>&callback=initMap&libraries=places&v=beta`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=<%= googleMapsApiKey %>&callback=initMap&libraries=places&v=weekly`;
     script.async = true;
     script.defer = true;
     script.onerror = function() {
@@ -705,12 +592,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     document.head.appendChild(script);
+
+    // Load Google Reviews
+    loadGoogleReviews();
 });
 
 // Initialize Google Map
 function initMap() {
     const apiKey = '<%= googleMapsApiKey %>';
-    if (!apiKey) return;
+    if (!apiKey) {
+        console.error('Google Maps API key is missing');
+        return;
+    }
 
     const mapElement = document.getElementById('salon-map');
     if (!mapElement) return;
@@ -730,7 +623,7 @@ function initMap() {
             ]
         });
 
-        // Use regular Marker instead of AdvancedMarkerElement for better compatibility
+        // Use regular Marker instead of AdvancedMarkerElement
         const marker = new google.maps.Marker({
             map,
             position: salonLocation,
@@ -758,5 +651,97 @@ function initMap() {
             </div>
         `;
     }
+}
+
+// Load Google Reviews
+function loadGoogleReviews() {
+    const reviewsContainer = document.getElementById('google-reviews');
+    if (!reviewsContainer) return;
+
+    const apiKey = '<%= googleMapsApiKey %>';
+    const placeId = '0x390c2f98f7a35099:0x1cc5130c96e9864d'; // Nandini J Makeup Studio & Luxury Salon
+    
+    if (!apiKey) {
+        reviewsContainer.innerHTML = `
+            <div class="review-card">
+                <p>Google Maps API key is not configured.</p>
+                <p>Please contact your website administrator for assistance.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Use server-side proxy to avoid CORS issues
+    fetch(`/api/google-reviews?placeId=${placeId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            if (data.result && data.result.reviews) {
+                reviewsContainer.innerHTML = '';
+                
+                // Add overall rating summary
+                const ratingSummary = document.createElement('div');
+                ratingSummary.className = 'review-card rating-summary';
+                ratingSummary.innerHTML = `
+                    <div class="overall-rating">
+                        <div class="rating-number">${data.result.rating || 'N/A'}</div>
+                        <div class="rating-stars">${'★'.repeat(Math.round(data.result.rating || 0))}${'☆'.repeat(5-Math.round(data.result.rating || 0))}</div>
+                        <div class="total-reviews">Based on ${data.result.user_ratings_total || 0} reviews</div>
+                    </div>
+                `;
+                reviewsContainer.appendChild(ratingSummary);
+                
+                // Add individual reviews
+                if (data.result.reviews.length > 0) {
+                    data.result.reviews.slice(0, 6).forEach(review => {
+                        const reviewCard = document.createElement('div');
+                        reviewCard.className = 'review-card';
+                        reviewCard.innerHTML = `
+                            <div class="review-header">
+                                <img src="${review.profile_photo_url}" alt="${review.author_name}" class="review-avatar" onerror="this.src='/images/default-avatar.svg'">
+                                <div>
+                                    <div class="review-author">${review.author_name}</div>
+                                    <div class="review-date">${new Date(review.time * 1000).toLocaleDateString()}</div>
+                                </div>
+                            </div>
+                            <div class="review-rating">
+                                ${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}
+                            </div>
+                            <div class="review-text">${review.text}</div>
+                        `;
+                        reviewsContainer.appendChild(reviewCard);
+                    });
+                } else {
+                    reviewsContainer.innerHTML = `
+                        <div class="review-card">
+                            <p>No reviews available at the moment.</p>
+                        </div>
+                    `;
+                }
+            } else {
+                reviewsContainer.innerHTML = `
+                    <div class="review-card">
+                        <p>No reviews available at the moment.</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading Google reviews:', error);
+            reviewsContainer.innerHTML = `
+                <div class="review-card">
+                    <p>Unable to load reviews at this time. Please try again later.</p>
+                    <p class="error-details">${error.message}</p>
+                </div>
+            `;
+        });
 }
 </script> 
