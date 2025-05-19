@@ -659,7 +659,7 @@ function loadGoogleReviews() {
     if (!reviewsContainer) return;
 
     const apiKey = '<%= googleMapsApiKey %>';
-    const placeId = '0x390c2f98f7a35099:0x1cc5130c96e9864d'; // Nandini J Makeup Studio & Luxury Salon
+    const placeId = 'ChIJN1t_tDeuEmsRUsoyG83frY4'; // Nandini J Makeup Studio & Luxury Salon
     
     if (!apiKey) {
         reviewsContainer.innerHTML = `
@@ -680,7 +680,7 @@ function loadGoogleReviews() {
     `;
 
     // Use server-side proxy to avoid CORS issues
-    fetch(`/api/google-reviews?placeId=${placeId}`)
+    fetch(`/api/google-reviews?placeId=${encodeURIComponent(placeId)}`)
         .then(response => {
             if (!response.ok) {
                 return response.json().then(data => {
@@ -695,55 +695,41 @@ function loadGoogleReviews() {
             }
             
             if (data.result && data.result.reviews) {
-                reviewsContainer.innerHTML = '';
+                const reviews = data.result.reviews;
+                const rating = data.result.rating || 0;
+                const totalRatings = data.result.user_ratings_total || 0;
                 
-                // Add overall rating summary
-                const ratingSummary = document.createElement('div');
-                ratingSummary.className = 'review-card rating-summary';
-                ratingSummary.innerHTML = `
-                    <div class="overall-rating">
-                        <div class="rating-number">${data.result.rating || 'N/A'}</div>
-                        <div class="rating-stars">${'★'.repeat(Math.round(data.result.rating || 0))}${'☆'.repeat(5-Math.round(data.result.rating || 0))}</div>
-                        <div class="total-reviews">Based on ${data.result.user_ratings_total || 0} reviews</div>
+                reviewsContainer.innerHTML = `
+                    <div class="review-summary">
+                        <div class="overall-rating">
+                            <h3>Overall Rating</h3>
+                            <div class="rating-stars">
+                                ${'★'.repeat(Math.round(rating))}${'☆'.repeat(5 - Math.round(rating))}
+                            </div>
+                            <p>${rating.toFixed(1)} out of 5 (${totalRatings} reviews)</p>
+                        </div>
                     </div>
-                `;
-                reviewsContainer.appendChild(ratingSummary);
-                
-                // Add individual reviews
-                if (data.result.reviews.length > 0) {
-                    data.result.reviews.slice(0, 6).forEach(review => {
-                        const reviewCard = document.createElement('div');
-                        reviewCard.className = 'review-card';
-                        reviewCard.innerHTML = `
+                    ${reviews.map(review => `
+                        <div class="review-card">
                             <div class="review-header">
-                                <img src="${review.profile_photo_url}" alt="${review.author_name}" class="review-avatar" onerror="this.src='/images/default-avatar.svg'">
+                                <img src="${review.profile_photo_url || 'https://via.placeholder.com/60'}" 
+                                     alt="${review.author_name}" 
+                                     class="review-avatar"
+                                     onerror="this.src='https://via.placeholder.com/60'">
                                 <div>
                                     <div class="review-author">${review.author_name}</div>
                                     <div class="review-date">${new Date(review.time * 1000).toLocaleDateString()}</div>
                                 </div>
                             </div>
                             <div class="review-rating">
-                                ${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}
+                                ${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}
                             </div>
                             <div class="review-text">${review.text}</div>
-                        `;
-                        reviewsContainer.appendChild(reviewCard);
-                    });
-                } else {
-                    reviewsContainer.innerHTML = `
-                        <div class="review-card">
-                            <p>No reviews available at the moment.</p>
-                            <p class="error-details">This location doesn't have any reviews yet.</p>
                         </div>
-                    `;
-                }
-            } else {
-                reviewsContainer.innerHTML = `
-                    <div class="review-card">
-                        <p>No reviews available at the moment.</p>
-                        <p class="error-details">Unable to fetch reviews for this location.</p>
-                    </div>
+                    `).join('')}
                 `;
+            } else {
+                throw new Error('No reviews found');
             }
         })
         .catch(error => {
@@ -752,7 +738,7 @@ function loadGoogleReviews() {
                 <div class="review-card">
                     <p>Unable to load reviews at this time.</p>
                     <p class="error-details">${error.message}</p>
-                    <p class="error-help">Please try again later or contact support if the issue persists.</p>
+                    <p class="help-text">Please try again later or contact us directly for feedback.</p>
                 </div>
             `;
         });
