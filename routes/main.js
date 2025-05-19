@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Service, Gallery, Team, SiteInfo, Booking } = require('../models');
+const axios = require('axios');
 
 // Home page
 router.get('/', async (req, res, next) => {
@@ -334,6 +335,60 @@ router.get('/fix-video-items', async (req, res, next) => {
     console.error('Error fixing video items:', error);
     res.status(500).send('Error: ' + error.message);
   }
+});
+
+// Google Places API proxy route
+router.get('/api/google-reviews', async (req, res) => {
+    try {
+        const { placeId } = req.query;
+        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+
+        if (!placeId || !apiKey) {
+            return res.status(400).json({ 
+                error: 'Missing required parameters',
+                details: {
+                    placeId: !placeId ? 'Missing' : 'Present',
+                    apiKey: !apiKey ? 'Missing' : 'Present'
+                }
+            });
+        }
+
+        // Add logging to debug the request
+        console.log('Fetching reviews for place:', placeId);
+
+        const response = await axios.get(
+            `https://maps.googleapis.com/maps/api/place/details/json`,
+            {
+                params: {
+                    place_id: placeId,
+                    fields: 'reviews,rating,user_ratings_total',
+                    key: apiKey
+                },
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }
+        );
+
+        // Add logging to debug the response
+        console.log('Google Places API response status:', response.status);
+
+        if (response.data.status === 'OK') {
+            res.json(response.data);
+        } else {
+            console.error('Google Places API error:', response.data);
+            res.status(400).json({
+                error: 'Failed to fetch reviews',
+                details: response.data
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching Google reviews:', error.response?.data || error.message);
+        res.status(500).json({ 
+            error: 'Failed to fetch reviews',
+            details: error.response?.data || error.message
+        });
+    }
 });
 
 module.exports = router; 

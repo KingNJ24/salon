@@ -613,10 +613,20 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             return;
         }
-        
-        fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${apiKey}`)
-            .then(response => response.json())
+
+        // Use server-side proxy to avoid CORS issues
+        fetch(`/api/google-reviews?placeId=${placeId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
                 if (data.result && data.result.reviews) {
                     reviewsContainer.innerHTML = '';
                     
@@ -625,32 +635,40 @@ document.addEventListener('DOMContentLoaded', function() {
                     ratingSummary.className = 'review-card rating-summary';
                     ratingSummary.innerHTML = `
                         <div class="overall-rating">
-                            <div class="rating-number">${data.result.rating}</div>
-                            <div class="rating-stars">${'★'.repeat(Math.round(data.result.rating))}${'☆'.repeat(5-Math.round(data.result.rating))}</div>
-                            <div class="total-reviews">Based on ${data.result.user_ratings_total} reviews</div>
+                            <div class="rating-number">${data.result.rating || 'N/A'}</div>
+                            <div class="rating-stars">${'★'.repeat(Math.round(data.result.rating || 0))}${'☆'.repeat(5-Math.round(data.result.rating || 0))}</div>
+                            <div class="total-reviews">Based on ${data.result.user_ratings_total || 0} reviews</div>
                         </div>
                     `;
                     reviewsContainer.appendChild(ratingSummary);
                     
                     // Add individual reviews
-                    data.result.reviews.slice(0, 6).forEach(review => {
-                        const reviewCard = document.createElement('div');
-                        reviewCard.className = 'review-card';
-                        reviewCard.innerHTML = `
-                            <div class="review-header">
-                                <img src="${review.profile_photo_url}" alt="${review.author_name}" class="review-avatar">
-                                <div>
-                                    <div class="review-author">${review.author_name}</div>
-                                    <div class="review-date">${new Date(review.time * 1000).toLocaleDateString()}</div>
+                    if (data.result.reviews.length > 0) {
+                        data.result.reviews.slice(0, 6).forEach(review => {
+                            const reviewCard = document.createElement('div');
+                            reviewCard.className = 'review-card';
+                            reviewCard.innerHTML = `
+                                <div class="review-header">
+                                    <img src="${review.profile_photo_url}" alt="${review.author_name}" class="review-avatar" onerror="this.src='/images/default-avatar.svg'">
+                                    <div>
+                                        <div class="review-author">${review.author_name}</div>
+                                        <div class="review-date">${new Date(review.time * 1000).toLocaleDateString()}</div>
+                                    </div>
                                 </div>
+                                <div class="review-rating">
+                                    ${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}
+                                </div>
+                                <div class="review-text">${review.text}</div>
+                            `;
+                            reviewsContainer.appendChild(reviewCard);
+                        });
+                    } else {
+                        reviewsContainer.innerHTML = `
+                            <div class="review-card">
+                                <p>No reviews available at the moment.</p>
                             </div>
-                            <div class="review-rating">
-                                ${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}
-                            </div>
-                            <div class="review-text">${review.text}</div>
                         `;
-                        reviewsContainer.appendChild(reviewCard);
-                    });
+                    }
                 } else {
                     reviewsContainer.innerHTML = `
                         <div class="review-card">
@@ -664,6 +682,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 reviewsContainer.innerHTML = `
                     <div class="review-card">
                         <p>Unable to load reviews at this time. Please try again later.</p>
+                        <p class="error-details">${error.message}</p>
                     </div>
                 `;
             });
@@ -679,48 +698,68 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const salonLocation = { lat: 29.4450669, lng: 77.3058998 };
         
-        const map = new google.maps.Map(mapElement, {
-            center: salonLocation,
-            zoom: 15,
-            styles: [
-                {
-                    "featureType": "poi",
-                    "elementType": "labels",
-                    "stylers": [{ "visibility": "off" }]
-                }
-            ]
-        });
+        try {
+            const map = new google.maps.Map(mapElement, {
+                center: salonLocation,
+                zoom: 15,
+                styles: [
+                    {
+                        "featureType": "poi",
+                        "elementType": "labels",
+                        "stylers": [{ "visibility": "off" }]
+                    }
+                ]
+            });
 
-        const marker = new google.maps.Marker({
-            position: salonLocation,
-            map: map,
-            title: 'Nandini J Makeup Studio & Luxury Salon',
-            animation: google.maps.Animation.DROP
-        });
+            const marker = new google.maps.Marker({
+                position: salonLocation,
+                map: map,
+                title: 'Nandini J Makeup Studio & Luxury Salon',
+                animation: google.maps.Animation.DROP
+            });
 
-        const infoWindow = new google.maps.InfoWindow({
-            content: `
-                <div style="padding: 10px;">
-                    <h3 style="margin: 0 0 10px 0; color: var(--color-primary);">Nandini J Makeup Studio & Luxury Salon</h3>
-                    <p style="margin: 5px 0;"><i class="fas fa-map-marker-alt"></i> <%= siteInfo.address %></p>
-                    <p style="margin: 5px 0;"><i class="fas fa-phone"></i> <%= siteInfo.phone %></p>
+            const infoWindow = new google.maps.InfoWindow({
+                content: `
+                    <div style="padding: 10px;">
+                        <h3 style="margin: 0 0 10px 0; color: var(--color-primary);">Nandini J Makeup Studio & Luxury Salon</h3>
+                        <p style="margin: 5px 0;"><i class="fas fa-map-marker-alt"></i> <%= siteInfo.address %></p>
+                        <p style="margin: 5px 0;"><i class="fas fa-phone"></i> <%= siteInfo.phone %></p>
+                    </div>
+                `
+            });
+
+            marker.addListener('click', () => {
+                infoWindow.open(map, marker);
+            });
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            mapElement.innerHTML = `
+                <div style="padding: 20px; text-align: center; background: #f8f9fa; border-radius: 8px;">
+                    <p>Unable to load map at this time. Please try again later.</p>
                 </div>
-            `
-        });
-
-        marker.addListener('click', () => {
-            infoWindow.open(map, marker);
-        });
+            `;
+        }
     }
 
     // Load Google Reviews
     loadGoogleReviews();
 
-    // Load Google Maps script
+    // Load Google Maps script with error handling
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=<%= googleMapsApiKey %>&callback=initMap`;
     script.async = true;
     script.defer = true;
+    script.onerror = function() {
+        console.error('Failed to load Google Maps script');
+        const mapElement = document.getElementById('salon-map');
+        if (mapElement) {
+            mapElement.innerHTML = `
+                <div style="padding: 20px; text-align: center; background: #f8f9fa; border-radius: 8px;">
+                    <p>Unable to load map at this time. Please try again later.</p>
+                </div>
+            `;
+        }
+    };
     window.initMap = initMap;
     document.head.appendChild(script);
 });
