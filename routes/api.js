@@ -8,7 +8,14 @@ const { Team, SiteInfo, Booking, ServiceCategory, GalleryCategory, Service } = r
 const axios = require('axios');
 const multer = require('multer');
 const uploadMulter = multer({ dest: 'uploads/' });
-const { cloudinary } = require('../utils/cloudinary');
+const cloudinary = require('cloudinary').v2;
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 // Google Places API proxy route
 router.get('/google-reviews', async (req, res) => {
@@ -849,16 +856,19 @@ router.post('/services', adminAuth, async (req, res) => {
     // Handle file upload if present
     if (req.body.file && req.body.file.startsWith('data:')) {
       try {
+        console.log('Attempting to upload file to Cloudinary...');
         const result = await cloudinary.uploader.upload(req.body.file, {
           folder: 'salon/services',
-          resource_type: 'auto'
+          resource_type: 'auto',
+          allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'webm']
         });
+        console.log('Cloudinary upload successful:', result.secure_url);
         image = result.secure_url;
       } catch (uploadError) {
         console.error('Error uploading to Cloudinary:', uploadError);
         return res.status(500).json({ 
           success: false, 
-          message: 'Error uploading file to Cloudinary' 
+          message: 'Error uploading file to Cloudinary: ' + uploadError.message 
         });
       }
     }
@@ -878,7 +888,11 @@ router.post('/services', adminAuth, async (req, res) => {
     return res.json({ success: true, service: newService });
   } catch (error) {
     console.error('Error creating service:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ 
+      success: false, 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
