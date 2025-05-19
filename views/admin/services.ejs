@@ -349,6 +349,13 @@
                 </div>
                 
                 <div class="form-group">
+                    <label for="serviceCategory" class="form-label">Category</label>
+                    <select id="serviceCategory" name="category" class="form-control" required>
+                        <option value="General">Loading categories...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
                     <label class="form-label">Service Type</label>
                     <div class="service-type-selector">
                         <label class="radio-label">
@@ -408,6 +415,7 @@
             document.getElementById('modalTitle').textContent = 'Add New Service';
             document.getElementById('serviceForm').reset();
             document.getElementById('serviceId').value = '';
+            loadCategories();
             document.getElementById('serviceModal').style.display = 'flex';
         }
 
@@ -422,6 +430,7 @@
                     document.getElementById('servicePrice').value = service.price;
                     document.getElementById('serviceDescription').value = service.description;
                     document.getElementById('serviceImage').value = service.image;
+                    document.getElementById('serviceCategory').value = service.category || 'General';
                     document.getElementById('serviceModal').style.display = 'flex';
                 })
                 .catch(error => {
@@ -681,6 +690,42 @@
                     }
                 });
             }
+        });
+
+        // Add this function to load categories
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/service-categories');
+                const data = await response.json();
+                
+                if (data.success && data.categories) {
+                    const categorySelect = document.getElementById('serviceCategory');
+                    categorySelect.innerHTML = ''; // Clear loading message
+                    
+                    // Add default option
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = 'General';
+                    defaultOption.textContent = 'General';
+                    categorySelect.appendChild(defaultOption);
+                    
+                    // Add categories from database
+                    data.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.name;
+                        option.textContent = category.name;
+                        categorySelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                showNotification('Failed to load categories', 'error');
+            }
+        }
+
+        // Call loadCategories when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCategories();
+            // ... existing DOMContentLoaded code ...
         });
     </script> 
 </body>

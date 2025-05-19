@@ -751,7 +751,7 @@ router.post('/services', adminAuth, async (req, res) => {
       }
     }
 
-    // Create new service
+    // Create new service with default category if not provided
     const newService = new Service({
       name,
       description,
@@ -761,7 +761,8 @@ router.post('/services', adminAuth, async (req, res) => {
       type: type || 'image',
       isVisible: isVisible === 'on' || isVisible === true,
       showOnHomepage: showOnHomepage === 'on' || showOnHomepage === true,
-      displayOrder: displayOrder || 0
+      displayOrder: displayOrder || 0,
+      category: req.body.category || 'General' // Add default category
     });
     
     console.log('Saving new service:', newService);
