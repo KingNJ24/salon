@@ -181,7 +181,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
+        background-color: rgba(0, 0, 0, 0.9);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -190,10 +190,12 @@
     
     .video-container {
         position: relative;
-        width: 80%;
-        max-width: 800px;
+        width: 90%;
+        max-width: 1200px;
         aspect-ratio: 16/9;
         background-color: #000;
+        border-radius: 8px;
+        overflow: hidden;
     }
     
     .video-container video {
@@ -204,13 +206,25 @@
     
     .close-modal {
         position: absolute;
-        top: -40px;
-        right: -40px;
-        background: none;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.5);
         border: none;
         color: white;
-        font-size: 30px;
+        font-size: 24px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1001;
+        transition: background-color 0.3s ease;
+    }
+    
+    .close-modal:hover {
+        background: rgba(0, 0, 0, 0.8);
     }
 </style>
 
@@ -302,11 +316,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 videoModal.style.display = 'flex';
                 
                 // Try playing after loading
-                setTimeout(() => {
+                videoPlayer.addEventListener('loadeddata', function playHandler() {
                     videoPlayer.play().catch(error => {
                         console.error('Error playing video in modal:', error);
                     });
-                }, 100);
+                    videoPlayer.removeEventListener('loadeddata', playHandler);
+                });
             }
         });
     });
@@ -334,6 +349,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && videoModal.style.display === 'flex') {
+            videoModal.style.display = 'none';
+            if (videoPlayer) {
+                videoPlayer.pause();
+                videoPlayer.currentTime = 0;
+            }
+        }
+    });
     
     // Category filtering with enhanced animations
     const categoryButtons = document.querySelectorAll('.category-filter');
