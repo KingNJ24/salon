@@ -8,6 +8,7 @@ const { Team, SiteInfo, Booking, ServiceCategory, GalleryCategory, Service } = r
 const axios = require('axios');
 const multer = require('multer');
 const uploadMulter = multer({ dest: 'uploads/' });
+const { cloudinary } = require('../utils/cloudinary');
 
 // Google Places API proxy route
 router.get('/google-reviews', async (req, res) => {
@@ -839,14 +840,29 @@ router.post('/bookings/bulk-action', adminAuth, async (req, res) => {
   }
 });
 
-// Add a new route for creating a service that accepts a POST request to /api/services. This route will handle file uploads and save the service details.
-router.post('/services', adminAuth, uploadMulter.single('file'), async (req, res) => {
+// Add a new route for creating a service that accepts a POST request to /api/services
+router.post('/services', adminAuth, async (req, res) => {
   try {
     const { name, description, price, videoUrl, isVisible, showOnHomepage, displayOrder } = req.body;
     let image = req.body.image;
-    if (req.file) {
-      image = '/' + req.file.path.split('public')[1].replace(/\\/g, '/');
+
+    // Handle file upload if present
+    if (req.body.file && req.body.file.startsWith('data:')) {
+      try {
+        const result = await cloudinary.uploader.upload(req.body.file, {
+          folder: 'salon/services',
+          resource_type: 'auto'
+        });
+        image = result.secure_url;
+      } catch (uploadError) {
+        console.error('Error uploading to Cloudinary:', uploadError);
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Error uploading file to Cloudinary' 
+        });
+      }
     }
+
     const newService = new Service({
       name,
       description,
@@ -857,6 +873,7 @@ router.post('/services', adminAuth, uploadMulter.single('file'), async (req, res
       showOnHomepage: showOnHomepage === 'on' || showOnHomepage === true,
       displayOrder: displayOrder || 0
     });
+    
     await newService.save();
     return res.json({ success: true, service: newService });
   } catch (error) {
