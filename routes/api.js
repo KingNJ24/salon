@@ -815,4 +815,26 @@ router.post('/generate-thumbnail', adminAuth, async (req, res) => {
   }
 });
 
+// Bulk actions for bookings
+router.post('/bookings/bulk-action', adminAuth, async (req, res) => {
+  try {
+    const { ids, action, status } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'No booking IDs provided' });
+    }
+    if (action === 'delete') {
+      await Booking.deleteMany({ _id: { $in: ids } });
+      return res.json({ success: true, message: 'Bookings deleted successfully' });
+    } else if (action === 'update-status' && status) {
+      await Booking.updateMany({ _id: { $in: ids } }, { $set: { status } });
+      return res.json({ success: true, message: 'Bookings updated successfully' });
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid action or missing status' });
+    }
+  } catch (error) {
+    console.error('Error in bulk action:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router; 

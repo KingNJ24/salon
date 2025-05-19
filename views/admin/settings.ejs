@@ -209,8 +209,8 @@
     <div class="admin-container">
         <div class="settings-header">
             <h1 class="settings-title">Settings</h1>
-        </div>
-
+                    </div>
+                    
         <div class="settings-grid">
             <!-- General Settings -->
             <div class="settings-card">
@@ -218,50 +218,50 @@
                     <h2 class="card-title">
                         <div class="card-icon">
                             <i class="fas fa-cog"></i>
-                        </div>
+                    </div>
                         General Settings
                     </h2>
                 </div>
                 <div class="card-body">
                     <form id="generalSettingsForm">
-                        <div class="form-group">
+            <div class="form-group">
                             <label class="form-label" for="businessName">Business Name</label>
                             <input type="text" id="businessName" name="businessName" class="form-control" value="Nandini J Makeup Studio & Luxury Salon -HD Party Makeup |Haircut & Styling |HD Bridal Makeup in Shamli" required>
                             <div class="form-error">Business name is required</div>
-                        </div>
-
-                        <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                             <label class="form-label" for="latitude">Latitude</label>
                             <input type="number" id="latitude" name="latitude" class="form-control" step="any" value="29.445101" required>
                             <div class="form-error">Valid latitude is required</div>
-                        </div>
-
-                        <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                             <label class="form-label" for="longitude">Longitude</label>
                             <input type="number" id="longitude" name="longitude" class="form-control" step="any" value="77.305900" required>
                             <div class="form-error">Valid longitude is required</div>
-                        </div>
-
-                        <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                             <label class="form-label" for="salonName">Salon Name</label>
                             <input type="text" id="salonName" name="salonName" class="form-control" value="<%= siteInfo.salonName || '' %>">
-                        </div>
-
-                        <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                             <label class="form-label" for="salonEmail">Email Address</label>
                             <input type="email" id="salonEmail" class="form-control" value="contact@nandinij.com">
-                        </div>
-
-                        <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                             <label class="form-label" for="salonPhone">Phone Number</label>
                             <input type="tel" id="salonPhone" class="form-control" value="+1 234 567 8900">
-                        </div>
-
-                        <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                             <label class="form-label" for="salonAddress">Address</label>
                             <textarea id="salonAddress" class="form-control" rows="3">123 Beauty Street, City, State 12345</textarea>
-                        </div>
-
+            </div>
+            
                         <button type="submit" class="btn btn-primary save-button">
                             <i class="fas fa-save"></i>
                             Save Changes
@@ -269,7 +269,7 @@
                     </form>
                 </div>
             </div>
-
+            
             <!-- Appearance Settings -->
             <div class="settings-card">
                 <div class="card-header">
@@ -282,7 +282,7 @@
                 </div>
                 <div class="card-body">
                     <form id="appearanceSettingsForm">
-                        <div class="form-group">
+            <div class="form-group">
                             <label class="form-label">Primary Color</label>
                             <div class="color-picker">
                                 <div class="color-option active" style="background: #ff69b4;" data-color="#ff69b4"></div>
@@ -290,19 +290,19 @@
                                 <div class="color-option" style="background: #2196F3;" data-color="#2196F3"></div>
                                 <div class="color-option" style="background: #9C27B0;" data-color="#9C27B0"></div>
                                 <div class="color-option" style="background: #FF9800;" data-color="#FF9800"></div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
+            </div>
+            </div>
+            
+            <div class="form-group">
                             <label class="form-label" for="logoUpload">Logo</label>
                             <input type="file" id="logoUpload" class="form-control" accept="image/*">
-                        </div>
-
-                        <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                             <label class="form-label" for="faviconUpload">Favicon</label>
                             <input type="file" id="faviconUpload" class="form-control" accept="image/*">
-                        </div>
-
+            </div>
+            
                         <button type="submit" class="btn btn-primary save-button">
                             <i class="fas fa-save"></i>
                             Save Changes
@@ -310,7 +310,7 @@
                     </form>
                 </div>
             </div>
-
+            
             <!-- Social Media Settings -->
             <div class="settings-card">
                 <div class="card-header">
@@ -340,28 +340,28 @@
                                 <i class="fab fa-youtube"></i>
                                 <span>YouTube</span>
                             </a>
-                        </div>
-
-                        <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                             <label class="form-label" for="facebookUrl">Facebook URL</label>
                             <input type="url" id="facebookUrl" class="form-control" placeholder="https://facebook.com/your-page">
-                        </div>
-
-                        <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                             <label class="form-label" for="instagramUrl">Instagram URL</label>
                             <input type="url" id="instagramUrl" class="form-control" placeholder="https://instagram.com/your-profile">
-                        </div>
-
-                        <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                             <label class="form-label" for="twitterUrl">Twitter URL</label>
                             <input type="url" id="twitterUrl" class="form-control" placeholder="https://twitter.com/your-handle">
-                        </div>
-
-                        <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                             <label class="form-label" for="youtubeUrl">YouTube URL</label>
                             <input type="url" id="youtubeUrl" class="form-control" placeholder="https://youtube.com/your-channel">
-                        </div>
-
+            </div>
+            
                         <button type="submit" class="btn btn-primary save-button">
                             <i class="fas fa-save"></i>
                             Save Changes
@@ -369,36 +369,36 @@
                     </form>
                 </div>
             </div>
-
+            
             <!-- Notification Settings -->
             <div class="settings-card">
                 <div class="card-header">
                     <h2 class="card-title">
                         <div class="card-icon">
                             <i class="fas fa-bell"></i>
-                        </div>
+                    </div>
                         Notifications
                     </h2>
                 </div>
                 <div class="card-body">
                     <form id="notificationSettingsForm">
-                        <div class="form-group">
+            <div class="form-group">
                             <label class="form-label">Email Notifications</label>
                             <div class="form-check">
                                 <input type="checkbox" id="newBookingEmail" class="form-check-input" checked>
                                 <label class="form-check-label" for="newBookingEmail">New Booking Notifications</label>
-                            </div>
+                </div>
                             <div class="form-check">
                                 <input type="checkbox" id="reminderEmail" class="form-check-input" checked>
                                 <label class="form-check-label" for="reminderEmail">Booking Reminders</label>
-                            </div>
+                    </div>
                             <div class="form-check">
                                 <input type="checkbox" id="reviewEmail" class="form-check-input" checked>
                                 <label class="form-check-label" for="reviewEmail">New Review Notifications</label>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
+                </div>
+            </div>
+            
+            <div class="form-group">
                             <label class="form-label">SMS Notifications</label>
                             <div class="form-check">
                                 <input type="checkbox" id="newBookingSMS" class="form-check-input">
@@ -408,19 +408,19 @@
                                 <input type="checkbox" id="reminderSMS" class="form-check-input" checked>
                                 <label class="form-check-label" for="reminderSMS">Booking Reminders</label>
                             </div>
-                        </div>
-
+            </div>
+            
                         <button type="submit" class="btn btn-primary save-button">
                             <i class="fas fa-save"></i>
                             Save Changes
                         </button>
                     </form>
-                </div>
             </div>
-        </div>
+            </div>
     </div>
+</div>
 
-    <script>
+<script>
         // Color picker functionality
         const colorOptions = document.querySelectorAll('.color-option');
         colorOptions.forEach(option => {
@@ -465,14 +465,14 @@
             }
             
             if (hasError) {
-                return;
-            }
+                    return;
+                }
             
             try {
                 const formData = new FormData(this);
                 const response = await fetch('/api/settings/update', {
-                    method: 'POST',
-                    headers: {
+                        method: 'POST',
+                        headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(Object.fromEntries(formData))
@@ -483,10 +483,10 @@
                 if (result.success) {
                     alert('Settings saved successfully!');
                     window.location.reload();
-                } else {
+                    } else {
                     alert('Error saving settings: ' + result.message);
-                }
-            } catch (error) {
+                    }
+                } catch (error) {
                 console.error('Error saving settings:', error);
                 alert('Error saving settings. Please try again.');
             }
@@ -523,7 +523,7 @@
                 // Handle favicon upload preview
                 console.log('Favicon file selected:', e.target.files[0].name);
             }
-        });
-    </script>
+    });
+</script>
 </body>
 </html> 

@@ -142,12 +142,30 @@ router.get('/settings', adminAuth, async (req, res, next) => {
 // Bookings admin page
 router.get('/bookings', adminAuth, async (req, res, next) => {
   try {
-    const bookings = await Booking.find();
-    
+    const { status, service, date, sort } = req.query;
+    let query = {};
+    if (status) query.status = status;
+    if (service) query.service = service;
+    if (date) {
+      const startDate = new Date(date);
+      const endDate = new Date(date);
+      endDate.setDate(endDate.getDate() + 1);
+      query.date = { $gte: startDate, $lt: endDate };
+    }
+    let sortOption = {};
+    if (sort === 'date-desc') sortOption = { date: -1 };
+    else if (sort === 'date-asc') sortOption = { date: 1 };
+    else if (sort === 'status') sortOption = { status: 1 };
+    else if (sort === 'customer') sortOption = { name: 1 };
+    else sortOption = { date: -1 }; // default sort by newest date
+
+    const bookings = await Booking.find(query).sort(sortOption);
+    const services = await Service.find();
     res.render('admin/bookings', { 
       title: 'Manage Bookings', 
       layout: 'layouts/admin', 
-      bookings 
+      bookings,
+      services
     });
   } catch (error) {
     next(error);

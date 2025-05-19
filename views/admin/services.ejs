@@ -6,7 +6,7 @@
     <title>Manage Services - Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/admin-styles.css">
-    <style>
+<style>
         .services-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -458,15 +458,15 @@
 
             fetch(url, {
                 method: method,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
                 body: JSON.stringify(Object.fromEntries(formData))
             })
             .then(response => {
                 if (response.ok) {
                     window.location.reload();
-                } else {
+                                } else {
                     throw new Error('Failed to save service');
                 }
             })
@@ -495,7 +495,7 @@
             if (type === 'video') {
                 imageSection.style.display = 'none';
                 videoSection.style.display = 'block';
-            } else {
+                                } else {
                 imageSection.style.display = 'block';
                 videoSection.style.display = 'none';
             }
@@ -503,19 +503,19 @@
 
         function updateViewMode(mode) {
             fetch('/api/settings/update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
                     servicesViewMode: mode
                 })
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
+                    if (data.success) {
                     window.location.reload();
-                } else {
+                    } else {
                     alert('Failed to update view mode');
                 }
             })
@@ -524,6 +524,6 @@
                 alert('Failed to update view mode');
             });
         }
-    </script>
+</script> 
 </body>
 </html> 
