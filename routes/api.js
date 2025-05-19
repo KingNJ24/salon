@@ -6,8 +6,6 @@ const serviceController = require('../controllers/serviceController');
 const galleryController = require('../controllers/galleryController');
 const { Team, SiteInfo, Booking, ServiceCategory, GalleryCategory, Service } = require('../models');
 const axios = require('axios');
-const multer = require('multer');
-const uploadMulter = multer({ dest: 'uploads/' });
 const cloudinary = require('cloudinary').v2;
 
 // Configure Cloudinary
@@ -79,165 +77,44 @@ router.get('/google-reviews', async (req, res) => {
 });
 
 // File upload endpoint
-router.post('/upload', adminAuth, (req, res) => {
+router.post('/upload', adminAuth, async (req, res) => {
   try {
-    // ALWAYS use Cloudinary in production
-    if (process.env.VERCEL === '1' || process.env.NODE_ENV === 'production') {
-      console.log('PRODUCTION ENVIRONMENT: Using Cloudinary for all uploads');
-      
-      // If the request has base64 data already, pass directly to Cloudinary
-      if (req.body && req.body.file) {
-        const { cloudinary } = require('../utils/cloudinary');
-      
-        // Process the base64 data directly
-        try {
-          // Determine content type and resource type
-          const fileDataParts = req.body.file.split(';base64,');
-          if (fileDataParts.length !== 2) {
-            return res.status(400).json({
-              success: false,
-              message: 'Invalid file format. Expected base64 encoded data.'
-            });
-          }
-          
-          const fileType = fileDataParts[0];
-          // Check for video type
-          const isVideo = fileType.includes('video/');
-          
-          // Upload directly to Cloudinary
-          cloudinary.uploader.upload(req.body.file, {
-            folder: 'salon',
-            resource_type: 'auto', 
-            allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-          })
-          .then(result => {
-            return res.json({
-              success: true,
-              filePath: result.secure_url,
-              fileType: result.resource_type,
-              originalName: req.body.fileName || result.original_filename || 'uploaded-file',
-              size: result.bytes,
-              url: result.secure_url
-            });
-          })
-          .catch(error => {
-            console.error('Cloudinary upload error:', error);
-            return res.status(500).json({
-              success: false,
-              message: 'Error uploading to Cloudinary: ' + error.message
-            });
-          });
-        } catch (error) {
-          console.error('Error processing upload:', error);
-          return res.status(500).json({
-            success: false,
-            message: 'Error processing upload: ' + error.message
-          });
-        }
-      } else {
-        // For multipart form data, use multer-storage-cloudinary
-        const { cloudinaryUpload } = require('../utils/cloudinary');
-        
-        cloudinaryUpload.single('file')(req, res, (err) => {
-          try {
-            if (err) {
-              console.error('Cloudinary upload error:', err);
-              return res.status(400).json({ 
-                success: false, 
-                message: err.message || 'Error uploading file' 
-              });
-            }
-            
-            if (!req.file) {
-              return res.status(400).json({ 
-                success: false, 
-                message: 'No file uploaded' 
-              });
-            }
-            
-            console.log('File uploaded to Cloudinary:', req.file);
-            
-            const isVideo = req.file.mimetype.startsWith('video/');
-            
-            return res.json({ 
-              success: true, 
-              filePath: req.file.path || req.file.secure_url,
-              fileType: isVideo ? 'video' : 'image',
-              originalName: req.file.originalname,
-              size: req.file.size,
-              url: req.file.secure_url || req.file.path
-            });
-          } catch (error) {
-            console.error('Error in Cloudinary upload handler:', error);
-            return res.status(500).json({ 
-              success: false, 
-              message: 'Server error: ' + error.message 
-            });
-          }
-        });
-      }
-    } else {
-      // In local development - use the regular file system upload
-      const { upload } = require('../utils/upload');
-      
-      // Initialize multer with error handling
-      upload.single('file')(req, res, (err) => {
-        try {
-          // Handle multer errors
-          if (err) {
-            console.error('Multer error:', err);
-            if (err.code === 'LIMIT_FILE_SIZE') {
-              return res.status(400).json({ 
-                success: false, 
-                message: 'File is too large. Maximum size is 50MB.' 
-              });
-            }
-            if (err.code === 'INVALID_FILE_TYPE') {
-              return res.status(400).json({ 
-                success: false, 
-                message: err.message || 'Invalid file type.' 
-              });
-            }
-            return res.status(500).json({ 
-              success: false, 
-              message: 'Error uploading file: ' + err.message 
-            });
-          }
-          
-          // Check if file was uploaded
-          if (!req.file) {
-            return res.status(400).json({ 
-              success: false, 
-              message: 'No file uploaded. Please select a file.' 
-            });
-          }
-          
-          console.log('File uploaded successfully:', req.file);
-          
-          // Determine the file type
-          const fileType = req.file.mimetype.startsWith('video/') ? 'video' : 'image';
-          
-          // Return the file path
-          const filePath = '/' + req.file.path.split('public')[1].replace(/\\/g, '/');
-          
-          return res.json({ 
-            success: true, 
-            filePath,
-            fileType,
-            originalName: req.file.originalname,
-            size: req.file.size
-          });
-        } catch (error) {
-          console.error('Unexpected error in upload handler:', error);
-          return res.status(500).json({ 
-            success: false, 
-            message: 'Server error: ' + error.message 
-          });
-        }
+    if (!req.body || !req.body.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file data found in request'
       });
     }
+
+    // Process file
+    const fileDataParts = req.body.file.split(';base64,');
+    if (fileDataParts.length !== 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid file format. Expected base64 encoded data.'
+      });
+    }
+
+    const fileType = fileDataParts[0];
+    const isVideo = fileType.includes('video/');
+
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(req.body.file, {
+      folder: 'salon',
+      resource_type: isVideo ? 'video' : 'auto',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'webm']
+    });
+
+    return res.json({
+      success: true,
+      filePath: result.secure_url,
+      fileType: result.resource_type,
+      originalName: req.body.fileName || result.original_filename || 'uploaded-file',
+      size: result.bytes,
+      url: result.secure_url
+    });
   } catch (error) {
-    console.error('Critical error in upload route:', error);
+    console.error('Error in upload handler:', error);
     return res.status(500).json({
       success: false,
       message: 'Server error: ' + error.message
