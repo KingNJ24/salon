@@ -659,7 +659,8 @@ function loadGoogleReviews() {
     if (!reviewsContainer) return;
 
     const apiKey = '<%= googleMapsApiKey %>';
-    const placeId = 'ChIJN1t_tDeuEmsRUsoyG83frY4'; // Nandini J Makeup Studio & Luxury Salon
+    // Using the correct placeId format for Nandini J Makeup Studio
+    const placeId = '0x390c2f98f7a35099:0x1cc5130c96e9864d';
     
     if (!apiKey) {
         reviewsContainer.innerHTML = `

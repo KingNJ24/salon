@@ -364,15 +364,6 @@ router.get('/api/google-reviews', async (req, res) => {
             });
         }
 
-        // Validate placeId format
-        if (!placeId.match(/^[a-zA-Z0-9_:]+$/)) {
-            console.error('Invalid placeId format:', placeId);
-            return res.status(400).json({
-                error: 'Invalid placeId format',
-                details: 'The placeId should only contain alphanumeric characters, underscores, and colons'
-            });
-        }
-
         // Make the request to Google Places API
         const response = await axios.get(
             'https://maps.googleapis.com/maps/api/place/details/json',
