@@ -389,7 +389,6 @@
                         <div class="video-preview" style="margin-bottom: 10px; max-width: 100%; max-height: 300px; display: none;">
                             <video id="videoPreview" controls preload="metadata" style="max-width: 100%; max-height: 300px;">
                                 <source src="" type="video/mp4">
-                                Your browser does not support the video tag.
                             </video>
                         </div>
                         <input type="file" accept="video/*" id="videoFileInput" class="form-control">
@@ -397,8 +396,21 @@
                             <button type="button" class="btn upload-btn" id="videoUploadBtn">Upload Video</button>
                             <input type="text" id="serviceVideo" name="videoUrl" class="video-url-input" style="flex: 1;" placeholder="Video URL">
                         </div>
-                        <button type="button" class="btn" id="generateThumbnailBtn" style="margin-top: 10px;">Generate Thumbnail from Video</button>
-                        <p id="thumbnailStatus" style="margin-top: 10px; display: none;"></p>
+                        
+                        <!-- Thumbnail Section -->
+                        <div class="thumbnail-section" style="margin-top: 15px;">
+                            <label class="form-label">Video Thumbnail</label>
+                            <div class="thumbnail-preview" style="margin-bottom: 10px;">
+                                <img id="thumbnailPreview" src="" alt="Thumbnail Preview" style="max-width: 200px; max-height: 200px; display: none;">
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button type="button" class="btn" id="generateThumbnailBtn">Generate Thumbnail</button>
+                                <input type="file" accept="image/*" id="thumbnailFileInput" class="form-control" style="flex: 1;">
+                                <button type="button" class="btn upload-btn" id="thumbnailUploadBtn">Upload Thumbnail</button>
+                            </div>
+                            <input type="text" id="serviceThumbnail" name="image" class="form-control" style="margin-top: 10px;" placeholder="Thumbnail URL">
+                            <p id="thumbnailStatus" style="margin-top: 10px; display: none;"></p>
+                        </div>
                     </div>
                 </div>
                 
@@ -726,6 +738,162 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadCategories();
             // ... existing DOMContentLoaded code ...
+        });
+
+        // Add these functions for thumbnail handling
+        async function generateThumbnail() {
+            const videoUrl = document.getElementById('serviceVideo').value;
+            const thumbnailStatus = document.getElementById('thumbnailStatus');
+            const thumbnailPreview = document.getElementById('thumbnailPreview');
+            const serviceThumbnail = document.getElementById('serviceThumbnail');
+            
+            if (!videoUrl) {
+                showNotification('Please upload a video first', 'error');
+                return;
+            }
+            
+            thumbnailStatus.style.display = 'block';
+            thumbnailStatus.textContent = 'Generating thumbnail...';
+            
+            try {
+                const response = await fetch('/api/generate-thumbnail', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ videoUrl })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    thumbnailPreview.src = data.thumbnailUrl;
+                    thumbnailPreview.style.display = 'block';
+                    serviceThumbnail.value = data.thumbnailUrl;
+                    thumbnailStatus.textContent = 'Thumbnail generated successfully';
+                    showNotification('Thumbnail generated successfully', 'success');
+                } else {
+                    throw new Error(data.message || 'Failed to generate thumbnail');
+                }
+            } catch (error) {
+                console.error('Error generating thumbnail:', error);
+                thumbnailStatus.textContent = 'Failed to generate thumbnail';
+                showNotification('Failed to generate thumbnail: ' + error.message, 'error');
+            }
+        }
+
+        // Add event listener for thumbnail generation
+        document.getElementById('generateThumbnailBtn').addEventListener('click', generateThumbnail);
+
+        // Add thumbnail upload handling
+        document.getElementById('thumbnailUploadBtn').addEventListener('click', async function() {
+            const thumbnailFileInput = document.getElementById('thumbnailFileInput');
+            const thumbnailPreview = document.getElementById('thumbnailPreview');
+            const serviceThumbnail = document.getElementById('serviceThumbnail');
+            const thumbnailStatus = document.getElementById('thumbnailStatus');
+            
+            if (!thumbnailFileInput.files || !thumbnailFileInput.files[0]) {
+                showNotification('Please select a thumbnail image', 'error');
+                return;
+            }
+            
+            const file = thumbnailFileInput.files[0];
+            thumbnailStatus.style.display = 'block';
+            thumbnailStatus.textContent = 'Uploading thumbnail...';
+            
+            try {
+                const base64Data = await readFileAsBase64(file);
+                const response = await fetch('/api/express-upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        file: base64Data,
+                        fileName: file.name,
+                        fileType: file.type
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    thumbnailPreview.src = data.url;
+                    thumbnailPreview.style.display = 'block';
+                    serviceThumbnail.value = data.url;
+                    thumbnailStatus.textContent = 'Thumbnail uploaded successfully';
+                    showNotification('Thumbnail uploaded successfully', 'success');
+                } else {
+                    throw new Error(data.message || 'Failed to upload thumbnail');
+                }
+            } catch (error) {
+                console.error('Error uploading thumbnail:', error);
+                thumbnailStatus.textContent = 'Failed to upload thumbnail';
+                showNotification('Failed to upload thumbnail: ' + error.message, 'error');
+            }
+        });
+
+        // Update video upload handler to show preview
+        document.getElementById('videoUploadBtn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            const videoFileInput = document.getElementById('videoFileInput');
+            const videoUrlInput = document.getElementById('serviceVideo');
+            const videoPreview = document.getElementById('videoPreview');
+            const thumbnailStatus = document.getElementById('thumbnailStatus');
+            
+            if (!videoFileInput.files || !videoFileInput.files[0]) {
+                showNotification('Please select a video file to upload', 'error');
+                return;
+            }
+            
+            const file = videoFileInput.files[0];
+            this.disabled = true;
+            this.textContent = 'Uploading...';
+            
+            try {
+                const base64Data = await readFileAsBase64(file);
+                
+                const response = await fetch('/api/express-upload-video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        file: base64Data,
+                        fileName: file.name,
+                        fileType: file.type
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Video uploaded successfully', 'success');
+                    if (videoUrlInput) {
+                        videoUrlInput.value = data.url;
+                    }
+                    if (videoPreview) {
+                        videoPreview.querySelector('source').src = data.url;
+                        videoPreview.load();
+                        videoPreview.style.display = 'block';
+                    }
+                    // Auto-generate thumbnail after successful video upload
+                    await generateThumbnail();
+                } else {
+                    throw new Error(data.message || 'Failed to upload video');
+                }
+            } catch (error) {
+                console.error('Error uploading video:', error);
+                showNotification('Failed to upload video: ' + error.message, 'error');
+            } finally {
+                this.disabled = false;
+                this.textContent = 'Upload Video';
+            }
         });
     </script> 
 </body>
