@@ -1,1393 +1,371 @@
-<!-- Add Category Management and Reorder Button -->
-<div style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: center;">
-    <div>
-        <button class="btn" id="add-service-btn">Add New Service</button>
-        <button class="btn" id="add-video-service-btn" style="background-color: #d4a373;">Add Video Service</button>
-        <button class="btn" id="reorder-mode-btn" style="background-color: #6c757d;">Reorder Services</button>
-        <button class="btn" id="save-order-btn" style="display: none; background-color: #28a745;">Save Order</button>
-        <div id="reorder-instructions" style="display: none; margin-left: 20px; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">
-            Drag and drop services to reorder them. Click 'Save Order' when finished.
-        </div>
-    </div>
-    <div>
-        <button class="btn" id="manage-categories-btn" style="background-color: #17a2b8;">Manage Categories</button>
-    </div>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Services - Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        .services-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
 
-<!-- Services Table -->
-<div class="card">
-    <div class="card-header">
-        <h2>All Services</h2>
-    </div>
-    <div class="card-body">
-        <div class="table-container" id="services-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 60px;">Order</th>
-                        <th style="width: 60px;">ID</th>
-                        <th style="width: 80px;">Media</th>
-                        <th>Name</th>
-                        <th>Price</th>
-                        <th>Category</th>
-                        <th>Description</th>
-                        <th>Visible</th>
-                        <th>Homepage</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="services-tbody">
-                    <% if (services.length === 0) { %>
-                        <tr>
-                            <td colspan="10" class="text-center">No services yet</td>
-                        </tr>
-                    <% } else { %>
-                        <% services.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)).forEach(service => { %>
-                            <tr class="service-row" data-id="<%= service._id || service.id %>" data-order="<%= service.displayOrder || 0 %>">
-                                <td>
-                                    <span class="order-badge" style="display: inline-block; background-color: #e9ecef; color: #495057; border-radius: 50%; width: 28px; height: 28px; text-align: center; line-height: 28px;">
-                                        #<%= service.displayOrder || 0 %>
-                                    </span>
-                                    <div class="reorder-handle" style="display: none; cursor: grab; color: #6c757d; width: 28px; height: 28px; align-items: center; justify-content: center; margin-top: 5px;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                                        </svg>
-                                    </div>
-                                </td>
-                                <td><%= service._id || service.id %></td>
-                                <td>
-                                    <% if (service.type === 'video') { %>
-                                        <div style="position: relative; width: 50px; height: 50px;">
-                                            <img src="<%= service.image %>" alt="<%= service.name %>" style="width: 50px; height: 50px; object-fit: cover; opacity: <%= service.isVisible !== false ? 1 : 0.5 %>;" onerror="this.src='/images/placeholder.jpg'">
-                                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.5); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="white">
-                                                    <path d="M8 5v14l11-7z"/>
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    <% } else { %>
-                                        <img src="<%= service.image %>" alt="<%= service.name %>" style="width: 50px; height: 50px; object-fit: cover; opacity: <%= service.isVisible !== false ? 1 : 0.5 %>;" onerror="this.src='/images/placeholder.jpg'">
-                                    <% } %>
-                                </td>
-                                <td><%= service.name %></td>
-                                <td><%= service.price %></td>
-                                <td><%= service.category %></td>
-                                <td>
-                                    <% 
-                                    const maxLength = 60;
-                                    const desc = service.description;
-                                    if (desc.length > maxLength) { 
-                                    %>
-                                        <%= desc.substring(0, maxLength) %>... 
-                                        <span class="view-more" style="color: #9c8370; cursor: pointer; text-decoration: underline;" 
-                                              data-desc="<%= desc %>">View more</span>
-                                    <% } else { %>
-                                        <%= desc %>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <button class="visibility-toggle" 
-                                            data-id="<%= service._id || service.id %>" 
-                                            data-visible="<%= service.isVisible !== false %>"
-                                            style="width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer; background-color: <%= service.isVisible !== false ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)' %>;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                            <circle cx="12" cy="12" r="3"></circle>
-                                        </svg>
-                                    </button>
-                                </td>
-                                <td>
-                                    <button class="homepage-toggle" 
-                                            data-id="<%= service._id || service.id %>" 
-                                            data-homepage="<%= service.showOnHomepage === true %>"
-                                            style="width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer; background-color: <%= service.showOnHomepage === true ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)' %>;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                                        </svg>
-                                    </button>
-                                </td>
-                                <td class="actions">
-                                    <button class="btn btn-sm edit-service-btn" 
-                                        data-id="<%= service._id || service.id %>"
-                                        data-name="<%= service.name %>"
-                                        data-price="<%= service.price %>"
-                                        data-category="<%= service.category %>"
-                                        data-description="<%= service.description %>"
-                                        data-image="<%= service.image %>"
-                                        data-type="<%= service.type || 'image' %>"
-                                        data-video-url="<%= service.videoUrl || '' %>"
-                                        data-display-order="<%= service.displayOrder || 0 %>"
-                                        data-is-visible="<%= service.isVisible !== false %>"
-                                        data-show-on-homepage="<%= service.showOnHomepage === true %>">Edit</button>
-                                    <button class="btn btn-sm btn-danger delete-btn" data-id="<%= service._id || service.id %>" data-confirm="Are you sure you want to delete this service?" data-endpoint="/api/service/delete/<%= service._id || service.id %>">Delete</button>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+        .services-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
 
-<!-- Service Edit/Add Modal (hidden by default) -->
-<div id="service-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2 id="modal-title">Edit Service</h2>
-        
-        <form id="service-form" class="admin-form" data-endpoint="/api/service/update/0">
-            <input type="hidden" id="service-id" name="id" value="">
-            <input type="hidden" id="service-type" name="type" value="image">
-            <input type="hidden" id="service-display-order" name="displayOrder" value="0">
-            
-            <div class="form-group">
-                <label for="service-name">Service Name</label>
-                <input type="text" id="service-name" name="name" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="service-price">Price</label>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <span id="currency-symbol"><%= siteInfo?.currencySymbol || '₹' %></span>
-                    <input type="text" id="service-price" name="price" required style="flex: 1;">
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="service-category">Category</label>
-                <select id="service-category" name="category" required>
-                    <!-- Categories will be loaded dynamically -->
-                    <option value="" disabled selected>Loading categories...</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="service-description">Description</label>
-                <textarea id="service-description" name="description" rows="4" required></textarea>
-            </div>
-            
-            <div class="form-group">
-                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-                    <div style="display: flex; align-items: center;">
-                        <input type="checkbox" id="service-visible" name="isVisible" checked style="margin-right: 5px;">
-                        <label for="service-visible">Visible</label>
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <input type="checkbox" id="service-homepage" name="showOnHomepage" style="margin-right: 5px;">
-                        <label for="service-homepage">Show on Homepage</label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-group image-upload">
-                <label id="thumbnail-label">Service Image</label>
-                <div class="image-preview" style="margin-bottom: 10px;">
-                    <img src="" alt="Preview" style="max-width: 100%; max-height: 200px; display: none;">
-                </div>
-                <input type="file" accept="image/*" class="form-control" id="image-file-input">
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button type="button" class="btn upload-btn" id="image-upload-btn">Upload</button>
-                    <input type="text" id="service-image" name="image" class="image-url-input" style="flex: 1;" placeholder="Image URL">
-                </div>
-                <p class="help-text">Upload an image or provide a URL.</p>
-            </div>
-            
-            <div class="form-group video-url-group" style="display: none;">
-                <label for="service-video-url">Video File</label>
-                <div class="video-preview" style="margin-bottom: 10px; max-width: 100%; max-height: 300px; display: none;">
-                    <video id="video-preview" controls preload="metadata" style="max-width: 100%; max-height: 300px;">
-                        <source src="" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                </div>
-                <div class="image-upload">
-                    <input type="file" accept="video/*" id="video-file-input" class="form-control">
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <button type="button" class="btn upload-btn" id="video-upload-btn">Upload Video</button>
-                        <input type="text" id="service-video-url" name="videoUrl" class="image-url-input" style="flex: 1;" placeholder="Video URL">
-                    </div>
-                    <p class="help-text">Upload a video file (MP4 recommended) or provide a video URL.</p>
-                </div>
-                <button type="button" class="btn" id="generate-thumbnail-btn" style="margin-top: 10px; background-color: #d4a373;">Generate Thumbnail from Video</button>
-                <p id="thumbnail-status" style="margin-top: 10px; display: none;"></p>
-            </div>
-            
-            <div class="actions">
-                <button type="button" class="btn btn-secondary close-modal">Cancel</button>
-                <button type="submit" class="btn">Save Service</button>
-            </div>
-        </form>
-    </div>
-</div>
+        .services-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin: 0;
+        }
 
-<!-- Category Management Modal -->
-<div id="categories-modal" class="modal" style="display: none;">
-    <div class="modal-content" style="max-width: 600px;">
-        <span class="close">&times;</span>
-        <h2>Manage Service Categories</h2>
-        
-        <div style="margin-bottom: 20px;">
-            <form id="add-category-form" class="admin-form" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <div style="flex: 1;">
-                    <input type="text" id="new-category-name" placeholder="New category name" required>
-                </div>
-                <button type="submit" class="btn" style="background-color: #28a745;">Add Category</button>
-            </form>
-            
-            <div class="table-container">
-                <table id="categories-table">
-                    <thead>
-                        <tr>
-                            <th>Order</th>
-                            <th>Category Name</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="categories-tbody">
-                        <tr>
-                            <td colspan="4" class="text-center">Loading categories...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div class="actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-            <button type="button" class="btn btn-secondary close-modal">Close</button>
-        </div>
-    </div>
-</div>
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
 
-<style>
-    /* Category management styles */
-    #categories-table .deleting {
-        opacity: 0.5;
-        background-color: #ffdddd;
-    }
-    
-    .edit-category-name {
-        width: 100%;
-        padding: 5px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-    }
-    
-    #categories-modal .table-container {
-        max-height: 400px;
-        overflow-y: auto;
-        margin-bottom: 15px;
-    }
-    
-    #categories-table th, #categories-table td {
-        padding: 8px;
-        vertical-align: middle;
-    }
-    
-    .edit-category-btn, .delete-category-btn, .save-category-btn, .cancel-edit-btn {
-        margin: 0 2px;
-    }
-</style>
+        .service-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            transition: var(--transition);
+        }
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('service-modal');
-        const closeButtons = document.querySelectorAll('.close, .close-modal');
-        const addServiceBtn = document.getElementById('add-service-btn');
-        const addVideoServiceBtn = document.getElementById('add-video-service-btn');
-        const editButtons = document.querySelectorAll('.edit-service-btn');
-        const serviceForm = document.getElementById('service-form');
-        const videoUrlGroup = document.querySelector('.video-url-group');
-        const thumbnailLabel = document.getElementById('thumbnail-label');
-        const videoFileInput = document.getElementById('video-file-input');
-        const videoUploadBtn = document.getElementById('video-upload-btn');
-        const videoPreview = document.querySelector('.video-preview');
-        const videoPlayer = document.getElementById('video-preview');
-        const serviceVideoUrlInput = document.getElementById('service-video-url');
-        const generateThumbnailBtn = document.getElementById('generate-thumbnail-btn');
-        const thumbnailPreview = document.querySelector('.image-preview img');
-        const thumbnailInput = document.getElementById('service-image');
-        const thumbnailStatus = document.getElementById('thumbnail-status');
-        
-        // Reordering functionality
-        const reorderModeBtn = document.getElementById('reorder-mode-btn');
-        const saveOrderBtn = document.getElementById('save-order-btn');
-        const reorderInstructions = document.getElementById('reorder-instructions');
-        const servicesContainer = document.getElementById('services-container');
-        const servicesTbody = document.getElementById('services-tbody');
-        
-        let isReorderMode = false;
-        let editingId = null;
-        
-        // Initialize visibility and homepage toggles
-        initToggleHandlers();
-        
-        // Function to capture video thumbnail
-        function captureVideoThumbnail(videoElement, callback) {
-            // Check if video is properly loaded
-            if (videoElement.readyState < 2) {
-                // If not loaded, wait for metadata to load
-                videoElement.addEventListener('loadeddata', function onLoaded() {
-                    videoElement.removeEventListener('loadeddata', onLoaded);
-                    captureFrameAndReturn();
-                });
-                
-                // Add error handling for video loading
-                videoElement.addEventListener('error', function onError() {
-                    videoElement.removeEventListener('error', onError);
-                    videoElement.removeEventListener('loadeddata', onLoaded);
-                    // Try server-side approach for CORS issues
-                    useServerProxyForThumbnail(videoElement.src, callback);
-                });
-                
-                // Make sure video loads
-                videoElement.load();
-            } else {
-                captureFrameAndReturn();
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .service-image {
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .service-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .service-card:hover .service-image img {
+            transform: scale(1.05);
+        }
+
+        .service-content {
+            padding: 1.5rem;
+        }
+
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .service-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin: 0;
+        }
+
+        .service-price {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--color-primary);
+        }
+
+        .service-description {
+            color: var(--color-text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .service-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--color-light);
+            color: var(--color-text);
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-icon:hover {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .add-service-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .add-service-btn:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .service-form {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--color-text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--color-primary);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .services-container {
+                padding: 1rem;
             }
-            
-            function captureFrameAndReturn() {
-                try {
-                    // Check if video dimensions are available
-                    if (!videoElement.videoWidth || !videoElement.videoHeight) {
-                        console.error('Video dimensions not available');
-                        // Try server-side approach for CORS issues
-                        useServerProxyForThumbnail(videoElement.src, callback);
-                        return;
-                    }
-                    
-                    // Go to 1 second into the video (or beginning if shorter)
-                    const targetTime = Math.min(1, videoElement.duration || 1);
-                    videoElement.currentTime = targetTime;
-                    
-                    videoElement.addEventListener('seeked', function onSeeked() {
-                        videoElement.removeEventListener('seeked', onSeeked);
-                        
-                        try {
-                            // Create canvas and draw frame
-                            const canvas = document.createElement('canvas');
-                            // Reduce the size to 640px wide maximum (maintaining aspect ratio)
-                            const maxWidth = 640;
-                            const scaleFactor = maxWidth / (videoElement.videoWidth || 640);
-                            canvas.width = Math.min(maxWidth, videoElement.videoWidth || 640);
-                            canvas.height = Math.floor((videoElement.videoHeight || 480) * scaleFactor);
-                            
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-                            
-                            // Get data URL with reduced quality (0.7 instead of 0.8)
-                            const dataURL = canvas.toDataURL('image/jpeg', 0.7);
-                            
-                            // Call back with the data URL
-                            callback(dataURL);
-                        } catch (err) {
-                            console.error('Error capturing video frame:', err);
-                            // Try server-side approach for any errors
-                            useServerProxyForThumbnail(videoElement.src, callback);
-                        }
-                    });
-                    
-                    // Add error handling for seeking
-                    videoElement.addEventListener('error', function onSeekError() {
-                        videoElement.removeEventListener('error', onSeekError);
-                        videoElement.removeEventListener('seeked', onSeeked);
-                        // Try server-side approach for CORS issues
-                        useServerProxyForThumbnail(videoElement.src, callback);
-                    });
-                } catch (error) {
-                    console.error('Error in captureFrameAndReturn:', error);
-                    // Try server-side approach for any errors
-                    useServerProxyForThumbnail(videoElement.src, callback);
-                }
+
+            .services-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .service-form {
+                padding: 1.5rem;
             }
         }
-        
-        // Function to use server proxy for thumbnail generation when client-side fails
-        function useServerProxyForThumbnail(videoUrl, callback) {
-            console.log('Trying server-side thumbnail generation for:', videoUrl);
-            
-            // Make a request to the server-side endpoint that will handle the CORS issue
-            fetch('/api/generate-thumbnail', {
-                method: 'POST',
+    </style>
+</head>
+<body>
+    <div class="services-container">
+        <div class="services-header">
+            <h1 class="services-title">Manage Services</h1>
+            <button class="add-service-btn" onclick="showAddServiceForm()">
+                <i class="fas fa-plus"></i>
+                Add New Service
+            </button>
+        </div>
+
+        <div class="services-grid">
+            <% if (services && services.length > 0) { %>
+                <% services.forEach(service => { %>
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="<%= service.image %>" alt="<%= service.name %>" 
+                                onerror="this.src='https://via.placeholder.com/300x200?text=<%= service.name.replace(/ /g, '+') %>'">
+                        </div>
+                        <div class="service-content">
+                            <div class="service-header">
+                                <h3 class="service-title"><%= service.name %></h3>
+                                <span class="service-price"><%= siteInfo.currencySymbol || '₹' %><%= service.price %></span>
+                            </div>
+                            <p class="service-description"><%= service.description %></p>
+                            <div class="service-actions">
+                                <button class="btn-icon" onclick="editService('<%= service._id %>')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon" onclick="deleteService('<%= service._id %>')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="no-services">
+                    <p>No services available. Add your first service to get started!</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Add/Edit Service Modal -->
+    <div id="serviceModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Service</h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="serviceForm" class="service-form" onsubmit="handleServiceSubmit(event)">
+                <input type="hidden" id="serviceId" name="serviceId">
+                
+                <div class="form-group">
+                    <label class="form-label" for="serviceName">Service Name</label>
+                    <input type="text" id="serviceName" name="name" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="servicePrice">Price</label>
+                    <input type="number" id="servicePrice" name="price" class="form-control" required min="0" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="serviceDescription">Description</label>
+                    <textarea id="serviceDescription" name="description" class="form-control" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="serviceImage">Image URL</label>
+                    <input type="url" id="serviceImage" name="image" class="form-control" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Service</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showAddServiceForm() {
+            document.getElementById('modalTitle').textContent = 'Add New Service';
+            document.getElementById('serviceForm').reset();
+            document.getElementById('serviceId').value = '';
+            document.getElementById('serviceModal').style.display = 'flex';
+        }
+
+        function editService(serviceId) {
+            // Fetch service details and populate form
+            fetch(`/api/services/${serviceId}`)
+                .then(response => response.json())
+                .then(service => {
+                    document.getElementById('modalTitle').textContent = 'Edit Service';
+                    document.getElementById('serviceId').value = service._id;
+                    document.getElementById('serviceName').value = service.name;
+                    document.getElementById('servicePrice').value = service.price;
+                    document.getElementById('serviceDescription').value = service.description;
+                    document.getElementById('serviceImage').value = service.image;
+                    document.getElementById('serviceModal').style.display = 'flex';
+                })
+                .catch(error => {
+                    console.error('Error fetching service:', error);
+                    alert('Failed to load service details. Please try again.');
+                });
+        }
+
+        function deleteService(serviceId) {
+            if (confirm('Are you sure you want to delete this service?')) {
+                fetch(`/api/services/${serviceId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        throw new Error('Failed to delete service');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting service:', error);
+                    alert('Failed to delete service. Please try again.');
+                });
+            }
+        }
+
+        function handleServiceSubmit(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const serviceId = formData.get('serviceId');
+            const method = serviceId ? 'PUT' : 'POST';
+            const url = serviceId ? `/api/services/${serviceId}` : '/api/services';
+
+            fetch(url, {
+                method: method,
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ videoUrl: videoUrl })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.thumbnailUrl) {
-                    console.log('Server proxy thumbnail generated successfully:', data.thumbnailUrl);
-                    
-                    // Check if the URL is a video rather than an image
-                    if (data.thumbnailUrl.endsWith('.mp4') || data.thumbnailUrl.endsWith('.webm') || data.thumbnailUrl.endsWith('.mov')) {
-                        console.warn('Received video URL instead of image, applying transformation');
-                        // Convert video URL to image URL using Cloudinary transformation
-                        if (data.thumbnailUrl.includes('cloudinary')) {
-                            data.thumbnailUrl = data.thumbnailUrl.replace('/upload/', '/upload/w_300,h_300,c_fill,f_jpg,so_0/');
-                        } else {
-                            // If not a Cloudinary URL, use fallback
-                            data.thumbnailUrl = '/images/video-placeholder.jpg';
-                        }
-                    }
-                    
-                    // Call back with the thumbnail URL
-                    callback(data.thumbnailUrl);
-                } else {
-                    throw new Error(data.message || 'Failed to generate thumbnail');
-                }
-            })
-            .catch(error => {
-                console.error('Server proxy thumbnail error:', error);
-                callback(null);
-            });
-        }
-        
-        // Generate thumbnail button click handler
-        if (generateThumbnailBtn) {
-            generateThumbnailBtn.addEventListener('click', function() {
-                if (!videoPlayer.src && serviceVideoUrlInput.value) {
-                    videoPlayer.src = serviceVideoUrlInput.value;
-                    videoPlayer.load();
-                }
-                
-                if (!videoPlayer.src) {
-                    showNotification('Please upload or provide a video URL first', 'error');
-                    return;
-                }
-                
-                // Show status message
-                if (thumbnailStatus) {
-                    thumbnailStatus.textContent = 'Generating thumbnail...';
-                    thumbnailStatus.style.display = 'block';
-                    thumbnailStatus.style.color = '#000';
-                }
-                
-                // Try to generate thumbnail
-                captureVideoThumbnail(videoPlayer, function(dataURL) {
-                    if (dataURL) {
-                        thumbnailPreview.src = dataURL;
-                        thumbnailPreview.style.display = 'block';
-                        thumbnailInput.value = dataURL;
-                        
-                        if (thumbnailStatus) {
-                            thumbnailStatus.textContent = 'Thumbnail generated successfully!';
-                            thumbnailStatus.style.color = '#28a745';
-                        }
-                        
-                        showNotification('Thumbnail generated successfully', 'success');
-                    } else {
-                        if (thumbnailStatus) {
-                            thumbnailStatus.textContent = 'Failed to generate thumbnail. Try uploading an image manually.';
-                            thumbnailStatus.style.color = '#dc3545';
-                        }
-                        
-                        showNotification('Failed to generate thumbnail', 'error');
-                    }
-                });
-            });
-        }
-        
-        // Setup video preview when URL changes
-        if (serviceVideoUrlInput) {
-            serviceVideoUrlInput.addEventListener('change', function() {
-                if (this.value) {
-                    videoPlayer.src = this.value;
-                    videoPlayer.load();
-                    videoPreview.style.display = 'block';
-                } else {
-                    videoPreview.style.display = 'none';
-                }
-            });
-        }
-        
-        // Setup video file upload
-        if (videoFileInput && videoUploadBtn) {
-            videoFileInput.addEventListener('change', function() {
-                if (this.files && this.files[0]) {
-                    const file = this.files[0];
-                    
-                    // Create object URL for preview
-                    const videoURL = URL.createObjectURL(file);
-                    videoPlayer.src = videoURL;
-                    videoPlayer.load();
-                    videoPreview.style.display = 'block';
-                }
-            });
-            
-            videoUploadBtn.addEventListener('click', async function(e) {
-                e.preventDefault();
-                
-                if (!videoFileInput.files || !videoFileInput.files[0]) {
-                    showNotification('Please select a video file to upload', 'error');
-                    return;
-                }
-                
-                videoUploadBtn.disabled = true;
-                videoUploadBtn.textContent = 'Uploading...';
-                
-                try {
-                    // Convert file to base64 for Vercel compatibility
-                    const file = videoFileInput.files[0];
-                    const reader = new FileReader();
-                    
-                    const base64Data = await new Promise((resolve, reject) => {
-                        reader.onload = () => resolve(reader.result);
-                        reader.onerror = reject;
-                        reader.readAsDataURL(file);
-                    });
-                    
-                    // Use the dedicated video upload endpoint
-                    const response = await fetch('/api/express-upload-video', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            file: base64Data,
-                            fileName: file.name,
-                            fileType: file.type
-                        })
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-                    }
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        videoUrlInput.value = data.filePath || data.url;
-                        videoPreview.src = data.filePath || data.url;
-                        videoPreview.load();
-                        showNotification('Video uploaded successfully', 'success');
-                    } else {
-                        throw new Error(data.message || 'Failed to upload video');
-                    }
-                } catch (error) {
-                    console.error('Upload error:', error);
-                    showNotification('Error uploading video: ' + error.message, 'error');
-                } finally {
-                    videoUploadBtn.disabled = false;
-                    videoUploadBtn.textContent = 'Upload Video';
-                }
-            });
-        }
-        
-        // Show notification
-        function showNotification(message, type = 'info') {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.textContent = message;
-            notification.style.position = 'fixed';
-            notification.style.top = '20px';
-            notification.style.right = '20px';
-            notification.style.padding = '12px 20px';
-            notification.style.backgroundColor = type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#cce5ff';
-            notification.style.color = type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#004085';
-            notification.style.borderRadius = '4px';
-            notification.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-            notification.style.zIndex = '9999';
-            
-            // Add to body
-            document.body.appendChild(notification);
-            
-            // Remove after 3 seconds
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transition = 'opacity 0.3s ease';
-                
-                // Remove from DOM after animation
-                setTimeout(() => {
-                    notification.remove();
-                }, 300);
-            }, 3000);
-        }
-        
-        // Open modal for adding a new image service
-        addServiceBtn.addEventListener('click', function() {
-            document.getElementById('modal-title').textContent = 'Add New Service';
-            serviceForm.reset();
-            document.getElementById('service-id').value = '';
-            document.getElementById('service-type').value = 'image';
-            serviceForm.setAttribute('data-endpoint', '/api/service/create');
-            thumbnailLabel.textContent = 'Service Image';
-            videoUrlGroup.style.display = 'none';
-            if (videoPreview) videoPreview.style.display = 'none';
-            if (thumbnailStatus) thumbnailStatus.style.display = 'none';
-            modal.style.display = 'block';
-        });
-        
-        // Open modal for adding a new video service
-        addVideoServiceBtn.addEventListener('click', function() {
-            document.getElementById('modal-title').textContent = 'Add New Video Service';
-            serviceForm.reset();
-            document.getElementById('service-id').value = '';
-            document.getElementById('service-type').value = 'video';
-            serviceForm.setAttribute('data-endpoint', '/api/service/create');
-            thumbnailLabel.textContent = 'Video Thumbnail';
-            videoUrlGroup.style.display = 'block';
-            if (videoPreview) videoPreview.style.display = 'none';
-            if (thumbnailStatus) thumbnailStatus.style.display = 'none';
-            modal.style.display = 'block';
-        });
-        
-        // Open modal for editing a service
-        editButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const serviceId = this.getAttribute('data-id');
-                const name = this.getAttribute('data-name');
-                const price = this.getAttribute('data-price');
-                const category = this.getAttribute('data-category');
-                const description = this.getAttribute('data-description');
-                const image = this.getAttribute('data-image');
-                const type = this.getAttribute('data-type') || 'image';
-                const videoUrl = this.getAttribute('data-video-url') || '';
-                const displayOrder = this.getAttribute('data-display-order') || 0;
-                const isVisible = this.getAttribute('data-is-visible') === 'true';
-                const showOnHomepage = this.getAttribute('data-show-on-homepage') === 'true';
-                
-                // Set form fields
-                document.getElementById('modal-title').textContent = 'Edit Service';
-                document.getElementById('service-id').value = serviceId;
-                document.getElementById('service-name').value = name;
-                document.getElementById('service-price').value = price;
-                document.getElementById('service-category').value = category;
-                document.getElementById('service-description').value = description;
-                document.getElementById('service-image').value = image;
-                document.getElementById('service-type').value = type;
-                document.getElementById('service-display-order').value = displayOrder;
-                document.getElementById('service-visible').checked = isVisible;
-                document.getElementById('service-homepage').checked = showOnHomepage;
-                
-                if (serviceVideoUrlInput) {
-                    serviceVideoUrlInput.value = videoUrl;
-                }
-                
-                // Show/hide video URL field based on item type
-                if (type === 'video') {
-                    thumbnailLabel.textContent = 'Video Thumbnail';
-                    videoUrlGroup.style.display = 'block';
-                    
-                    // Update video preview if available
-                    if (videoPlayer && videoUrl) {
-                        videoPlayer.src = videoUrl;
-                        videoPlayer.load();
-                        videoPreview.style.display = 'block';
-                    } else if (videoPreview) {
-                        videoPreview.style.display = 'none';
-                    }
-                } else {
-                    thumbnailLabel.textContent = 'Service Image';
-                    videoUrlGroup.style.display = 'none';
-                    if (videoPreview) videoPreview.style.display = 'none';
-                }
-                
-                serviceForm.setAttribute('data-endpoint', `/api/service/update/${serviceId}`);
-                if (thumbnailStatus) thumbnailStatus.style.display = 'none';
-                modal.style.display = 'block';
-            });
-        });
-        
-        // Form submission handler to ensure video thumbnails are generated
-        serviceForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // Always prevent default form submission to handle manually
-
-            // Create form data for AJAX submission
-            const formData = new FormData(serviceForm);
-            const endpoint = serviceForm.getAttribute('data-endpoint');
-            const jsonData = {};
-            
-            // Convert form data to JSON and process data URLs carefully
-            formData.forEach((value, key) => {
-                // Handle image data URLs by truncating them for logging
-                if ((key === 'image' || key === 'videoUrl') && value.length > 1000) {
-                    console.log(`Processing ${key}, length: ${value.length}`);
-                    jsonData[key] = value;
-                } else {
-                    jsonData[key] = value;
-                }
-            });
-            
-            // If this is a video without a thumbnail, generate one automatically
-            if (document.getElementById('service-type').value === 'video' && 
-                (!thumbnailInput.value || thumbnailInput.value === '') &&
-                (serviceVideoUrlInput.value && serviceVideoUrlInput.value !== '')) {
-                
-                // Show status message
-                if (thumbnailStatus) {
-                    thumbnailStatus.textContent = 'Generating thumbnail...';
-                    thumbnailStatus.style.display = 'block';
-                    thumbnailStatus.style.color = '#000';
-                }
-                
-                // Set video source and attempt to load it
-                if (videoPlayer.src !== serviceVideoUrlInput.value) {
-                    videoPlayer.src = serviceVideoUrlInput.value;
-                    videoPlayer.load();
-                }
-                
-                // Attempt to generate thumbnail
-                captureVideoThumbnail(videoPlayer, function(dataURL) {
-                    if (dataURL) {
-                        jsonData.image = dataURL;
-                        if (thumbnailStatus) {
-                            thumbnailStatus.textContent = 'Thumbnail generated. Saving...';
-                            thumbnailStatus.style.color = '#28a745';
-                        }
-                        
-                        // Submit form after thumbnail generation
-                        submitFormData(endpoint, jsonData);
-                    } else {
-                        if (thumbnailStatus) {
-                            thumbnailStatus.textContent = 'Could not generate thumbnail. Using default...';
-                            thumbnailStatus.style.color = '#dc3545';
-                        }
-                        
-                        // Set default placeholder
-                        jsonData.image = '/images/placeholder.jpg';
-                        
-                        // Submit form anyway
-                        submitFormData(endpoint, jsonData);
-                    }
-                });
-            } else {
-                // Regular submission without thumbnail generation
-                submitFormData(endpoint, jsonData);
-            }
-        });
-        
-        // Function to submit form data via AJAX with proper error handling
-        function submitFormData(endpoint, jsonData) {
-            // Show loading indicator
-            const loadingOverlay = document.createElement('div');
-            loadingOverlay.style.position = 'fixed';
-            loadingOverlay.style.top = '0';
-            loadingOverlay.style.left = '0';
-            loadingOverlay.style.width = '100%';
-            loadingOverlay.style.height = '100%';
-            loadingOverlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
-            loadingOverlay.style.display = 'flex';
-            loadingOverlay.style.alignItems = 'center';
-            loadingOverlay.style.justifyContent = 'center';
-            loadingOverlay.style.zIndex = '9999';
-            loadingOverlay.innerHTML = '<div style="background: white; padding: 20px; border-radius: 5px;">Saving service... Please wait.</div>';
-            document.body.appendChild(loadingOverlay);
-            
-            // Check if the data is too large
-            const jsonString = JSON.stringify(jsonData);
-            if (jsonString.length > 1024 * 1024 * 5) { // 5MB limit
-                // Data is too large, show error
-                loadingOverlay.remove();
-                showNotification('Data is too large. Try using a smaller image or video.', 'error');
-                return;
-            }
-            
-            fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: jsonString
+                body: JSON.stringify(Object.fromEntries(formData))
             })
             .then(response => {
-                if (!response.ok) {
-                    if (response.status === 413) {
-                        throw new Error('File too large. Try using a smaller image or video.');
-                    }
-                    return response.text().then(text => {
-                        try {
-                            // Try to parse as JSON
-                            return JSON.parse(text);
-                        } catch (e) {
-                            // Not JSON, throw the text
-                            throw new Error(`Server error: ${text.substring(0, 100)}...`);
-                        }
-                    });
-                }
-                return response.json();
-            })
-            .then(result => {
-                loadingOverlay.remove();
-                if (result.success) {
-                    showNotification('Service saved successfully!', 'success');
-                    modal.style.display = 'none';
-                    // Reload page after short delay
-                    setTimeout(() => window.location.reload(), 1000);
+                if (response.ok) {
+                    window.location.reload();
                 } else {
-                    showNotification(result.message || 'Failed to save service.', 'error');
+                    throw new Error('Failed to save service');
                 }
             })
             .catch(error => {
-                loadingOverlay.remove();
-                console.error('Error:', error);
-                showNotification(error.message || 'An error occurred during saving.', 'error');
+                console.error('Error saving service:', error);
+                alert('Failed to save service. Please try again.');
             });
         }
-        
-        // Close modal
-        closeButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                modal.style.display = 'none';
-            });
-        });
-        
+
+        function closeModal() {
+            document.getElementById('serviceModal').style.display = 'none';
+        }
+
         // Close modal when clicking outside
-        window.addEventListener('click', function(event) {
+        window.onclick = function(event) {
+            const modal = document.getElementById('serviceModal');
             if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-        
-        // Toggle reorder mode
-        if (reorderModeBtn) {
-            reorderModeBtn.addEventListener('click', function() {
-                toggleReorderMode(true);
-            });
-        }
-        
-        // Save order button
-        if (saveOrderBtn) {
-            saveOrderBtn.addEventListener('click', function() {
-                saveServicesOrder();
-            });
-        }
-        
-        // Initialize toggle handlers for visibility and homepage
-        function initToggleHandlers() {
-            // Visibility toggles
-            document.querySelectorAll('.visibility-toggle').forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    const serviceRow = this.closest('.service-row');
-                    const serviceId = serviceRow.getAttribute('data-id');
-                    const isVisible = this.getAttribute('data-visible') === 'true';
-                    
-                    // Toggle visibility state
-                    const newVisibility = !isVisible;
-                    
-                    // Update UI immediately for better UX
-                    this.setAttribute('data-visible', newVisibility);
-                    this.style.backgroundColor = newVisibility ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
-                    serviceRow.querySelector('img').style.opacity = newVisibility ? 1 : 0.5;
-                    
-                    // Send update to server
-                    fetch(`/api/service/update/${serviceId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ isVisible: newVisibility })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (!data.success) {
-                            // Revert UI if failed
-                            console.error('Failed to update visibility');
-                            this.setAttribute('data-visible', isVisible);
-                            this.style.backgroundColor = isVisible ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
-                            serviceRow.querySelector('img').style.opacity = isVisible ? 1 : 0.5;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        // Revert UI on error
-                        this.setAttribute('data-visible', isVisible);
-                        this.style.backgroundColor = isVisible ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
-                        serviceRow.querySelector('img').style.opacity = isVisible ? 1 : 0.5;
-                    });
-                });
-            });
-            
-            // Homepage toggles
-            document.querySelectorAll('.homepage-toggle').forEach(toggle => {
-                toggle.addEventListener('click', function() {
-                    const serviceRow = this.closest('.service-row');
-                    const serviceId = serviceRow.getAttribute('data-id');
-                    const showOnHomepage = this.getAttribute('data-homepage') === 'true';
-                    
-                    // Toggle homepage state
-                    const newHomepageState = !showOnHomepage;
-                    
-                    // Update UI immediately for better UX
-                    this.setAttribute('data-homepage', newHomepageState);
-                    this.style.backgroundColor = newHomepageState ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
-                    
-                    // Send update to server
-                    fetch(`/api/service/update/${serviceId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ showOnHomepage: newHomepageState })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (!data.success) {
-                            // Revert UI if failed
-                            console.error('Failed to update homepage visibility');
-                            this.setAttribute('data-homepage', showOnHomepage);
-                            this.style.backgroundColor = showOnHomepage ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        // Revert UI on error
-                        this.setAttribute('data-homepage', showOnHomepage);
-                        this.style.backgroundColor = showOnHomepage ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
-                    });
-                });
-            });
-        }
-        
-        // Function to toggle reorder mode
-        function toggleReorderMode(enable) {
-            isReorderMode = enable;
-            
-            // Show/hide reorder handles
-            const reorderHandles = document.querySelectorAll('.reorder-handle');
-            reorderHandles.forEach(handle => {
-                handle.style.display = enable ? 'flex' : 'none';
-            });
-            
-            // Show/hide buttons
-            reorderModeBtn.style.display = enable ? 'none' : 'block';
-            saveOrderBtn.style.display = enable ? 'block' : 'none';
-            reorderInstructions.style.display = enable ? 'block' : 'none';
-            
-            // Enable/disable sorting
-            if (enable) {
-                initSortable();
+                closeModal();
             }
         }
-        
-        // Initialize sortable functionality using Sortable.js library
-        function initSortable() {
-            // Check if Sortable is available
-            if (typeof Sortable !== 'undefined') {
-                new Sortable(servicesTbody, {
-                    animation: 150,
-                    handle: '.reorder-handle',
-                    onEnd: function() {
-                        // Update the order numbers in the UI
-                        updateOrderDisplay();
-                    }
-                });
-            } else {
-                // Fallback if Sortable.js is not loaded
-                console.error('Sortable.js library is not loaded. Please include it in your HTML.');
-                alert('Reordering requires the Sortable.js library. Please add it to your project.');
-                toggleReorderMode(false);
-            }
-        }
-        
-        // Update display order numbers in the UI
-        function updateOrderDisplay() {
-            const rows = servicesTbody.querySelectorAll('.service-row');
-            rows.forEach((row, index) => {
-                row.setAttribute('data-order', index);
-                const orderBadge = row.querySelector('.order-badge');
-                if (orderBadge) {
-                    orderBadge.textContent = '#' + index;
-                }
-            });
-        }
-        
-        // Save the new order to the server
-        function saveServicesOrder() {
-            const rows = servicesTbody.querySelectorAll('.service-row');
-            const updates = [];
-            
-            rows.forEach((row, index) => {
-                const serviceId = row.getAttribute('data-id');
-                console.log(`Reordering: Service ID ${serviceId} to position ${index}`);
-                updates.push({
-                    id: serviceId,
-                    displayOrder: index
-                });
-            });
-            
-            console.log('Updates to send:', updates);
-            
-            // Show saving state
-            saveOrderBtn.textContent = 'Saving...';
-            saveOrderBtn.disabled = true;
-            
-            // Send batch update to server
-            const promises = updates.map(update => {
-                return fetch(`/api/service/update/${update.id}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        displayOrder: update.displayOrder
-                    })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (!data.success) {
-                        console.error(`Failed to update service ${update.id}:`, data.message);
-                    }
-                    return data.success;
-                })
-                .catch(error => {
-                    console.error(`Error updating service ${update.id}:`, error);
-                    return false;
-                });
-            });
-            
-            // Wait for all updates to complete
-            Promise.all(promises).then(results => {
-                const allSuccessful = results.every(success => success);
-                
-                saveOrderBtn.disabled = false;
-                if (allSuccessful) {
-                    saveOrderBtn.textContent = 'Order Saved!';
-                    
-                    // Update the order display
-                    rows.forEach((row, index) => {
-                        const orderCell = row.querySelector('td:first-child');
-                        if (orderCell) {
-                            orderCell.textContent = index + 1;
-                        }
-                        row.setAttribute('data-order', index);
-                    });
-                    
-                    // Reload page to ensure the order is reflected
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    saveOrderBtn.textContent = 'Error Saving Order';
-                    setTimeout(() => {
-                        saveOrderBtn.textContent = 'Try Again';
-                    }, 2000);
-                }
-            });
-        }
-        
-        // Add Category Management
-        const categoriesModal = document.getElementById('categories-modal');
-        const manageCategoriesBtn = document.getElementById('manage-categories-btn');
-        const addCategoryForm = document.getElementById('add-category-form');
-        const categoriesTbody = document.getElementById('categories-tbody');
-        let serviceCategories = [];
-        
-        // Load categories for the service form dropdown
-        async function loadCategories() {
-            try {
-                const response = await fetch('/api/service-categories');
-                const data = await response.json();
-                
-                if (data.success) {
-                    serviceCategories = data.categories;
-                    
-                    // Update select options in service form
-                    const categorySelect = document.getElementById('service-category');
-                    categorySelect.innerHTML = ''; // Clear existing options
-                    
-                    serviceCategories.forEach(category => {
-                        const option = document.createElement('option');
-                        option.value = category.name;
-                        option.textContent = category.name;
-                        categorySelect.appendChild(option);
-                    });
-                    
-                    // If no categories, add default ones
-                    if (serviceCategories.length === 0) {
-                        const defaultCategories = ['Haircut', 'Coloring', 'Treatment', 'Styling', 'Other'];
-                        defaultCategories.forEach(category => {
-                            const option = document.createElement('option');
-                            option.value = category;
-                            option.textContent = category;
-                            categorySelect.appendChild(option);
-                        });
-                    }
-                } else {
-                    console.error('Failed to load categories:', data.message);
-                    showNotification('Failed to load categories', 'error');
-                }
-            } catch (error) {
-                console.error('Error loading categories:', error);
-                showNotification('Error loading categories', 'error');
-            }
-        }
-        
-        // Load categories when the page loads
-        loadCategories();
-        
-        // Populate the categories table
-        async function populateCategoriesTable() {
-            try {
-                const response = await fetch('/api/service-categories');
-                const data = await response.json();
-                
-                if (data.success) {
-                    serviceCategories = data.categories;
-                    categoriesTbody.innerHTML = ''; // Clear the table
-                    
-                    if (serviceCategories.length === 0) {
-                        categoriesTbody.innerHTML = '<tr><td colspan="4" class="text-center">No categories yet</td></tr>';
-                        return;
-                    }
-                    
-                    serviceCategories.forEach((category, index) => {
-                        const row = document.createElement('tr');
-                        row.setAttribute('data-id', category._id);
-                        row.innerHTML = `
-                            <td>${category.displayOrder || index}</td>
-                            <td>
-                                <span class="category-name">${category.name}</span>
-                                <input type="text" class="edit-category-name" style="display: none;" value="${category.name}">
-                            </td>
-                            <td>${category.isActive !== false ? 'Active' : 'Inactive'}</td>
-                            <td>
-                                <button class="btn btn-sm edit-category-btn" data-id="${category._id}">Edit</button>
-                                <button class="btn btn-sm btn-danger delete-category-btn" data-id="${category._id}">Delete</button>
-                                <button class="btn btn-sm save-category-btn" data-id="${category._id}" style="display: none; background-color: #28a745;">Save</button>
-                                <button class="btn btn-sm cancel-edit-btn" style="display: none;">Cancel</button>
-                            </td>
-                        `;
-                        categoriesTbody.appendChild(row);
-                    });
-                    
-                    // Add event listeners to edit buttons
-                    document.querySelectorAll('.edit-category-btn').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const row = this.closest('tr');
-                            const categoryName = row.querySelector('.category-name');
-                            const editInput = row.querySelector('.edit-category-name');
-                            const editBtn = row.querySelector('.edit-category-btn');
-                            const deleteBtn = row.querySelector('.delete-category-btn');
-                            const saveBtn = row.querySelector('.save-category-btn');
-                            const cancelBtn = row.querySelector('.cancel-edit-btn');
-                            
-                            // Show/hide elements
-                            categoryName.style.display = 'none';
-                            editInput.style.display = 'block';
-                            editBtn.style.display = 'none';
-                            deleteBtn.style.display = 'none';
-                            saveBtn.style.display = 'inline-block';
-                            cancelBtn.style.display = 'inline-block';
-                            
-                            // Focus the input
-                            editInput.focus();
-                        });
-                    });
-                    
-                    // Add event listeners to cancel buttons
-                    document.querySelectorAll('.cancel-edit-btn').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const row = this.closest('tr');
-                            const categoryName = row.querySelector('.category-name');
-                            const editInput = row.querySelector('.edit-category-name');
-                            const editBtn = row.querySelector('.edit-category-btn');
-                            const deleteBtn = row.querySelector('.delete-category-btn');
-                            const saveBtn = row.querySelector('.save-category-btn');
-                            const cancelBtn = row.querySelector('.cancel-edit-btn');
-                            
-                            // Reset input value
-                            editInput.value = categoryName.textContent;
-                            
-                            // Show/hide elements
-                            categoryName.style.display = 'inline';
-                            editInput.style.display = 'none';
-                            editBtn.style.display = 'inline-block';
-                            deleteBtn.style.display = 'inline-block';
-                            saveBtn.style.display = 'none';
-                            cancelBtn.style.display = 'none';
-                        });
-                    });
-                    
-                    // Add event listeners to save buttons
-                    document.querySelectorAll('.save-category-btn').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const row = this.closest('tr');
-                            const categoryId = this.getAttribute('data-id');
-                            const editInput = row.querySelector('.edit-category-name');
-                            const categoryName = row.querySelector('.category-name');
-                            const newName = editInput.value.trim();
-                            
-                            if (!newName) {
-                                showNotification('Category name cannot be empty', 'error');
-                                return;
-                            }
-                            
-                            try {
-                                const response = await fetch(`/api/service-category/update/${categoryId}`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({ 
-                                        name: newName,
-                                        isActive: true 
-                                    })
-                                });
-                                
-                                const data = await response.json();
-                                
-                                if (data.success) {
-                                    // Update the display and toggle back to view mode
-                                    categoryName.textContent = newName;
-                                    
-                                    // Toggle edit/view mode
-                                    categoryName.style.display = 'inline';
-                                    editInput.style.display = 'none';
-                                    row.querySelector('.edit-category-btn').style.display = 'inline-block';
-                                    row.querySelector('.delete-category-btn').style.display = 'inline-block';
-                                    row.querySelector('.save-category-btn').style.display = 'none';
-                                    row.querySelector('.cancel-edit-btn').style.display = 'none';
-                                    
-                                    showNotification('Category updated successfully', 'success');
-                                    // Refresh data
-                                    populateCategoriesTable();
-                                    loadCategories();
-                                } else {
-                                    throw new Error(data.message || 'Failed to update category');
-                                }
-                            } catch (error) {
-                                console.error('Error updating category:', error);
-                                showNotification(`Error: ${error.message}`, 'error');
-                            }
-                        });
-                    });
-                    
-                    // Add event listeners to delete buttons
-                    document.querySelectorAll('.delete-category-btn').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const categoryId = this.getAttribute('data-id');
-                            const row = this.closest('tr');
-                            const categoryName = row.querySelector('.category-name').textContent;
-                            
-                            // Use confirm dialog to prevent accidental deletion
-                            if (!confirm(`Are you sure you want to delete the category "${categoryName}"? This may affect existing services.`)) {
-                                return; // User canceled
-                            }
-                            
-                            try {
-                                // Show loading indicator
-                                row.classList.add('deleting');
-                                this.textContent = 'Deleting...';
-                                this.disabled = true;
-                                
-                                const response = await fetch(`/api/service-category/delete/${categoryId}`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    }
-                                });
-                                
-                                const data = await response.json();
-                                
-                                if (data.success) {
-                                    showNotification(`Category "${categoryName}" deleted successfully`, 'success');
-                                    // Remove the row from the table
-                                    row.remove();
-                                    // Refresh data
-                                    populateCategoriesTable();
-                                    loadCategories();
-                                } else {
-                                    throw new Error(data.message || 'Failed to delete category');
-                                }
-                            } catch (error) {
-                                console.error('Error deleting category:', error);
-                                showNotification(`Error: ${error.message}`, 'error');
-                                // Reset the button
-                                row.classList.remove('deleting');
-                                this.textContent = 'Delete';
-                                this.disabled = false;
-                            }
-                        });
-                    });
-                } else {
-                    throw new Error(data.message || 'Failed to fetch categories');
-                }
-            } catch (error) {
-                console.error('Error populating categories table:', error);
-                categoriesTbody.innerHTML = `<tr><td colspan="4" class="text-center">Error loading categories: ${error.message}</td></tr>`;
-            }
-        }
-        
-        // Open categories modal
-        if (manageCategoriesBtn) {
-            manageCategoriesBtn.addEventListener('click', function() {
-                categoriesModal.style.display = 'block';
-                populateCategoriesTable();
-            });
-        }
-        
-        // Add new category
-        if (addCategoryForm) {
-            addCategoryForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const newCategoryName = document.getElementById('new-category-name').value.trim();
-                
-                if (!newCategoryName) {
-                    showNotification('Category name cannot be empty', 'error');
-                    return;
-                }
-                
-                try {
-                    const response = await fetch('/api/service-category/create', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ 
-                            name: newCategoryName,
-                            displayOrder: serviceCategories.length
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        document.getElementById('new-category-name').value = '';
-                        showNotification('Category added successfully', 'success');
-                        populateCategoriesTable();
-                        loadCategories();
-                    } else {
-                        throw new Error(data.message || 'Failed to add category');
-                    }
-                } catch (error) {
-                    console.error('Error adding category:', error);
-                    showNotification(`Error: ${error.message}`, 'error');
-                }
-            });
-        }
-        
-        // View more functionality for description
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('view-more')) {
-                const fullDesc = e.target.getAttribute('data-desc');
-                alert(fullDesc);
-            }
-        });
-        
-        // Close modals when clicking outside
-        window.addEventListener('click', function(event) {
-            if (event.target === categoriesModal) {
-                categoriesModal.style.display = 'none';
-            }
-        });
-        
-        // Close categories modal when clicking close button
-        categoriesModal.querySelectorAll('.close, .close-modal').forEach(closeBtn => {
-            closeBtn.addEventListener('click', function() {
-                categoriesModal.style.display = 'none';
-            });
-        });
-    });
-</script> 
+    </script>
+</body>
+</html> 

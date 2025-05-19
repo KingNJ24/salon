@@ -1,713 +1,529 @@
-<!-- Site Settings Form -->
-<div class="card">
-    <div class="card-header">
-        <h2>Site Settings</h2>
-    </div>
-    <div class="card-body">
-        <form id="settings-form" class="admin-form" data-endpoint="/api/settings/update">
-            <!-- Basic Information -->
-            <h3 style="margin-top: 0;">Basic Information</h3>
-            
-            <div class="form-group">
-                <label for="salon-name">Salon Name</label>
-                <input type="text" id="salon-name" name="salonName" value="<%= siteInfo.salonName %>" required>
-            </div>
-            
-            <!-- Logo Upload -->
-            <div class="form-group">
-                <label>Logo</label>
-                <div class="image-upload">
-                    <div class="image-preview">
-                        <img src="<%= siteInfo.logo || '/images/logo.png' %>" alt="Logo Preview" style="max-height: 100px; width: 100px; display: block; margin-bottom: 10px; border-radius: 50%; object-fit: cover; aspect-ratio: 1/1; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
-                    </div>
-                    <input type="file" accept="image/*">
-                    <div style="display: flex; margin-top: 10px;">
-                        <input type="text" name="logo" class="image-url-input" value="<%= siteInfo.logo || '/images/logo.png' %>" placeholder="Image URL">
-                        <button type="button" class="btn upload-btn">Upload</button>
-                    </div>
-                    <p class="help-text">Upload a logo image or provide a URL. The logo will appear as a circle on the website.</p>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="salon-address">Address</label>
-                <input type="text" id="salon-address" name="address" value="<%= siteInfo.address %>" required>
-            </div>
-            
-            <!-- Map Location -->
-            <div class="form-group">
-                <label for="map-embed-url">Map Location</label>
-                <div class="image-upload">
-                    <div class="map-preview">
-                        <iframe 
-                            src="<%= siteInfo.mapEmbedUrl %>" 
-                            width="100%" 
-                            height="200" 
-                            style="border:0; border-radius: 4px; margin-bottom: 10px;" 
-                            allowfullscreen="" 
-                            loading="lazy"
-                            referrerpolicy="no-referrer-when-downgrade">
-                        </iframe>
-                    </div>
-                    
-                    <div class="map-selector-wrapper" style="margin-bottom: 15px;">
-                        <h4 style="margin-top: 15px; margin-bottom: 10px;">Select Location on Map</h4>
-                        <input 
-                            type="text" 
-                            id="map-search-input" 
-                            placeholder="Search for a location..." 
-                            style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;"
-                        >
-                        <div 
-                            id="map-selector-container" 
-                            style="width: 100%; height: 300px; border-radius: 4px; border: 1px solid #ddd; margin-bottom: 10px;"
-                        ></div>
-                        <button type="button" id="select-location-btn" class="btn" style="margin-top: 10px;">Use This Location</button>
-                        <p class="help-text">
-                            Search for your salon location (press Enter to search), click on the map, or drag the marker to pinpoint the exact position. 
-                            Then click "Use This Location" to update the map embed URL.
-                        </p>
-                    </div>
-                    
-                    <label for="map-embed-url">Embed URL</label>
-                    <input type="text" id="map-embed-url" name="mapEmbedUrl" value="<%= siteInfo.mapEmbedUrl %>" style="width: 100%;" class="form-control">
-                    
-                    <!-- Hidden inputs for storing map coordinates -->
-                    <input type="hidden" id="map-lat" name="mapLat" value="<%= siteInfo.mapLat || '' %>">
-                    <input type="hidden" id="map-lng" name="mapLng" value="<%= siteInfo.mapLng || '' %>">
-                    
-                    <p class="help-text">
-                        The map URL and coordinates are automatically generated when selecting a location.
-                    </p>
-                    <button type="button" id="preview-map-btn" class="btn" style="margin-top: 10px;">Preview Embed</button>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="salon-phone">Phone</label>
-                <input type="text" id="salon-phone" name="phone" value="<%= siteInfo.phone %>" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="salon-email">Email</label>
-                <input type="email" id="salon-email" name="email" value="<%= siteInfo.email %>" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="currency-symbol">Currency Symbol</label>
-                <select id="currency-symbol" name="currencySymbol">
-                    <option value="₹" <%= siteInfo.currencySymbol === '₹' ? 'selected' : '' %>>₹ (Rupee)</option>
-                    <option value="$" <%= siteInfo.currencySymbol === '$' ? 'selected' : '' %>>$ (Dollar)</option>
-                    <option value="€" <%= siteInfo.currencySymbol === '€' ? 'selected' : '' %>>€ (Euro)</option>
-                    <option value="£" <%= siteInfo.currencySymbol === '£' ? 'selected' : '' %>>£ (Pound)</option>
-                    <option value="¥" <%= siteInfo.currencySymbol === '¥' ? 'selected' : '' %>>¥ (Yen)</option>
-                    <option value="₽" <%= siteInfo.currencySymbol === '₽' ? 'selected' : '' %>>₽ (Ruble)</option>
-                    <option value="₩" <%= siteInfo.currencySymbol === '₩' ? 'selected' : '' %>>₩ (Won)</option>
-                    <option value="₪" <%= siteInfo.currencySymbol === '₪' ? 'selected' : '' %>>₪ (Shekel)</option>
-                    <option value="د.إ" <%= siteInfo.currencySymbol === 'د.إ' ? 'selected' : '' %>>د.إ (Dirham)</option>
-                    <option value="R" <%= siteInfo.currencySymbol === 'R' ? 'selected' : '' %>>R (Rand)</option>
-                </select>
-                <p class="help-text">This symbol will be displayed next to prices across the website.</p>
-            </div>
-            
-            <!-- Social Media Links -->
-            <h3>Social Media</h3>
-            
-            <div class="form-group">
-                <label for="social-facebook">Facebook</label>
-                <input type="url" id="social-facebook" name="socialMedia.facebook" value="<%= siteInfo.socialMedia?.facebook || '' %>" placeholder="https://facebook.com/yoursalon">
-            </div>
-            
-            <div class="form-group">
-                <label for="social-instagram">Instagram</label>
-                <input type="url" id="social-instagram" name="socialMedia.instagram" value="<%= siteInfo.socialMedia?.instagram || '' %>" placeholder="https://instagram.com/yoursalon">
-            </div>
-            
-            <div class="form-group">
-                <label for="social-twitter">Twitter</label>
-                <input type="url" id="social-twitter" name="socialMedia.twitter" value="<%= siteInfo.socialMedia?.twitter || '' %>" placeholder="https://twitter.com/yoursalon">
-            </div>
-            
-            <div class="form-group">
-                <label for="social-pinterest">Pinterest</label>
-                <input type="url" id="social-pinterest" name="socialMedia.pinterest" value="<%= siteInfo.socialMedia?.pinterest || '' %>" placeholder="https://pinterest.com/yoursalon">
-            </div>
-            
-            <div class="form-group">
-                <label for="social-youtube">YouTube</label>
-                <input type="url" id="social-youtube" name="socialMedia.youtube" value="<%= siteInfo.socialMedia?.youtube || '' %>" placeholder="https://youtube.com/channel/yoursalon">
-            </div>
-            
-            <div class="form-group">
-                <label for="social-whatsapp">WhatsApp</label>
-                <input type="text" id="social-whatsapp" name="socialMedia.whatsapp" value="<%= siteInfo.socialMedia?.whatsapp || '' %>" placeholder="918123456789">
-                <p class="help-text">Enter WhatsApp number with country code without + (e.g., 918123456789)</p>
-            </div>
-            
-            <!-- Featured Services -->
-            <h3>Homepage Featured Services</h3>
-            <p class="help-text">Select up to 3 services to feature on the homepage. If none are selected, the first 3 services will be shown.</p>
-            
-            <div class="form-group" id="featured-services-container">
-                <div id="featured-services-list">
-                    <!-- This will be populated with services via JavaScript -->
-                </div>
-            </div>
-            
-            <!-- Services Display Options -->
-            <h3>Services Display Options</h3>
-            
-            <div class="form-group">
-                <label for="services-view-mode">Services Page View Mode</label>
-                <select id="services-view-mode" name="servicesViewMode">
-                    <option value="grid" <%= siteInfo.servicesViewMode === 'grid' ? 'selected' : '' %>>Grid View (with images/videos)</option>
-                    <option value="catalog" <%= siteInfo.servicesViewMode === 'catalog' ? 'selected' : '' %>>Catalog View (text only)</option>
-                </select>
-                <p class="help-text">Choose how services are displayed on your services page.</p>
-            </div>
-            
-            <!-- Business Hours -->
-            <h3>Business Hours</h3>
-            
-            <div class="form-group">
-                <label for="hours-monday">Monday</label>
-                <input type="text" id="hours-monday" name="hours.monday" value="<%= siteInfo.hours.monday %>">
-            </div>
-            
-            <div class="form-group">
-                <label for="hours-tuesday">Tuesday</label>
-                <input type="text" id="hours-tuesday" name="hours.tuesday" value="<%= siteInfo.hours.tuesday %>">
-            </div>
-            
-            <div class="form-group">
-                <label for="hours-wednesday">Wednesday</label>
-                <input type="text" id="hours-wednesday" name="hours.wednesday" value="<%= siteInfo.hours.wednesday %>">
-            </div>
-            
-            <div class="form-group">
-                <label for="hours-thursday">Thursday</label>
-                <input type="text" id="hours-thursday" name="hours.thursday" value="<%= siteInfo.hours.thursday %>">
-            </div>
-            
-            <div class="form-group">
-                <label for="hours-friday">Friday</label>
-                <input type="text" id="hours-friday" name="hours.friday" value="<%= siteInfo.hours.friday %>">
-            </div>
-            
-            <div class="form-group">
-                <label for="hours-saturday">Saturday</label>
-                <input type="text" id="hours-saturday" name="hours.saturday" value="<%= siteInfo.hours.saturday %>">
-            </div>
-            
-            <div class="form-group">
-                <label for="hours-sunday">Sunday</label>
-                <input type="text" id="hours-sunday" name="hours.sunday" value="<%= siteInfo.hours.sunday %>">
-            </div>
-            
-            <!-- Homepage Content -->
-            <h3>Homepage Content</h3>
-            
-            <div class="form-group">
-                <label for="hero-title">Hero Title</label>
-                <input type="text" id="hero-title" name="heroTitle" value="<%= siteInfo.heroTitle || 'Your Hair, Our Passion' %>">
-            </div>
-            
-            <div class="form-group">
-                <label for="hero-subtitle">Hero Subtitle</label>
-                <input type="text" id="hero-subtitle" name="heroSubtitle" value="<%= siteInfo.heroSubtitle || 'Experience the best in hair care and styling' %>">
-            </div>
-            
-            <div class="form-group">
-                <label for="about-text">About Section</label>
-                <textarea id="about-text" name="aboutText" rows="4"><%= siteInfo.aboutText || 'We are a team of passionate stylists dedicated to helping you look and feel your best. With years of experience and a commitment to excellence, we provide top-quality hair services in a welcoming environment.' %></textarea>
-            </div>
-            
-            <!-- About Image Upload -->
-            <div class="form-group">
-                <label>About Section Image</label>
-                <div class="image-upload">
-                    <div class="image-preview">
-                        <img src="<%= siteInfo.aboutImage || '/images/about.jpg' %>" alt="About Image Preview" style="max-width: 100%; max-height: 200px; display: block; margin-bottom: 10px; border-radius: 4px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    </div>
-                    <input type="file" accept="image/*">
-                    <div style="display: flex; margin-top: 10px;">
-                        <input type="text" name="aboutImage" class="image-url-input" value="<%= siteInfo.aboutImage || '/images/about.jpg' %>" placeholder="Image URL">
-                        <button type="button" class="btn upload-btn">Upload</button>
-                    </div>
-                    <p class="help-text">Upload an about section image or provide a URL. This image will be shown in the about section on your website.</p>
-                </div>
-            </div>
-            
-            <!-- Homepage Image Upload -->
-            <div class="form-group">
-                <label>Homepage Image</label>
-                <div class="image-upload">
-                    <div class="image-preview">
-                        <img src="<%= siteInfo.homepageImage || '/images/salon-homepage.jpg' %>" alt="Homepage Image Preview" style="max-width: 100%; max-height: 200px; display: block; margin-bottom: 10px; border-radius: 4px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    </div>
-                    <input type="file" accept="image/*">
-                    <div style="display: flex; margin-top: 10px;">
-                        <input type="text" name="homepageImage" class="image-url-input" value="<%= siteInfo.homepageImage || '/images/salon-homepage.jpg' %>" placeholder="Image URL">
-                        <button type="button" class="btn upload-btn">Upload</button>
-                    </div>
-                    <p class="help-text">Upload a homepage image or provide a URL. This image will be shown on your website's homepage.</p>
-                </div>
-            </div>
-            
-            <!-- Home Video Upload -->
-            <div class="form-group">
-                <label>Home Page Video</label>
-                <div class="video-preview" style="margin-bottom: 15px; max-width: 100%; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    <video id="video-preview" controls preload="metadata" style="max-width: 100%; display: block;" poster="/images/about.jpg">
-                        <source src="<%= siteInfo.homeVideo || '/videos/salon-ad.mp4' %>" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                </div>
-                <div class="image-upload">
-                    <input type="file" accept="video/*" id="video-file-input" class="form-control">
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <button type="button" class="btn upload-btn" id="video-upload-btn">Upload Video</button>
-                        <input type="text" id="home-video-url" name="homeVideo" value="<%= siteInfo.homeVideo || '/videos/salon-ad.mp4' %>" style="flex: 1;" placeholder="Video URL">
-                    </div>
-                    <p class="help-text">Upload a video for the homepage (MP4 recommended) or provide a video URL. The video will autoplay on the homepage.</p>
-                </div>
-            </div>
-            
-            <!-- Admin Credentials -->
-            <h3>Admin Credentials</h3>
-            
-            <div class="form-group">
-                <label for="admin-username">Admin Username</label>
-                <input type="text" id="admin-username" name="adminUsername" value="nikhil">
-                <p class="help-text">Enter a new username to change it.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="admin-password">Admin Password</label>
-                <input type="password" id="admin-password" name="adminPassword" placeholder="Enter new password">
-                <p class="help-text">Leave blank to keep current password.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="admin-confirm-password">Confirm Password</label>
-                <input type="password" id="admin-confirm-password" name="adminConfirmPassword" placeholder="Confirm new password">
-            </div>
-            
-            <!-- Save Button -->
-            <div class="form-group" style="margin-top: 30px;">
-                <button type="submit" class="btn">Save Settings</button>
-            </div>
-        </form>
-    </div>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Salon Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin-styles.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const settingsForm = document.getElementById('settings-form');
-        const videoFileInput = document.getElementById('video-file-input');
-        const videoUploadBtn = document.getElementById('video-upload-btn');
-        const videoPreview = document.getElementById('video-preview');
-        const homeVideoUrlInput = document.getElementById('home-video-url');
-        const featuredServicesContainer = document.getElementById('featured-services-list');
-        const mapEmbedUrlInput = document.getElementById('map-embed-url');
-        const previewMapBtn = document.getElementById('preview-map-btn');
-        
-        // Preview Map Button
-        if (previewMapBtn && mapEmbedUrlInput) {
-            previewMapBtn.addEventListener('click', function() {
-                const mapUrl = mapEmbedUrlInput.value.trim();
-                if (mapUrl) {
-                    const mapIframe = document.querySelector('.image-upload iframe');
-                    if (mapIframe) {
-                        mapIframe.src = mapUrl;
-                    }
-                }
-            });
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
         }
-        
-        // Load all services for featured services selection
-        loadServices();
-        
-        function loadServices() {
-            // Show loading state
-            featuredServicesContainer.innerHTML = '<p>Loading services...</p>';
-            
-            // Use AJAX to get services data
-            fetch('/api/services/list')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success && data.services && data.services.length > 0) {
-                        populateFeaturedServicesSelect(data.services);
-                    } else {
-                        console.error('No services returned from API');
-                        featuredServicesContainer.innerHTML = '<p>No services found. Please add services in the Services tab first.</p>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading services:', error);
-                    
-                    // Attempt to get services from the dashboard
-                    let services = [];
-                    try {
-                        // Try to get services from dashboard if they exist
-                        const serviceElements = document.querySelectorAll('#dashboard-services .service-item');
-                        
-                        if (serviceElements && serviceElements.length > 0) {
-                            serviceElements.forEach(el => {
-                                const id = el.getAttribute('data-id');
-                                const name = el.querySelector('.service-name')?.textContent || 'Service';
-                                const image = el.querySelector('img')?.src || '/images/placeholder.jpg';
-                                if (id) services.push({ id, name, image });
-                            });
-                        }
-                    } catch (e) {
-                        console.error('Error with fallback method:', e);
-                    }
-                    
-                    if (services.length > 0) {
-                        populateFeaturedServicesSelect(services);
-                    } else {
-                        // Create a button to navigate to services page
-                        featuredServicesContainer.innerHTML = `
-                            <p>Unable to load services. You may need to add services first.</p>
-                            <button type="button" class="btn" onclick="window.location.href='/admin/services'" style="margin-top: 10px;">
-                                Go to Services Management
-                            </button>
-                        `;
-                    }
-                });
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
         }
-        
-        function populateFeaturedServicesSelect(services) {
-            if (!featuredServicesContainer) return;
-            
-            // Parse current featured services from the server-side template
-            let currentFeaturedIds = [];
-            try {
-                // Get current featured services
-                currentFeaturedIds = [
-                    '<%= siteInfo.featuredServices && siteInfo.featuredServices[0] ? siteInfo.featuredServices[0].toString() : "" %>',
-                    '<%= siteInfo.featuredServices && siteInfo.featuredServices[1] ? siteInfo.featuredServices[1].toString() : "" %>',
-                    '<%= siteInfo.featuredServices && siteInfo.featuredServices[2] ? siteInfo.featuredServices[2].toString() : "" %>'
-                ].filter(id => id && id !== "");
-            } catch (e) {
-                console.error('Error parsing current featured services:', e);
+
+        .settings-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin: 0;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .settings-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--color-text);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(255, 105, 180, 0.1);
+        }
+
+        .form-error {
+            color: var(--color-danger);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .form-control.error {
+            border-color: var(--color-danger);
+        }
+
+        .form-control.error:focus {
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+        }
+
+        .form-control.error + .form-error {
+            display: block;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border-color: var(--color-primary);
+        }
+
+        .social-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem;
+            border-radius: var(--border-radius);
+            background: var(--color-secondary);
+            color: var(--color-text);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .social-link:hover {
+            background: var(--color-primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .social-link i {
+            font-size: 1.2rem;
+        }
+
+        .save-button {
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 1rem;
             }
-            
-            // Create featured services selection UI
-            let html = `
-                <style>
-                    .service-selection {
-                        display: grid;
-                        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                        gap: 15px;
-                        margin-bottom: 15px;
-                    }
-                    .service-item {
-                        border: 1px solid #ddd;
-                        border-radius: 4px;
-                        padding: 10px;
-                        display: flex;
-                        flex-direction: column;
-                        cursor: pointer;
-                        transition: all 0.2s ease;
-                        position: relative;
-                    }
-                    .service-item:hover {
-                        border-color: #aaa;
-                        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                    }
-                    .service-item.selected {
-                        border-color: #9c8370;
-                        background-color: rgba(156, 131, 112, 0.05);
-                    }
-                    .service-item img {
-                        width: 100%;
-                        height: 100px;
-                        object-fit: cover;
-                        border-radius: 4px;
-                        margin-bottom: 8px;
-                    }
-                    .service-name {
-                        font-weight: 500;
-                    }
-                    .service-checkbox-indicator {
-                        position: absolute;
-                        top: 5px;
-                        right: 5px;
-                        width: 20px;
-                        height: 20px;
-                        border-radius: 50%;
-                        background: #9c8370;
-                        color: white;
-                        display: none;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 12px;
-                    }
-                    .service-item.selected .service-checkbox-indicator {
-                        display: flex;
-                    }
-                </style>
-                <p class="help-text">Select up to 3 services to feature on the homepage:</p>
-                <div class="service-selection">
-            `;
-            
-            services.forEach(service => {
-                const isSelected = currentFeaturedIds.includes(service.id.toString());
-                html += `
-                    <div class="service-item ${isSelected ? 'selected' : ''}" data-id="${service.id}">
-                        <div class="service-checkbox-indicator">✓</div>
-                        <img src="${service.image}" alt="${service.name}" onerror="this.src='/images/placeholder.jpg'">
-                        <div class="service-name">${service.name}</div>
-                        <input type="checkbox" name="featuredServices" value="${service.id}" ${isSelected ? 'checked' : ''} style="display: none;">
-                    </div>
-                `;
-            });
-            
-            html += `</div>`;
-            
-            // Update the container
-            featuredServicesContainer.innerHTML = html;
-            
-            // Add click handler for service selection
-            document.querySelectorAll('.service-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const checkbox = this.querySelector('input[type="checkbox"]');
-                    const selected = this.classList.toggle('selected');
-                    checkbox.checked = selected;
-                    
-                    // Limit to 3 selected services
-                    const selectedItems = document.querySelectorAll('.service-item.selected');
-                    if (selectedItems.length > 3) {
-                        this.classList.remove('selected');
-                        checkbox.checked = false;
-                        alert('You can select a maximum of 3 services for the homepage.');
-                    }
-                    
-                    // Provide feedback that the item was clicked
-                    this.style.transform = 'scale(0.98)';
-                    setTimeout(() => {
-                        this.style.transform = 'scale(1)';
-                    }, 100);
-                });
-            });
+
+            .settings-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .social-links {
+                grid-template-columns: 1fr;
+            }
         }
-        
-        // Handle video file upload
-        if (videoFileInput && videoUploadBtn) {
-            // Preview selected video file
-            videoFileInput.addEventListener('change', function() {
-                if (this.files && this.files[0]) {
-                    const file = this.files[0];
-                    
-                    // Create object URL for preview
-                    const videoURL = URL.createObjectURL(file);
-                    videoPreview.src = videoURL;
-                    videoPreview.load();
-                }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="settings-header">
+            <h1 class="settings-title">Settings</h1>
+        </div>
+
+        <div class="settings-grid">
+            <!-- General Settings -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <div class="card-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        General Settings
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <form id="generalSettingsForm">
+                        <div class="form-group">
+                            <label class="form-label" for="businessName">Business Name</label>
+                            <input type="text" id="businessName" name="businessName" class="form-control" value="Nandini J Makeup Studio & Luxury Salon -HD Party Makeup |Haircut & Styling |HD Bridal Makeup in Shamli" required>
+                            <div class="form-error">Business name is required</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="latitude">Latitude</label>
+                            <input type="number" id="latitude" name="latitude" class="form-control" step="any" value="29.445101" required>
+                            <div class="form-error">Valid latitude is required</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="longitude">Longitude</label>
+                            <input type="number" id="longitude" name="longitude" class="form-control" step="any" value="77.305900" required>
+                            <div class="form-error">Valid longitude is required</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="salonName">Salon Name</label>
+                            <input type="text" id="salonName" name="salonName" class="form-control" value="<%= siteInfo.salonName || '' %>">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="salonEmail">Email Address</label>
+                            <input type="email" id="salonEmail" class="form-control" value="contact@nandinij.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="salonPhone">Phone Number</label>
+                            <input type="tel" id="salonPhone" class="form-control" value="+1 234 567 8900">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="salonAddress">Address</label>
+                            <textarea id="salonAddress" class="form-control" rows="3">123 Beauty Street, City, State 12345</textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary save-button">
+                            <i class="fas fa-save"></i>
+                            Save Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Appearance Settings -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <div class="card-icon">
+                            <i class="fas fa-paint-brush"></i>
+                        </div>
+                        Appearance
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <form id="appearanceSettingsForm">
+                        <div class="form-group">
+                            <label class="form-label">Primary Color</label>
+                            <div class="color-picker">
+                                <div class="color-option active" style="background: #ff69b4;" data-color="#ff69b4"></div>
+                                <div class="color-option" style="background: #4CAF50;" data-color="#4CAF50"></div>
+                                <div class="color-option" style="background: #2196F3;" data-color="#2196F3"></div>
+                                <div class="color-option" style="background: #9C27B0;" data-color="#9C27B0"></div>
+                                <div class="color-option" style="background: #FF9800;" data-color="#FF9800"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="logoUpload">Logo</label>
+                            <input type="file" id="logoUpload" class="form-control" accept="image/*">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="faviconUpload">Favicon</label>
+                            <input type="file" id="faviconUpload" class="form-control" accept="image/*">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary save-button">
+                            <i class="fas fa-save"></i>
+                            Save Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Social Media Settings -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <div class="card-icon">
+                            <i class="fas fa-share-alt"></i>
+                        </div>
+                        Social Media
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <form id="socialSettingsForm">
+                        <div class="social-links">
+                            <a href="#" class="social-link">
+                                <i class="fab fa-facebook"></i>
+                                <span>Facebook</span>
+                            </a>
+                            <a href="#" class="social-link">
+                                <i class="fab fa-instagram"></i>
+                                <span>Instagram</span>
+                            </a>
+                            <a href="#" class="social-link">
+                                <i class="fab fa-twitter"></i>
+                                <span>Twitter</span>
+                            </a>
+                            <a href="#" class="social-link">
+                                <i class="fab fa-youtube"></i>
+                                <span>YouTube</span>
+                            </a>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="facebookUrl">Facebook URL</label>
+                            <input type="url" id="facebookUrl" class="form-control" placeholder="https://facebook.com/your-page">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="instagramUrl">Instagram URL</label>
+                            <input type="url" id="instagramUrl" class="form-control" placeholder="https://instagram.com/your-profile">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="twitterUrl">Twitter URL</label>
+                            <input type="url" id="twitterUrl" class="form-control" placeholder="https://twitter.com/your-handle">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="youtubeUrl">YouTube URL</label>
+                            <input type="url" id="youtubeUrl" class="form-control" placeholder="https://youtube.com/your-channel">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary save-button">
+                            <i class="fas fa-save"></i>
+                            Save Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <div class="card-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        Notifications
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <form id="notificationSettingsForm">
+                        <div class="form-group">
+                            <label class="form-label">Email Notifications</label>
+                            <div class="form-check">
+                                <input type="checkbox" id="newBookingEmail" class="form-check-input" checked>
+                                <label class="form-check-label" for="newBookingEmail">New Booking Notifications</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" id="reminderEmail" class="form-check-input" checked>
+                                <label class="form-check-label" for="reminderEmail">Booking Reminders</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" id="reviewEmail" class="form-check-input" checked>
+                                <label class="form-check-label" for="reviewEmail">New Review Notifications</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">SMS Notifications</label>
+                            <div class="form-check">
+                                <input type="checkbox" id="newBookingSMS" class="form-check-input">
+                                <label class="form-check-label" for="newBookingSMS">New Booking Notifications</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" id="reminderSMS" class="form-check-input" checked>
+                                <label class="form-check-label" for="reminderSMS">Booking Reminders</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary save-button">
+                            <i class="fas fa-save"></i>
+                            Save Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Color picker functionality
+        const colorOptions = document.querySelectorAll('.color-option');
+        colorOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                colorOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                // Update primary color in CSS variables
+                document.documentElement.style.setProperty('--color-primary', option.dataset.color);
             });
-            
-            // Handle video upload
-            videoUploadBtn.addEventListener('click', async function(e) {
-                e.preventDefault();
-                
-                if (!videoFileInput.files || !videoFileInput.files[0]) {
-                    alert('Please select a video file to upload');
-                    return;
-                }
-                
-                const file = videoFileInput.files[0];
-                
-                videoUploadBtn.disabled = true;
-                videoUploadBtn.textContent = 'Uploading...';
-                
-                try {
-                    // Convert file to base64 for Vercel compatibility
-                    const base64Data = await new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () => resolve(reader.result);
-                        reader.onerror = reject;
-                        reader.readAsDataURL(file);
-                    });
-                    
-                    // Use dedicated endpoint for video uploads
-                    const response = await fetch('/api/express-upload-video', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            file: base64Data,
-                            fileName: file.name,
-                            fileType: file.type
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        createNotification('Video uploaded successfully', 'success');
-                        homeVideoUrlInput.value = data.filePath || data.url;
-                        
-                        // Update video preview if it exists
-                        if (videoPreview) {
-                            videoPreview.src = data.filePath || data.url;
-                            videoPreview.load();
-                        }
-                    } else {
-                        throw new Error(data.message || 'Failed to upload video');
-                    }
-                } catch (error) {
-                    console.error('Upload error:', error);
-                    alert('Error uploading video: ' + error.message);
-                } finally {
-                    videoUploadBtn.disabled = false;
-                    videoUploadBtn.textContent = 'Upload Video';
-                }
-            });
-        }
-        
-        // Update video preview when URL changes
-        if (homeVideoUrlInput) {
-            homeVideoUrlInput.addEventListener('change', function() {
-                if (this.value && videoPreview) {
-                    videoPreview.querySelector('source').src = this.value;
-                    videoPreview.load();
-                }
-            });
-        }
-        
-        // Show notification helper function
-        function createNotification(message, type = 'info') {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.textContent = message;
-            notification.style.position = 'fixed';
-            notification.style.top = '20px';
-            notification.style.right = '20px';
-            notification.style.padding = '12px 20px';
-            notification.style.backgroundColor = type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#cce5ff';
-            notification.style.color = type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#004085';
-            notification.style.borderRadius = '4px';
-            notification.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-            notification.style.zIndex = '9999';
-            
-            // Add to body
-            document.body.appendChild(notification);
-            
-            // Remove after 3 seconds
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transition = 'opacity 0.3s ease';
-                
-                // Remove from DOM after animation
-                setTimeout(() => {
-                    notification.remove();
-                }, 300);
-            }, 3000);
-        }
-        
-        settingsForm.addEventListener('submit', function(e) {
+        });
+
+        // Form submission handlers
+        document.getElementById('generalSettingsForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Validate password confirmation
-            const password = document.getElementById('admin-password').value;
-            const confirmPassword = document.getElementById('admin-confirm-password').value;
+            // Validate required fields
+            const businessName = document.getElementById('businessName').value;
+            const latitude = parseFloat(document.getElementById('latitude').value);
+            const longitude = parseFloat(document.getElementById('longitude').value);
             
-            if (password && password !== confirmPassword) {
-                alert('Password and confirmation do not match');
+            let hasError = false;
+            
+            if (!businessName) {
+                document.getElementById('businessName').classList.add('error');
+                hasError = true;
+            } else {
+                document.getElementById('businessName').classList.remove('error');
+            }
+            
+            if (isNaN(latitude) || latitude < -90 || latitude > 90) {
+                document.getElementById('latitude').classList.add('error');
+                hasError = true;
+            } else {
+                document.getElementById('latitude').classList.remove('error');
+            }
+            
+            if (isNaN(longitude) || longitude < -180 || longitude > 180) {
+                document.getElementById('longitude').classList.add('error');
+                hasError = true;
+            } else {
+                document.getElementById('longitude').classList.remove('error');
+            }
+            
+            if (hasError) {
                 return;
             }
             
-            // Create FormData object
-            const formData = new FormData(settingsForm);
-            const data = {};
-            
-            // Process form data into a nested object
-            formData.forEach((value, key) => {
-                if (key.includes('.')) {
-                    const [parent, child] = key.split('.');
-                    if (!data[parent]) data[parent] = {};
-                    data[parent][child] = value;
-                } else if (key === 'featuredServices') {
-                    // Handle multiple selected services
-                    if (!data[key]) data[key] = [];
-                    data[key].push(value);
-                } else {
-                    data[key] = value;
-                }
-            });
-            
-            // Double check to ensure featuredServices is properly collected
-            if (!data.featuredServices || data.featuredServices.length === 0) {
-                const checkedBoxes = document.querySelectorAll('input[name="featuredServices"]:checked');
-                if (checkedBoxes.length > 0) {
-                    data.featuredServices = Array.from(checkedBoxes).map(cb => cb.value);
-                }
-            }
-            
-            // Show saving indicator
-            const saveBtn = settingsForm.querySelector('button[type="submit"]');
-            const originalBtnText = saveBtn.textContent;
-            saveBtn.textContent = 'Saving...';
-            saveBtn.disabled = true;
-            
-            // Send settings update
-            fetch('/api/settings/update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(result => {
+            try {
+                const formData = new FormData(this);
+                const response = await fetch('/api/settings/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+                
+                const result = await response.json();
+                
                 if (result.success) {
-                    // Create temporary message
-                    const message = document.createElement('div');
-                    message.className = 'success-message';
-                    message.textContent = 'Settings saved successfully!';
-                    message.style.backgroundColor = '#d4edda';
-                    message.style.color = '#155724';
-                    message.style.padding = '15px';
-                    message.style.marginBottom = '20px';
-                    message.style.borderRadius = '4px';
-                    
-                    // Insert at the top of the form
-                    settingsForm.insertBefore(message, settingsForm.firstChild);
-                    
-                    // Remove after 3 seconds
-                    setTimeout(() => {
-                        message.remove();
-                    }, 3000);
+                    alert('Settings saved successfully!');
+                    window.location.reload();
                 } else {
-                    alert(result.message || 'Failed to save settings.');
+                    alert('Error saving settings: ' + result.message);
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while saving settings: ' + error.message);
-            })
-            .finally(() => {
-                // Restore button state
-                saveBtn.textContent = originalBtnText;
-                saveBtn.disabled = false;
-            });
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                alert('Error saving settings. Please try again.');
+            }
         });
-    });
-</script>
 
-<!-- Google Maps API and Location Selector -->
-<script src="/js/admin/map-selector.js"></script> 
+        document.getElementById('appearanceSettingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Handle appearance settings save
+            console.log('Saving appearance settings...');
+        });
+
+        document.getElementById('socialSettingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Handle social media settings save
+            console.log('Saving social media settings...');
+        });
+
+        document.getElementById('notificationSettingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Handle notification settings save
+            console.log('Saving notification settings...');
+        });
+
+        // File upload preview
+        document.getElementById('logoUpload').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                // Handle logo upload preview
+                console.log('Logo file selected:', e.target.files[0].name);
+            }
+        });
+
+        document.getElementById('faviconUpload').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                // Handle favicon upload preview
+                console.log('Favicon file selected:', e.target.files[0].name);
+            }
+        });
+    </script>
+</body>
+</html> 

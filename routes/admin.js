@@ -65,13 +65,15 @@ router.get('/dashboard', adminAuth, async (req, res, next) => {
     const services = await Service.find();
     const gallery = await Gallery.find();
     const bookings = await Booking.find();
+    const siteInfo = await SiteInfo.findOne() || {};
     
     res.render('admin/dashboard', { 
       title: 'Admin Dashboard', 
       layout: 'layouts/admin',
       services,
       gallery,
-      bookings
+      bookings,
+      siteInfo
     });
   } catch (error) {
     next(error);
