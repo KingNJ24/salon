@@ -1,25 +1,377 @@
-<div class="login-container">
-    <div class="login-form">
-        <h1>Salon Admin</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Nandini J Makeup Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --color-primary: #ff69b4;
+            --color-secondary: #f8f9fa;
+            --color-text: #333;
+            --color-error: #dc3545;
+            --color-success: #28a745;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--color-primary), #ff1493);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h1 {
+            color: var(--color-text);
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 0.9rem;
+            animation: fadeIn 0.5s ease-out 0.2s backwards;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+            animation: fadeIn 0.5s ease-out 0.3s backwards;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--color-text);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: var(--color-secondary);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(255, 105, 180, 0.1);
+        }
+
+        .form-group i {
+            position: absolute;
+            right: 1rem;
+            top: 2.3rem;
+            color: #666;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus + i {
+            color: var(--color-primary);
+        }
+
+        .error-message {
+            color: var(--color-error);
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            display: none;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 1rem;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-out 0.4s backwards;
+        }
+
+        .login-button:hover {
+            background: #ff1493;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            transition: 0.5s;
+        }
+
+        .login-button:hover::before {
+            left: 100%;
+        }
+
+        .back-to-site {
+            text-align: center;
+            margin-top: 1.5rem;
+            animation: fadeIn 0.5s ease-out 0.5s backwards;
+        }
+
+        .back-to-site a {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-to-site a:hover {
+            color: #ff1493;
+        }
+
+        .back-to-site i {
+            transition: var(--transition);
+        }
+
+        .back-to-site a:hover i {
+            transform: translateX(-3px);
+        }
+
+        /* Animations */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Loading Animation */
+        .loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin: -10px 0 0 -10px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 1.5rem;
+            }
+
+            .login-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .form-group input {
+                padding: 0.7rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>Admin Login</h1>
+            <p>Welcome back! Please login to your account.</p>
+        </div>
         
-        <% if (error) { %>
-            <div class="error-message">
-                Invalid username or password. Please try again.
-            </div>
-        <% } %>
-        
-        <form action="/admin" method="POST">
+        <form action="/admin/login" method="POST" id="loginForm">
             <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" required>
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+                <i class="fas fa-envelope"></i>
+                <div class="error-message" id="emailError">Please enter a valid email address</div>
             </div>
             
             <div class="form-group">
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
+                <i class="fas fa-lock"></i>
+                <div class="error-message" id="passwordError">Password is required</div>
             </div>
             
-            <button type="submit" class="btn">Login</button>
+            <button type="submit" class="login-button">
+                <span>Login</span>
+            </button>
         </form>
+        
+        <div class="back-to-site">
+            <a href="/">
+                <i class="fas fa-arrow-left"></i>
+                Back to Website
+            </a>
+        </div>
     </div>
-</div> 
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('loginForm');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const emailError = document.getElementById('emailError');
+            const passwordError = document.getElementById('passwordError');
+            const loginButton = document.querySelector('.login-button');
+
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                let isValid = true;
+
+                // Email validation
+                if (!emailInput.value || !isValidEmail(emailInput.value)) {
+                    emailError.classList.add('show');
+                    isValid = false;
+                } else {
+                    emailError.classList.remove('show');
+                }
+
+                // Password validation
+                if (!passwordInput.value) {
+                    passwordError.classList.add('show');
+                    isValid = false;
+                } else {
+                    passwordError.classList.remove('show');
+                }
+
+                if (isValid) {
+                    // Show loading state
+                    loginButton.classList.add('loading');
+                    loginButton.querySelector('span').style.opacity = '0';
+                } else {
+                    e.preventDefault();
+                }
+            });
+
+            // Real-time validation
+            emailInput.addEventListener('input', function() {
+                if (this.value && isValidEmail(this.value)) {
+                    emailError.classList.remove('show');
+                }
+            });
+
+            passwordInput.addEventListener('input', function() {
+                if (this.value) {
+                    passwordError.classList.remove('show');
+                }
+            });
+
+            // Email validation helper
+            function isValidEmail(email) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            }
+
+            // Add focus effects
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'translateY(-2px)';
+                });
+
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

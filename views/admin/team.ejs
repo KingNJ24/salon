@@ -1,42 +1,95 @@
-<!-- Add New Team Member Button -->
-<div style="margin-bottom: 20px;">
-    <button class="btn" id="add-member-btn">Add New Team Member</button>
+<!-- Team Header -->
+<div class="team-header">
+    <div class="team-actions">
+        <button class="btn btn-primary" id="add-member-btn">
+            <i class="fas fa-user-plus"></i> Add Team Member
+        </button>
+    </div>
+    <div class="team-tools">
+        <button class="btn btn-outline" id="reorder-mode-btn">
+            <i class="fas fa-sort"></i> Enable Reorder Mode
+        </button>
+        <button class="btn btn-success" id="save-order-btn" style="display: none;">
+            <i class="fas fa-save"></i> Save Order
+        </button>
+    </div>
 </div>
 
-<!-- Team Members -->
-<div class="card">
-    <div class="card-header">
-        <h2>Team Members</h2>
-    </div>
-    <div class="card-body">
-        <div class="team-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
-            <% if (team.length === 0) { %>
-                <div class="text-center" style="grid-column: 1 / -1;">No team members yet</div>
-            <% } else { %>
-                <% team.forEach(member => { %>
-                    <div class="team-card" style="background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
-                        <div class="team-image" style="height: 300px; overflow: hidden;">
-                            <img src="<%= member.image %>" alt="<%= member.name %>" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/placeholder.jpg'">
-                        </div>
-                        <div class="team-info" style="padding: 20px;">
-                            <h3 style="margin-bottom: 5px;"><%= member.name %></h3>
-                            <p style="color: var(--primary); margin-bottom: 10px;"><%= member.title %></p>
-                            <p style="margin-bottom: 15px;"><%= member.bio %></p>
-                            <div class="actions">
-                                <button class="btn btn-sm edit-member-btn" 
-                                    data-id="<%= member.id %>"
-                                    data-name="<%= member.name %>"
-                                    data-title="<%= member.title %>"
-                                    data-bio="<%= member.bio %>"
-                                    data-image="<%= member.image %>">Edit</button>
-                                <button class="btn btn-sm btn-danger delete-btn" data-id="<%= member.id %>" data-confirm="Are you sure you want to remove this team member?" data-endpoint="/api/team/delete/<%= member.id %>">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                <% }); %>
-            <% } %>
+<!-- Team Grid -->
+<div class="team-grid" id="team-grid">
+    <% if (team.length === 0) { %>
+        <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <p>No team members yet</p>
+            <p class="empty-state-details">Get started by adding your first team member.</p>
         </div>
-    </div>
+    <% } else { %>
+        <% team.sort((a, b) => a.displayOrder - b.displayOrder).forEach(member => { %>
+            <div class="team-member-card" 
+                data-id="<%= member._id || member.id %>" 
+                data-order="<%= member.displayOrder || 0 %>">
+                
+                <div class="team-member-header">
+                    <div class="visibility-toggle">
+                        <input type="checkbox" id="visibility-<%= member._id || member.id %>" 
+                            class="visibility-checkbox" 
+                            <%= member.isVisible !== false ? 'checked' : '' %>>
+                        <label for="visibility-<%= member._id || member.id %>" class="visibility-label"></label>
+                    </div>
+                    <div class="reorder-handle">
+                        <i class="fas fa-grip-vertical"></i>
+                    </div>
+                </div>
+
+                <div class="team-member-image <%= member.isVisible === false ? 'hidden' : '' %>">
+                    <img src="<%= member.image %>" alt="<%= member.name %>" 
+                        onerror="this.src='https://via.placeholder.com/300x300?text=<%= member.name.replace(/ /g, '+') %>'">
+                </div>
+
+                <div class="team-member-info">
+                    <h3 class="team-member-name"><%= member.name %></h3>
+                    <span class="team-member-role"><%= member.role %></span>
+                    <p class="team-member-bio"><%= member.bio %></p>
+                    <div class="team-member-social">
+                        <% if (member.social?.instagram) { %>
+                            <a href="<%= member.social.instagram %>" target="_blank" class="social-link">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        <% } %>
+                        <% if (member.social?.facebook) { %>
+                            <a href="<%= member.social.facebook %>" target="_blank" class="social-link">
+                                <i class="fab fa-facebook"></i>
+                            </a>
+                        <% } %>
+                        <% if (member.social?.twitter) { %>
+                            <a href="<%= member.social.twitter %>" target="_blank" class="social-link">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                        <% } %>
+                    </div>
+                    <div class="team-member-actions">
+                        <button class="btn btn-sm btn-primary edit-member-btn" 
+                            data-id="<%= member.id %>"
+                            data-name="<%= member.name %>"
+                            data-role="<%= member.role %>"
+                            data-bio="<%= member.bio %>"
+                            data-image="<%= member.image %>"
+                            data-social='<%= JSON.stringify(member.social || {}) %>'
+                            data-display-order="<%= member.displayOrder || 0 %>"
+                            data-is-visible="<%= member.isVisible !== false %>">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-btn" 
+                            data-id="<%= member.id %>" 
+                            data-confirm="Are you sure you want to delete this team member?" 
+                            data-endpoint="/api/team/delete/<%= member.id %>">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        <% }); %>
+    <% } %>
 </div>
 
 <!-- Team Member Edit/Add Modal (hidden by default) -->
@@ -136,4 +189,186 @@
             }
         });
     });
-</script> 
+</script>
+
+<style>
+    .team-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .team-actions, .team-tools {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .team-member-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+
+    .team-member-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .team-member-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .team-member-image {
+        height: 300px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .team-member-image.hidden {
+        opacity: 0.5;
+    }
+
+    .team-member-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .team-member-card:hover .team-member-image img {
+        transform: scale(1.05);
+    }
+
+    .team-member-info {
+        padding: 1.5rem;
+    }
+
+    .team-member-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 0.5rem;
+    }
+
+    .team-member-role {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background: #f3f4f6;
+        color: #4b5563;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+
+    .team-member-bio {
+        color: #6b7280;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+    }
+
+    .team-member-social {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .social-link {
+        color: #6b7280;
+        font-size: 1.25rem;
+        transition: color 0.3s ease;
+    }
+
+    .team-member-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 4rem 2rem;
+        background: #f9fafb;
+        border-radius: 12px;
+        color: #6b7280;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #9ca3af;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state-details {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .team-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .team-actions, .team-tools {
+            justify-content: center;
+        }
+
+        .team-grid {
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #9c8370, #7c6b5d);
+        color: white;
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #d4a373, #bc6c25);
+        color: white;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #86efac, #4ade80);
+        color: white;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 2px solid #9c8370;
+        color: #9c8370;
+    }
+
+    .btn-outline:hover {
+        background: #9c8370;
+        color: white;
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #fca5a5, #f87171);
+        color: white;
+    }
+
+    .social-link:hover {
+        color: #9c8370;
+    }
+</style> 

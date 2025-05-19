@@ -1,149 +1,105 @@
 <!-- Add New Button -->
-<div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-    <div>
-        <button class="btn" id="add-image-btn">Add New Image</button>
-        <button class="btn" id="add-video-btn" style="margin-left: 10px; background-color: #d4a373;">Add New Video</button>
+<div class="gallery-header">
+    <div class="gallery-actions">
+        <button class="btn btn-primary" id="add-image-btn">
+            <i class="fas fa-image"></i> Add New Image
+        </button>
+        <button class="btn btn-secondary" id="add-video-btn">
+            <i class="fas fa-video"></i> Add New Video
+        </button>
     </div>
-    <div>
-        <button class="btn" id="manage-categories-btn" style="background-color: #17a2b8; margin-right: 10px;">Manage Categories</button>
-        <button class="btn" id="reorder-mode-btn" style="background-color: #6c757d;">Enable Reorder Mode</button>
-        <button class="btn" id="save-order-btn" style="background-color: #28a745; display: none;">Save Order</button>
+    <div class="gallery-tools">
+        <button class="btn btn-info" id="manage-categories-btn">
+            <i class="fas fa-tags"></i> Manage Categories
+        </button>
+        <button class="btn btn-outline" id="reorder-mode-btn">
+            <i class="fas fa-sort"></i> Enable Reorder Mode
+        </button>
+        <button class="btn btn-success" id="save-order-btn" style="display: none;">
+            <i class="fas fa-save"></i> Save Order
+        </button>
     </div>
 </div>
 
 <!-- Category Filter -->
-<div style="margin-bottom: 20px;">
-    <div class="category-filter-container" style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <button class="category-filter btn" data-category="all" style="background-color: #9c8370;">All</button>
-        <button class="category-filter btn" data-category="Bridal" style="background-color: transparent; color: #333; border: 1px solid #ddd;">Bridal</button>
-        <button class="category-filter btn" data-category="Colors" style="background-color: transparent; color: #333; border: 1px solid #ddd;">Colors</button>
-        <button class="category-filter btn" data-category="Cuts" style="background-color: transparent; color: #333; border: 1px solid #ddd;">Cuts</button>
-        <button class="category-filter btn" data-category="Makeup" style="background-color: transparent; color: #333; border: 1px solid #ddd;">Makeup</button>
-        <button class="category-filter btn" data-category="Textures" style="background-color: transparent; color: #333; border: 1px solid #ddd;">Textures</button>
-    </div>
+<div class="category-filter-container">
+    <button class="category-filter active" data-category="all">All</button>
+    <% if (typeof categories !== 'undefined' && categories.length > 0) { %>
+        <% categories.forEach(function(category) { %>
+            <button class="category-filter" data-category="<%= category %>"><%= category %></button>
+        <% }); %>
+    <% } %>
 </div>
 
 <!-- Gallery Grid -->
-<div class="card">
-    <div class="card-header">
-        <h2>Gallery Items</h2>
-        <div class="item-count" style="margin-top: 5px; font-size: 14px; color: #6c757d;">
-            <span id="gallery-count"><%= gallery.length %></span> items
+<div class="gallery-admin-grid" id="gallery-grid">
+    <% if (gallery.length === 0) { %>
+        <div class="empty-state">
+            <i class="fas fa-images"></i>
+            <p>No gallery items yet</p>
+            <p class="empty-state-details">Get started by adding your first item with the buttons above.</p>
         </div>
-    </div>
-    <div class="card-body">
-        <div id="gallery-loading" style="text-align: center; padding: 30px; display: none;">
-            <p>Loading gallery items...</p>
-        </div>
-        
-        <div id="reorder-instructions" style="display: none; margin-bottom: 20px; background-color: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #9c8370;">
-            <p style="margin-bottom: 0;"><strong>Reorder Mode Enabled:</strong> Drag and drop gallery items to change their display order. Click "Save Order" when you're finished.</p>
-        </div>
-        
-        <div class="gallery-admin-grid" id="gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
-            <% if (gallery.length === 0) { %>
-                <div class="text-center" style="grid-column: 1 / -1; padding: 50px 0;">
-                    <p style="margin-bottom: 20px; color: #6c757d;">No gallery items yet</p>
-                    <p>Get started by adding your first item with the buttons above.</p>
-                </div>
-            <% } else { %>
-                <% gallery.sort((a, b) => a.displayOrder - b.displayOrder).forEach(item => { %>
-                    <div class="gallery-admin-item" style="background-color: white; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; position: relative;" 
-                        data-category="<%= item.category %>" 
-                        data-id="<%= item._id || item.id %>" 
-                        data-order="<%= item.displayOrder || 0 %>">
-                        
-                        <!-- Visibility toggle button -->
-                        <div class="visibility-toggle" style="position: absolute; top: 10px; left: 10px; z-index: 5; cursor: pointer; background-color: <%= item.isVisible ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)' %>; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" data-visible="<%= item.isVisible !== false %>">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
-                                <% if (item.isVisible !== false) { %>
-                                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
-                                    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
-                                <% } else { %>
-                                    <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/>
-                                    <path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/>
-                                    <path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/>
-                                <% } %>
-                            </svg>
-                        </div>
-                        
-                        <!-- Homepage indicator (not a toggle button) -->
-                        <div class="homepage-indicator" style="position: absolute; top: 10px; right: 10px; z-index: 5; cursor: pointer; background-color: <%= item.isVisible && item.showOnHomepage ? 'rgba(220, 53, 69, 0.8)' : 'rgba(108, 117, 125, 0.3)' %>; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
-                                    <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.777.416L8 13.101l-5.223 2.815A.5.5 0 0 1 2 15.5V2zm2-1a1 1 0 0 0-1 1v12.566l4.723-2.482a.5.5 0 0 1 .554 0L13 14.566V2a1 1 0 0 0-1-1H4z"/>
-                            </svg>
-                        </div>
-                        
-                        <!-- Reorder handle (visible in reorder mode) -->
-                        <div class="reorder-handle" style="position: absolute; top: 50%; left: 10px; transform: translateY(-50%); z-index: 5; cursor: grab; background-color: rgba(0,0,0,0.5); border-radius: 4px; width: 30px; height: 30px; display: none; align-items: center; justify-content: center;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd" d="M3 2.5a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1h-10a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1h-10a.5.5 0 0 1-.5-.5zm0 4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1h-10a.5.5 0 0 1-.5-.5z"/>
-                            </svg>
-                        </div>
-                        
-                        <div class="gallery-admin-image" style="height: 200px; overflow: hidden; position: relative; <%= item.isVisible === false ? 'opacity: 0.5;' : '' %>">
-                            <% if (item.type === 'video') { %>
-                                <!-- Video thumbnail with play button indicator -->
-                                <div style="position: relative; width: 100%; height: 100%;">
-                                    <img src="<%= item.image %>" alt="<%= item.title %>" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/placeholder.jpg'">
-                                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white">
-                                            <path d="M8 5v14l11-7z"/>
-                                        </svg>
-                                    </div>
-                                    <!-- Video preview on hover -->
-                                    <video style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s ease;" 
-                                          onmouseover="this.style.opacity=1; this.play();" 
-                                          onmouseout="this.style.opacity=0; this.pause(); this.currentTime=0;" 
-                                          muted loop preload="none">
-                                        <source src="<%= item.videoUrl %>" type="video/mp4">
-                                    </video>
-                                    <!-- Video type indicator badge -->
-                                    <div style="position: absolute; top: 50px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px;">
-                                        Video
-                                    </div>
-                                </div>
-                            <% } else { %>
-                                <img src="<%= item.image %>" alt="<%= item.title %>" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='/images/placeholder.jpg'">
-                            <% } %>
-                        </div>
-                        <div class="gallery-admin-info" style="padding: 15px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <h3 style="margin-bottom: 5px;"><%= item.title %></h3>
-                                <span class="order-badge" style="background-color: #f8f9fa; color: #6c757d; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: bold;">
-                                    #<%= item.displayOrder || 0 %>
-                                </span>
-                            </div>
-                            <p style="margin-bottom: 5px; color: #6c757d;">
-                                <span class="category-badge" style="background-color: #f8f9fa; padding: 2px 8px; border-radius: 10px; font-size: 12px; color: #333;"><%= item.category %></span>
-                            </p>
-                            <% if (item.type === 'video') { %>
-                                <p style="margin-bottom: 10px; color: #6c757d; font-size: 0.8em;">Video</p>
-                            <% } %>
-                            <div class="actions" style="display: flex; gap: 10px; margin-top: 10px;">
-                                <button class="btn btn-sm edit-gallery-btn" 
-                                    data-id="<%= item.id %>"
-                                    data-title="<%= item.title %>"
-                                    data-category="<%= item.category %>"
-                                    data-image="<%= item.image %>"
-                                    data-type="<%= item.type || 'image' %>"
-                                    data-video-url="<%= item.videoUrl || '' %>"
-                                    data-display-order="<%= item.displayOrder || 0 %>"
-                                    data-is-visible="<%= item.isVisible !== false %>"
-                                    data-show-on-homepage="<%= item.showOnHomepage || false %>"
-                                    style="flex: 1;">Edit</button>
-                                <button class="btn btn-sm btn-danger delete-btn" 
-                                    data-id="<%= item.id %>" 
-                                    data-confirm="Are you sure you want to delete this item?" 
-                                    data-endpoint="/api/gallery/delete/<%= item.id %>"
-                                    style="background-color: #dc3545;">Delete</button>
-                            </div>
-                        </div>
+    <% } else { %>
+        <% gallery.sort((a, b) => a.displayOrder - b.displayOrder).forEach(item => { %>
+            <div class="gallery-admin-item" 
+                data-category="<%= item.category %>" 
+                data-id="<%= item._id || item.id %>" 
+                data-order="<%= item.displayOrder || 0 %>">
+                
+                <div class="gallery-item-header">
+                    <div class="visibility-toggle">
+                        <input type="checkbox" id="visibility-<%= item._id || item.id %>" 
+                            class="visibility-checkbox" 
+                            <%= item.isVisible !== false ? 'checked' : '' %>>
+                        <label for="visibility-<%= item._id || item.id %>" class="visibility-label"></label>
                     </div>
-                <% }); %>
-            <% } %>
-        </div>
-    </div>
+                    <div class="reorder-handle">
+                        <i class="fas fa-grip-vertical"></i>
+                    </div>
+                </div>
+
+                <div class="gallery-admin-image <%= item.isVisible === false ? 'hidden' : '' %>">
+                    <% if (item.type === 'video') { %>
+                        <div class="video-thumbnail" data-video-src="<%= item.videoUrl %>">
+                            <img src="<%= item.image %>" alt="<%= item.title %>" 
+                                onerror="this.src='https://via.placeholder.com/300x200?text=<%= item.title.replace(/ /g, '+') %>'">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <img src="<%= item.image %>" alt="<%= item.title %>" 
+                            onerror="this.src='https://via.placeholder.com/300x200?text=<%= item.title.replace(/ /g, '+') %>'">
+                    <% } %>
+                </div>
+
+                <div class="gallery-item-info">
+                    <h3 class="gallery-item-title"><%= item.title %></h3>
+                    <span class="gallery-item-category"><%= item.category %></span>
+                    <div class="gallery-item-actions">
+                        <button class="btn btn-sm btn-primary edit-gallery-btn" 
+                            data-id="<%= item.id %>"
+                            data-title="<%= item.title %>"
+                            data-category="<%= item.category %>"
+                            data-image="<%= item.image %>"
+                            data-type="<%= item.type || 'image' %>"
+                            data-video-url="<%= item.videoUrl || '' %>"
+                            data-display-order="<%= item.displayOrder || 0 %>"
+                            data-is-visible="<%= item.isVisible !== false %>"
+                            data-show-on-homepage="<%= item.showOnHomepage || false %>">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-btn" 
+                            data-id="<%= item.id %>" 
+                            data-confirm="Are you sure you want to delete this item?" 
+                            data-endpoint="/api/gallery/delete/<%= item.id %>">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        <% }); %>
+    <% } %>
 </div>
 
 <!-- Gallery Edit/Add Modal (hidden by default) -->
@@ -267,32 +223,259 @@
 </div>
 
 <style>
-    /* Category management styles */
-    #categories-table .deleting {
+    .gallery-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .gallery-actions, .gallery-tools {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #9c8370, #7c6b5d);
+        color: white;
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #d4a373, #bc6c25);
+        color: white;
+    }
+
+    .btn-info {
+        background: linear-gradient(135deg, #a5b4fc, #818cf8);
+        color: white;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #86efac, #4ade80);
+        color: white;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 2px solid #9c8370;
+        color: #9c8370;
+    }
+
+    .btn-outline:hover {
+        background: #9c8370;
+        color: white;
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #fca5a5, #f87171);
+        color: white;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .category-filter-container {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+
+    .category-filter {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        background: #f3f4f6;
+        color: #4b5563;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .category-filter.active {
+        background: #9c8370;
+        color: white;
+    }
+
+    .category-filter:hover:not(.active) {
+        background: #e5e7eb;
+    }
+
+    .gallery-admin-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+
+    .gallery-admin-item {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+
+    .gallery-admin-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .gallery-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .visibility-toggle {
+        position: relative;
+    }
+
+    .visibility-checkbox {
+        display: none;
+    }
+
+    .visibility-label {
+        display: inline-block;
+        width: 40px;
+        height: 20px;
+        background: #e5e7eb;
+        border-radius: 20px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .visibility-label:after {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: white;
+        top: 2px;
+        left: 2px;
+        transition: all 0.3s ease;
+    }
+
+    .visibility-checkbox:checked + .visibility-label {
+        background: #4f46e5;
+    }
+
+    .visibility-checkbox:checked + .visibility-label:after {
+        left: 22px;
+    }
+
+    .reorder-handle {
+        cursor: grab;
+        color: #9ca3af;
+        padding: 0.5rem;
+    }
+
+    .gallery-admin-image {
+        height: 200px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .gallery-admin-image.hidden {
         opacity: 0.5;
-        background-color: #ffdddd;
     }
-    
-    .edit-category-name {
+
+    .gallery-admin-image img {
         width: 100%;
-        padding: 5px;
-        border: 1px solid #ccc;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .gallery-admin-item:hover .gallery-admin-image img {
+        transform: scale(1.05);
+    }
+
+    .gallery-item-info {
+        padding: 1rem;
+    }
+
+    .gallery-item-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 0.5rem;
+    }
+
+    .gallery-item-category {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background: #f3f4f6;
+        color: #4b5563;
         border-radius: 4px;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
     }
-    
-    #categories-modal .table-container {
-        max-height: 400px;
-        overflow-y: auto;
-        margin-bottom: 15px;
+
+    .gallery-item-actions {
+        display: flex;
+        gap: 0.75rem;
     }
-    
-    #categories-table th, #categories-table td {
-        padding: 8px;
-        vertical-align: middle;
+
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
     }
-    
-    .edit-category-btn, .delete-category-btn, .save-category-btn, .cancel-edit-btn {
-        margin: 0 2px;
+
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 4rem 2rem;
+        background: #f9fafb;
+        border-radius: 12px;
+        color: #6b7280;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #9ca3af;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state-details {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .gallery-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .gallery-actions, .gallery-tools {
+            justify-content: center;
+        }
+
+        .gallery-admin-grid {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1rem;
+        }
     }
 </style>
 
@@ -481,19 +664,19 @@
                 toggle.addEventListener('click', function() {
                     const galleryItem = this.closest('.gallery-admin-item');
                     const itemId = galleryItem.getAttribute('data-id');
-                    const isVisible = this.getAttribute('data-visible') === 'true';
+                    const isVisible = this.querySelector('.visibility-checkbox').checked;
                     
                     // Toggle visibility state
                     const newVisibility = !isVisible;
                     
                     // Update UI immediately for better UX
-                    this.setAttribute('data-visible', newVisibility);
-                    this.style.backgroundColor = newVisibility ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
+                    this.querySelector('.visibility-checkbox').checked = newVisibility;
+                    this.querySelector('.visibility-label').style.backgroundColor = newVisibility ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
                     
                     if (newVisibility) {
-                        this.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/></svg>';
+                        this.querySelector('.visibility-label').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/></svg>';
                     } else {
-                        this.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/><path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/></svg>';
+                        this.querySelector('.visibility-label').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16"><path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/><path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/></svg>';
                     }
                     
                     // Update image opacity
@@ -522,7 +705,7 @@
                         if (!data.success) {
                             // Revert UI if failed
                             console.error('Failed to update visibility');
-                            this.setAttribute('data-visible', isVisible);
+                            this.querySelector('.visibility-checkbox').checked = isVisible;
                             this.style.backgroundColor = isVisible ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
                             galleryItem.querySelector('.gallery-admin-image').style.opacity = isVisible ? 1 : 0.5;
                         }
@@ -530,7 +713,7 @@
                     .catch(error => {
                         console.error('Error:', error);
                         // Revert UI on error
-                        this.setAttribute('data-visible', isVisible);
+                        this.querySelector('.visibility-checkbox').checked = isVisible;
                         this.style.backgroundColor = isVisible ? 'rgba(40, 167, 69, 0.8)' : 'rgba(108, 117, 125, 0.8)';
                         galleryItem.querySelector('.gallery-admin-image').style.opacity = isVisible ? 1 : 0.5;
                     });
@@ -543,7 +726,7 @@
                     const galleryItem = this.closest('.gallery-admin-item');
                     const itemId = galleryItem.getAttribute('data-id');
                     const visibilityToggle = galleryItem.querySelector('.visibility-toggle');
-                    const isVisible = visibilityToggle.getAttribute('data-visible') === 'true';
+                    const isVisible = visibilityToggle.querySelector('.visibility-checkbox').checked;
                     
                     // Only allow changing homepage status for visible items
                     if (!isVisible) {
@@ -855,8 +1038,9 @@
                                     emptyState.style.gridColumn = '1 / -1';
                                     emptyState.style.padding = '50px 0';
                                     emptyState.innerHTML = `
-                                        <p style="margin-bottom: 20px; color: #6c757d;">No gallery items yet</p>
-                                        <p>Get started by adding your first item with the buttons above.</p>
+                                        <i class="fas fa-images"></i>
+                                        <p>No gallery items yet</p>
+                                        <p class="empty-state-details">Get started by adding your first item with the buttons above.</p>
                                     `;
                                     galleryGrid.appendChild(emptyState);
                                 }

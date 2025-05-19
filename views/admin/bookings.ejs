@@ -1,61 +1,364 @@
-<!-- Bookings Table -->
-<div class="card">
-    <div class="card-header">
-        <h2>All Bookings</h2>
-    </div>
-    <div class="card-body">
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Service</th>
-                        <th>Date</th>
-                        <th>Message</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (bookings.length === 0) { %>
-                        <tr>
-                            <td colspan="10" class="text-center">No bookings yet</td>
-                        </tr>
-                    <% } else { %>
-                        <% bookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).forEach(booking => { %>
-                            <tr>
-                                <td><%= booking.id %></td>
-                                <td><%= booking.name %></td>
-                                <td><a href="mailto:<%= booking.email %>"><%= booking.email %></a></td>
-                                <td><a href="tel:<%= booking.phone %>"><%= booking.phone %></a></td>
-                                <td><%= booking.service %></td>
-                                <td><%= new Date(booking.date).toLocaleDateString() %></td>
-                                <td><%= booking.message ? booking.message.substring(0, 30) + (booking.message.length > 30 ? '...' : '') : '-' %></td>
-                                <td>
-                                    <span class="badge badge-<%= booking.status.toLowerCase() %>"><%= booking.status %></span>
-                                </td>
-                                <td><%= new Date(booking.createdAt).toLocaleDateString() %></td>
-                                <td class="actions">
-                                    <select class="status-select" data-id="<%= booking.id %>">
-                                        <option value="New" <%= booking.status === 'New' ? 'selected' : '' %>>New</option>
-                                        <option value="Pending" <%= booking.status === 'Pending' ? 'selected' : '' %>>Pending</option>
-                                        <option value="Confirmed" <%= booking.status === 'Confirmed' ? 'selected' : '' %>>Confirmed</option>
-                                        <option value="Completed" <%= booking.status === 'Completed' ? 'selected' : '' %>>Completed</option>
-                                        <option value="Cancelled" <%= booking.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
-                                    </select>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    <% } %>
-                </tbody>
-            </table>
+<!-- Bookings Header -->
+<div class="bookings-header">
+    <div class="bookings-actions">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="booking-search" placeholder="Search bookings...">
+        </div>
+        <div class="date-filter">
+            <input type="date" id="date-filter" class="form-control">
         </div>
     </div>
+    <div class="bookings-tools">
+        <button class="btn btn-outline" id="export-btn">
+            <i class="fas fa-download"></i> Export
+        </button>
+        <button class="btn btn-primary" id="refresh-btn">
+            <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+    </div>
 </div>
+
+<!-- Bookings Grid -->
+<div class="bookings-grid" id="bookings-grid">
+    <% if (bookings.length === 0) { %>
+        <div class="empty-state">
+            <i class="fas fa-calendar-alt"></i>
+            <p>No bookings found</p>
+            <p class="empty-state-details">Bookings will appear here when customers make appointments.</p>
+        </div>
+    <% } else { %>
+        <% bookings.forEach(booking => { %>
+            <div class="booking-card" data-id="<%= booking._id %>">
+                <div class="booking-header">
+                    <div class="booking-status <%= booking.status.toLowerCase() %>">
+                        <i class="fas fa-circle"></i>
+                        <%= booking.status %>
+                    </div>
+                    <div class="booking-actions">
+                        <button class="btn btn-sm btn-primary edit-booking-btn" 
+                            data-id="<%= booking._id %>"
+                            data-customer="<%= booking.customer %>"
+                            data-service="<%= booking.service %>"
+                            data-date="<%= booking.date %>"
+                            data-time="<%= booking.time %>"
+                            data-status="<%= booking.status %>"
+                            data-notes="<%= booking.notes %>">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-btn" 
+                            data-id="<%= booking._id %>" 
+                            data-confirm="Are you sure you want to delete this booking?" 
+                            data-endpoint="/api/bookings/delete/<%= booking._id %>">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="booking-info">
+                    <div class="booking-customer">
+                        <i class="fas fa-user"></i>
+                        <span><%= booking.customer %></span>
+                    </div>
+                    <div class="booking-service">
+                        <i class="fas fa-cut"></i>
+                        <span><%= booking.service %></span>
+                    </div>
+                    <div class="booking-datetime">
+                        <i class="fas fa-clock"></i>
+                        <span><%= new Date(booking.date).toLocaleDateString() %> at <%= booking.time %></span>
+                    </div>
+                    <% if (booking.notes) { %>
+                        <div class="booking-notes">
+                            <i class="fas fa-sticky-note"></i>
+                            <span><%= booking.notes %></span>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        <% }); %>
+    <% } %>
+</div>
+
+<style>
+    .bookings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .bookings-actions {
+        display: flex;
+        gap: 1rem;
+        flex: 1;
+        max-width: 600px;
+    }
+
+    .search-box {
+        position: relative;
+        flex: 1;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+
+    .date-filter {
+        min-width: 200px;
+    }
+
+    .bookings-tools {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .bookings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .booking-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+
+    .booking-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .booking-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .booking-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+    }
+
+    .booking-status i {
+        font-size: 0.5rem;
+    }
+
+    .booking-status.pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .booking-status.confirmed {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .booking-status.completed {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .booking-status.cancelled {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .booking-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .booking-info {
+        padding: 1.5rem;
+    }
+
+    .booking-customer,
+    .booking-service,
+    .booking-datetime,
+    .booking-notes {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        color: #4b5563;
+    }
+
+    .booking-customer i,
+    .booking-service i,
+    .booking-datetime i,
+    .booking-notes i {
+        color: #6b7280;
+        width: 1rem;
+    }
+
+    .booking-notes {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 4rem 2rem;
+        background: #f9fafb;
+        border-radius: 12px;
+        color: #6b7280;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #9ca3af;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state-details {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .bookings-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .bookings-actions {
+            flex-direction: column;
+            max-width: none;
+        }
+
+        .bookings-tools {
+            justify-content: center;
+        }
+
+        .bookings-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #9c8370, #7c6b5d);
+        color: white;
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #d4a373, #bc6c25);
+        color: white;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 2px solid #9c8370;
+        color: #9c8370;
+    }
+
+    .btn-outline:hover {
+        background: #9c8370;
+        color: white;
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #fca5a5, #f87171);
+        color: white;
+    }
+
+    .search-box input:focus {
+        border-color: #9c8370;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(156, 131, 112, 0.2);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('booking-search');
+        const dateFilter = document.getElementById('date-filter');
+        const exportBtn = document.getElementById('export-btn');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const bookingsGrid = document.getElementById('bookings-grid');
+
+        // Search functionality
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const bookingCards = document.querySelectorAll('.booking-card');
+            
+            bookingCards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        });
+
+        // Date filter functionality
+        dateFilter.addEventListener('change', function(e) {
+            const selectedDate = e.target.value;
+            const bookingCards = document.querySelectorAll('.booking-card');
+            
+            bookingCards.forEach(card => {
+                const bookingDate = card.querySelector('.booking-datetime span').textContent;
+                card.style.display = bookingDate.includes(selectedDate) ? 'block' : 'none';
+            });
+        });
+
+        // Export functionality
+        exportBtn.addEventListener('click', function() {
+            const bookings = Array.from(document.querySelectorAll('.booking-card')).map(card => {
+                return {
+                    customer: card.querySelector('.booking-customer span').textContent,
+                    service: card.querySelector('.booking-service span').textContent,
+                    datetime: card.querySelector('.booking-datetime span').textContent,
+                    status: card.querySelector('.booking-status').textContent.trim(),
+                    notes: card.querySelector('.booking-notes')?.querySelector('span')?.textContent || ''
+                };
+            });
+
+            const csv = [
+                ['Customer', 'Service', 'Date & Time', 'Status', 'Notes'],
+                ...bookings.map(b => [b.customer, b.service, b.datetime, b.status, b.notes])
+            ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bookings-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        });
+
+        // Refresh functionality
+        refreshBtn.addEventListener('click', function() {
+            window.location.reload();
+        });
+    });
+</script>
 
 <!-- Booking Details Modal (would need JavaScript to implement) -->
 <div id="booking-details-modal" class="modal" style="display: none;">
