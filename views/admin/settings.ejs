@@ -435,6 +435,7 @@
         // Function to handle form submission
         async function handleSettingsSubmit(formId, formData) {
             try {
+                console.log('Submitting form data:', formData); // Debug log
                 const response = await fetch('/api/settings/update', {
                     method: 'POST',
                     headers: {
@@ -444,6 +445,7 @@
                 });
                 
                 const result = await response.json();
+                console.log('Server response:', result); // Debug log
                 
                 if (result.success) {
                     showNotification('Settings saved successfully!', 'success');
@@ -462,13 +464,13 @@
         document.getElementById('generalSettingsForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const formData = {
-                businessName: document.getElementById('businessName').value,
-                latitude: parseFloat(document.getElementById('latitude').value),
-                longitude: parseFloat(document.getElementById('longitude').value),
                 salonName: document.getElementById('salonName').value,
                 email: document.getElementById('salonEmail').value,
                 phone: document.getElementById('salonPhone').value,
-                address: document.getElementById('salonAddress').value
+                address: document.getElementById('salonAddress').value,
+                businessName: document.getElementById('businessName').value,
+                latitude: parseFloat(document.getElementById('latitude').value),
+                longitude: parseFloat(document.getElementById('longitude').value)
             };
             await handleSettingsSubmit('generalSettingsForm', formData);
         });
@@ -477,11 +479,11 @@
         document.getElementById('appearanceSettingsForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const formData = {
-                servicesViewMode: document.getElementById('servicesViewMode').value,
-                currencySymbol: document.getElementById('currencySymbol').value,
-                heroTitle: document.getElementById('heroTitle').value,
-                heroSubtitle: document.getElementById('heroSubtitle').value,
-                aboutText: document.getElementById('aboutText').value
+                servicesViewMode: document.getElementById('servicesViewMode')?.value || 'grid',
+                currencySymbol: document.getElementById('currencySymbol')?.value || '₹',
+                heroTitle: document.getElementById('heroTitle')?.value || '',
+                heroSubtitle: document.getElementById('heroSubtitle')?.value || '',
+                aboutText: document.getElementById('aboutText')?.value || ''
             };
             await handleSettingsSubmit('appearanceSettingsForm', formData);
         });
@@ -491,10 +493,10 @@
             e.preventDefault();
             const formData = {
                 socialMedia: {
-                    facebook: document.getElementById('facebookUrl').value,
-                    instagram: document.getElementById('instagramUrl').value,
-                    twitter: document.getElementById('twitterUrl').value,
-                    youtube: document.getElementById('youtubeUrl').value
+                    facebook: document.getElementById('facebookUrl').value || '',
+                    instagram: document.getElementById('instagramUrl').value || '',
+                    twitter: document.getElementById('twitterUrl').value || '',
+                    youtube: document.getElementById('youtubeUrl').value || ''
                 }
             };
             await handleSettingsSubmit('socialSettingsForm', formData);

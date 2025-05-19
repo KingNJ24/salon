@@ -480,14 +480,61 @@ router.post('/settings/update', adminAuth, async (req, res) => {
     
     if (siteInfo) {
       // Update existing settings
-      Object.keys(req.body).forEach(key => {
-        siteInfo[key] = req.body[key];
-      });
+      const updateData = {};
+      
+      // Handle basic info
+      if (req.body.salonName) updateData.salonName = req.body.salonName;
+      if (req.body.email) updateData.email = req.body.email;
+      if (req.body.phone) updateData.phone = req.body.phone;
+      if (req.body.address) updateData.address = req.body.address;
+      
+      // Handle appearance settings
+      if (req.body.servicesViewMode) updateData.servicesViewMode = req.body.servicesViewMode;
+      if (req.body.currencySymbol) updateData.currencySymbol = req.body.currencySymbol;
+      if (req.body.heroTitle) updateData.heroTitle = req.body.heroTitle;
+      if (req.body.heroSubtitle) updateData.heroSubtitle = req.body.heroSubtitle;
+      if (req.body.aboutText) updateData.aboutText = req.body.aboutText;
+      
+      // Handle social media
+      if (req.body.socialMedia) {
+        updateData.socialMedia = {
+          ...siteInfo.socialMedia,
+          ...req.body.socialMedia
+        };
+      }
+      
+      // Handle business hours
+      if (req.body.hours) {
+        updateData.hours = {
+          ...siteInfo.hours,
+          ...req.body.hours
+        };
+      }
+      
+      // Handle notification settings
+      if (req.body.emailNotifications) {
+        updateData.emailNotifications = {
+          ...siteInfo.emailNotifications,
+          ...req.body.emailNotifications
+        };
+      }
+      if (req.body.smsNotifications) {
+        updateData.smsNotifications = {
+          ...siteInfo.smsNotifications,
+          ...req.body.smsNotifications
+        };
+      }
+      
+      // Update the document
+      Object.assign(siteInfo, updateData);
       await siteInfo.save();
+      
+      console.log('Settings updated successfully:', updateData);
     } else {
       // Create new settings
       siteInfo = new SiteInfo(req.body);
       await siteInfo.save();
+      console.log('New settings created successfully');
     }
     
     return res.json({ success: true, siteInfo });
