@@ -162,10 +162,10 @@
 
             <form class="login-form" id="loginForm" onsubmit="return handleLogin(event)">
                 <div class="form-group">
-                    <label class="form-label" for="email">Email Address</label>
-                    <input type="email" id="email" class="form-control" required
-                           placeholder="Enter your email">
-                    <div class="form-error">Please enter a valid email address</div>
+                    <label class="form-label" for="username">Username</label>
+                    <input type="text" id="username" class="form-control" required
+                           placeholder="Enter your username">
+                    <div class="form-error">Please enter your username</div>
                 </div>
 
                 <div class="form-group">
@@ -190,12 +190,11 @@
     <script>
         // Form validation
         const form = document.getElementById('loginForm');
-        const emailInput = document.getElementById('email');
+        const usernameInput = document.getElementById('username');
         const passwordInput = document.getElementById('password');
 
-        function validateEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
+        function validateUsername(username) {
+            return username.length >= 3;
         }
 
         function validatePassword(password) {
@@ -217,12 +216,12 @@
             event.preventDefault();
             let isValid = true;
 
-            // Validate email
-            if (!validateEmail(emailInput.value)) {
-                showError(emailInput, 'Please enter a valid email address');
+            // Validate username
+            if (!validateUsername(usernameInput.value)) {
+                showError(usernameInput, 'Username must be at least 3 characters');
                 isValid = false;
             } else {
-                hideError(emailInput);
+                hideError(usernameInput);
             }
 
             // Validate password
@@ -238,19 +237,17 @@
                 button.classList.add('loading');
                 button.disabled = true;
 
-                // Simulate API call
-                setTimeout(() => {
-                    window.location.href = '/admin/dashboard';
-                }, 1500);
+                // Submit the form
+                form.submit();
             }
 
             return false;
         }
 
         // Real-time validation
-        emailInput.addEventListener('input', () => {
-            if (validateEmail(emailInput.value)) {
-                hideError(emailInput);
+        usernameInput.addEventListener('input', () => {
+            if (validateUsername(usernameInput.value)) {
+                hideError(usernameInput);
             }
         });
 

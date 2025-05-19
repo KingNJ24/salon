@@ -19,8 +19,8 @@ router.get('/', (req, res) => {
 // Login POST handler (for form submitting to /admin directly)
 router.post('/', (req, res) => {
   const { username, password } = req.body;
-  const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'nikhil';
-  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '123456';
+  const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
   
   if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
     req.session.isAuthenticated = true;
@@ -30,15 +30,15 @@ router.post('/', (req, res) => {
   res.render('admin/login', { 
     title: 'Admin Login', 
     layout: 'layouts/admin', 
-    error: 'Invalid credentials' 
+    error: 'Invalid username or password' 
   });
 });
 
 // Login POST handler
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
-  const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'nikhil';
-  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '123456';
+  const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
   
   if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
     req.session.isAuthenticated = true;
@@ -48,7 +48,7 @@ router.post('/login', (req, res) => {
   res.render('admin/login', { 
     title: 'Admin Login', 
     layout: 'layouts/admin', 
-    error: 'Invalid credentials' 
+    error: 'Invalid username or password' 
   });
 });
 
