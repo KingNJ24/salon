@@ -340,12 +340,12 @@ router.get('/fix-video-items', async (req, res, next) => {
 // Google Places API proxy route
 router.get('/api/google-reviews', async (req, res) => {
     try {
-        const { placeId } = req.query;
+        let { placeId } = req.query;
         const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
         // Log the incoming request details
         console.log('Google Reviews API Request:', {
-            placeId,
+            originalPlaceId: placeId,
             hasApiKey: !!apiKey,
             apiKeyPrefix: apiKey ? apiKey.substring(0, 5) + '...' : 'missing'
         });
@@ -363,6 +363,9 @@ router.get('/api/google-reviews', async (req, res) => {
                 }
             });
         }
+
+        // Clean up placeId - remove any trailing :1 or other suffixes
+        placeId = placeId.split(':')[0] + ':' + placeId.split(':')[1];
 
         // Make the request to Google Places API
         const response = await axios.get(
@@ -384,7 +387,8 @@ router.get('/api/google-reviews', async (req, res) => {
             status: response.status,
             dataStatus: response.data.status,
             hasReviews: !!response.data.result?.reviews,
-            reviewCount: response.data.result?.reviews?.length || 0
+            reviewCount: response.data.result?.reviews?.length || 0,
+            placeId: placeId
         });
 
         if (response.data.status === 'OK') {
@@ -393,7 +397,8 @@ router.get('/api/google-reviews', async (req, res) => {
             console.error('Google Places API error:', response.data);
             res.status(400).json({
                 error: 'Failed to fetch reviews',
-                details: response.data
+                details: response.data,
+                placeId: placeId
             });
         }
     } catch (error) {
@@ -411,19 +416,22 @@ router.get('/api/google-reviews', async (req, res) => {
             // that falls out of the range of 2xx
             res.status(error.response.status).json({
                 error: 'Google Places API error',
-                details: error.response.data
+                details: error.response.data,
+                placeId: req.query.placeId
             });
         } else if (error.request) {
             // The request was made but no response was received
             res.status(500).json({
                 error: 'No response from Google Places API',
-                details: error.message
+                details: error.message,
+                placeId: req.query.placeId
             });
         } else {
             // Something happened in setting up the request that triggered an Error
             res.status(500).json({
                 error: 'Error setting up request',
-                details: error.message
+                details: error.message,
+                placeId: req.query.placeId
             });
         }
     }
