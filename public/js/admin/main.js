@@ -151,11 +151,11 @@ function initImageUpload() {
   
   imageUploaders.forEach(uploader => {
     const fileInput = uploader.querySelector('input[type="file"]');
+    const uploadBtn = uploader.querySelector('.upload-btn');
     const urlInput = uploader.querySelector('.image-url-input');
     const previewImg = uploader.querySelector('.image-preview img');
-    const uploadBtn = uploader.querySelector('.upload-btn');
-    const videoUrlInput = document.getElementById('gallery-video-url');
-    const fileTypeInput = document.getElementById('gallery-type');
+    const videoUrlInput = uploader.closest('form')?.querySelector('input[name="videoUrl"]');
+    const fileTypeInput = uploader.closest('form')?.querySelector('input[name="type"]');
     
     // Show preview for the URL
     if (urlInput && urlInput.value) {
@@ -202,35 +202,23 @@ function initImageUpload() {
         uploadBtn.textContent = 'Uploading...';
         
         try {
-          let response;
+          // Convert file to base64
+          const base64Data = await readFileAsBase64(file);
           
           // Choose endpoint based on file type
-          if (isVideo) {
-            // For videos, use the dedicated video upload endpoint with base64
-            const base64Data = await readFileAsBase64(file);
-            
-            // Use the video upload endpoint
-            response = await fetch('/api/express-upload-video', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ 
-                file: base64Data,
-                fileName: file.name,
-                fileType: file.type
-              })
-            });
-          } else {
-            // For images, use the regular upload endpoint with FormData
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            response = await fetch('/api/upload', {
-              method: 'POST',
-              body: formData,
-            });
-          }
+          const endpoint = isVideo ? '/api/express-upload-video' : '/api/express-upload';
+          
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              file: base64Data,
+              fileName: file.name,
+              fileType: file.type
+            })
+          });
           
           // Process response
           if (!response.ok) {
