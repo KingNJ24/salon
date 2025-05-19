@@ -671,11 +671,21 @@ function loadGoogleReviews() {
         return;
     }
 
+    // Show loading state
+    reviewsContainer.innerHTML = `
+        <div class="loading-reviews">
+            <p>Loading reviews...</p>
+            <p class="loading-details">Fetching reviews from Google Places API</p>
+        </div>
+    `;
+
     // Use server-side proxy to avoid CORS issues
     fetch(`/api/google-reviews?placeId=${placeId}`)
         .then(response => {
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json().then(data => {
+                    throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                });
             }
             return response.json();
         })
@@ -723,6 +733,7 @@ function loadGoogleReviews() {
                     reviewsContainer.innerHTML = `
                         <div class="review-card">
                             <p>No reviews available at the moment.</p>
+                            <p class="error-details">This location doesn't have any reviews yet.</p>
                         </div>
                     `;
                 }
@@ -730,6 +741,7 @@ function loadGoogleReviews() {
                 reviewsContainer.innerHTML = `
                     <div class="review-card">
                         <p>No reviews available at the moment.</p>
+                        <p class="error-details">Unable to fetch reviews for this location.</p>
                     </div>
                 `;
             }
@@ -738,8 +750,9 @@ function loadGoogleReviews() {
             console.error('Error loading Google reviews:', error);
             reviewsContainer.innerHTML = `
                 <div class="review-card">
-                    <p>Unable to load reviews at this time. Please try again later.</p>
+                    <p>Unable to load reviews at this time.</p>
                     <p class="error-details">${error.message}</p>
+                    <p class="error-help">Please try again later or contact support if the issue persists.</p>
                 </div>
             `;
         });

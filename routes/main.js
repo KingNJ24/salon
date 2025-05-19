@@ -343,8 +343,18 @@ router.get('/api/google-reviews', async (req, res) => {
         const { placeId } = req.query;
         const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
+        // Log the incoming request details
+        console.log('Google Reviews API Request:', {
+            placeId,
+            hasApiKey: !!apiKey,
+            apiKeyPrefix: apiKey ? apiKey.substring(0, 5) + '...' : 'missing'
+        });
+
         if (!placeId || !apiKey) {
-            console.error('Missing required parameters:', { placeId: !!placeId, apiKey: !!apiKey });
+            console.error('Missing required parameters:', { 
+                placeId: !placeId ? 'Missing' : 'Present',
+                apiKey: !apiKey ? 'Missing' : 'Present'
+            });
             return res.status(400).json({ 
                 error: 'Missing required parameters',
                 details: {
@@ -354,12 +364,18 @@ router.get('/api/google-reviews', async (req, res) => {
             });
         }
 
-        // Add logging to debug the request
-        console.log('Fetching reviews for place:', placeId);
-        console.log('Using API key:', apiKey.substring(0, 5) + '...');
+        // Validate placeId format
+        if (!placeId.match(/^[a-zA-Z0-9_:]+$/)) {
+            console.error('Invalid placeId format:', placeId);
+            return res.status(400).json({
+                error: 'Invalid placeId format',
+                details: 'The placeId should only contain alphanumeric characters, underscores, and colons'
+            });
+        }
 
+        // Make the request to Google Places API
         const response = await axios.get(
-            `https://maps.googleapis.com/maps/api/place/details/json`,
+            'https://maps.googleapis.com/maps/api/place/details/json',
             {
                 params: {
                     place_id: placeId,
@@ -372,9 +388,13 @@ router.get('/api/google-reviews', async (req, res) => {
             }
         );
 
-        // Add logging to debug the response
-        console.log('Google Places API response status:', response.status);
-        console.log('Response data:', JSON.stringify(response.data, null, 2));
+        // Log the response status
+        console.log('Google Places API Response:', {
+            status: response.status,
+            dataStatus: response.data.status,
+            hasReviews: !!response.data.result?.reviews,
+            reviewCount: response.data.result?.reviews?.length || 0
+        });
 
         if (response.data.status === 'OK') {
             res.json(response.data);
@@ -386,11 +406,35 @@ router.get('/api/google-reviews', async (req, res) => {
             });
         }
     } catch (error) {
-        console.error('Error fetching Google reviews:', error.response?.data || error.message);
-        res.status(500).json({ 
-            error: 'Failed to fetch reviews',
-            details: error.response?.data || error.message
+        // Log detailed error information
+        console.error('Error fetching Google reviews:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            placeId: req.query.placeId
         });
+
+        // Return appropriate error response
+        if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            res.status(error.response.status).json({
+                error: 'Google Places API error',
+                details: error.response.data
+            });
+        } else if (error.request) {
+            // The request was made but no response was received
+            res.status(500).json({
+                error: 'No response from Google Places API',
+                details: error.message
+            });
+        } else {
+            // Something happened in setting up the request that triggered an Error
+            res.status(500).json({
+                error: 'Error setting up request',
+                details: error.message
+            });
+        }
     }
 });
 
