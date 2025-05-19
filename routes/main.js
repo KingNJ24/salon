@@ -159,6 +159,50 @@ router.get('/about', async (req, res, next) => {
   }
 });
 
+// Google Places API proxy route
+router.get('/api/google-reviews', async (req, res) => {
+    try {
+        const { placeId } = req.query;
+        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+
+        if (!placeId || !apiKey) {
+            return res.status(400).json({ 
+                error: 'Missing required parameters',
+                details: {
+                    placeId: !placeId ? 'Missing' : 'Present',
+                    apiKey: !apiKey ? 'Missing' : 'Present'
+                }
+            });
+        }
+
+        const response = await axios.get(
+            'https://maps.googleapis.com/maps/api/place/details/json',
+            {
+                params: {
+                    place_id: placeId,
+                    fields: 'reviews,rating,user_ratings_total',
+                    key: apiKey
+                }
+            }
+        );
+
+        if (response.data.status === 'OK') {
+            res.json(response.data);
+        } else {
+            res.status(400).json({
+                error: 'Failed to fetch reviews',
+                details: response.data
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching Google reviews:', error.response?.data || error.message);
+        res.status(500).json({
+            error: 'Error fetching reviews',
+            details: error.response?.data || error.message
+        });
+    }
+});
+
 // Booking form submission
 router.post('/booking', async (req, res, next) => {
   try {
@@ -335,106 +379,6 @@ router.get('/fix-video-items', async (req, res, next) => {
     console.error('Error fixing video items:', error);
     res.status(500).send('Error: ' + error.message);
   }
-});
-
-// Google Places API proxy route
-router.get('/api/google-reviews', async (req, res) => {
-    try {
-        let { placeId } = req.query;
-        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-
-        // Log the incoming request details
-        console.log('Google Reviews API Request:', {
-            originalPlaceId: placeId,
-            hasApiKey: !!apiKey,
-            apiKeyPrefix: apiKey ? apiKey.substring(0, 5) + '...' : 'missing'
-        });
-
-        if (!placeId || !apiKey) {
-            console.error('Missing required parameters:', { 
-                placeId: !placeId ? 'Missing' : 'Present',
-                apiKey: !apiKey ? 'Missing' : 'Present'
-            });
-            return res.status(400).json({ 
-                error: 'Missing required parameters',
-                details: {
-                    placeId: !placeId ? 'Missing' : 'Present',
-                    apiKey: !apiKey ? 'Missing' : 'Present'
-                }
-            });
-        }
-
-        // Clean up placeId - remove any trailing :1 or other suffixes
-        placeId = placeId.split(':')[0] + ':' + placeId.split(':')[1];
-
-        // Make the request to Google Places API
-        const response = await axios.get(
-            'https://maps.googleapis.com/maps/api/place/details/json',
-            {
-                params: {
-                    place_id: placeId,
-                    fields: 'reviews,rating,user_ratings_total',
-                    key: apiKey
-                },
-                headers: {
-                    'Accept': 'application/json'
-                }
-            }
-        );
-
-        // Log the response status
-        console.log('Google Places API Response:', {
-            status: response.status,
-            dataStatus: response.data.status,
-            hasReviews: !!response.data.result?.reviews,
-            reviewCount: response.data.result?.reviews?.length || 0,
-            placeId: placeId
-        });
-
-        if (response.data.status === 'OK') {
-            res.json(response.data);
-        } else {
-            console.error('Google Places API error:', response.data);
-            res.status(400).json({
-                error: 'Failed to fetch reviews',
-                details: response.data,
-                placeId: placeId
-            });
-        }
-    } catch (error) {
-        // Log detailed error information
-        console.error('Error fetching Google reviews:', {
-            message: error.message,
-            response: error.response?.data,
-            status: error.response?.status,
-            placeId: req.query.placeId
-        });
-
-        // Return appropriate error response
-        if (error.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
-            res.status(error.response.status).json({
-                error: 'Google Places API error',
-                details: error.response.data,
-                placeId: req.query.placeId
-            });
-        } else if (error.request) {
-            // The request was made but no response was received
-            res.status(500).json({
-                error: 'No response from Google Places API',
-                details: error.message,
-                placeId: req.query.placeId
-            });
-        } else {
-            // Something happened in setting up the request that triggered an Error
-            res.status(500).json({
-                error: 'Error setting up request',
-                details: error.message,
-                placeId: req.query.placeId
-            });
-        }
-    }
 });
 
 module.exports = router; 

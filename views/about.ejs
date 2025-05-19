@@ -53,7 +53,7 @@
             <!-- Team Member 1 -->
             <div class="team-member">
                 <div class="team-photo">
-                    <img src="https://via.placeholder.com/250x250?text=Sarah+Johnson" alt="Sarah Johnson" onerror="this.src='https://via.placeholder.com/250x250?text=Sarah+Johnson'">
+                    <img src="/images/team/sarah.jpg" alt="Sarah Johnson" onerror="this.src='/images/team/default.jpg'">
                 </div>
                 <h3>Sarah Johnson</h3>
                 <p class="team-role">Founder & Master Stylist</p>
@@ -63,7 +63,7 @@
             <!-- Team Member 2 -->
             <div class="team-member">
                 <div class="team-photo">
-                    <img src="https://via.placeholder.com/250x250?text=Michael+Brown" alt="Michael Brown" onerror="this.src='https://via.placeholder.com/250x250?text=Michael+Brown'">
+                    <img src="/images/team/michael.jpg" alt="Michael Brown" onerror="this.src='/images/team/default.jpg'">
                 </div>
                 <h3>Michael Brown</h3>
                 <p class="team-role">Senior Stylist</p>
@@ -73,7 +73,7 @@
             <!-- Team Member 3 -->
             <div class="team-member">
                 <div class="team-photo">
-                    <img src="https://via.placeholder.com/250x250?text=Emily+Davis" alt="Emily Davis" onerror="this.src='https://via.placeholder.com/250x250?text=Emily+Davis'">
+                    <img src="/images/team/emily.jpg" alt="Emily Davis" onerror="this.src='/images/team/default.jpg'">
                 </div>
                 <h3>Emily Davis</h3>
                 <p class="team-role">Color Specialist</p>
@@ -145,8 +145,14 @@
     <div class="container">
         <h2 class="section-title text-center">What Our Clients Say</h2>
         <div class="reviews-container">
-            <div id="google-reviews" class="reviews-grid">
+            <div id="google-reviews" class="reviews-scroll-container">
                 <div class="loading-reviews">Loading reviews...</div>
+            </div>
+            <!-- Scroll indicator for mobile -->
+            <div class="scroll-indicator reviews-scroll-indicator">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
             </div>
         </div>
     </div>
@@ -361,31 +367,81 @@
     .reviews-section {
         padding: 60px 0;
         background-color: var(--color-light);
+        position: relative;
+        overflow: hidden;
     }
 
-    .loading-reviews {
-        text-align: center;
-        padding: 40px;
-        color: #666;
-        font-style: italic;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-
-    .reviews-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 25px;
+    .reviews-container {
+        position: relative;
         margin-top: 30px;
     }
 
+    .reviews-scroll-container {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        gap: 20px;
+        padding: 20px 0;
+        margin: 0 -20px;
+        padding: 0 20px;
+    }
+
+    .reviews-scroll-container::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .reviews-scroll-container::-webkit-scrollbar-track {
+        background: var(--color-light-gray);
+        border-radius: 10px;
+    }
+
+    .reviews-scroll-container::-webkit-scrollbar-thumb {
+        background: var(--color-primary);
+        border-radius: 10px;
+    }
+
+    .review-summary {
+        flex: 0 0 300px;
+        scroll-snap-align: start;
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+    .overall-rating {
+        width: 100%;
+    }
+
+    .overall-rating h3 {
+        color: var(--color-primary);
+        margin-bottom: 15px;
+    }
+
+    .rating-stars {
+        font-size: 2rem;
+        color: #ffd700;
+        margin: 10px 0;
+        letter-spacing: 2px;
+    }
+
     .review-card {
+        flex: 0 0 300px;
+        scroll-snap-align: start;
         background: white;
         border-radius: 12px;
         padding: 25px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
     }
 
     .review-card:hover {
@@ -400,8 +456,8 @@
     }
 
     .review-avatar {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
         margin-right: 15px;
         object-fit: cover;
@@ -431,6 +487,104 @@
         color: #333;
         line-height: 1.6;
         font-size: 1rem;
+        flex-grow: 1;
+        overflow-y: auto;
+        max-height: 150px;
+    }
+
+    .loading-reviews {
+        flex: 0 0 300px;
+        scroll-snap-align: start;
+        text-align: center;
+        padding: 40px;
+        color: #666;
+        font-style: italic;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .loading-reviews p {
+        margin: 5px 0;
+    }
+
+    .loading-details {
+        font-size: 0.9rem;
+        color: #888;
+    }
+
+    .reviews-scroll-indicator {
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        animation: pulse 2s infinite;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        z-index: 5;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+    }
+
+    .reviews-scroll-indicator svg {
+        width: 24px;
+        height: 24px;
+        fill: none;
+        stroke: var(--color-primary);
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        animation: slideRight 1.5s infinite;
+    }
+
+    @keyframes slideRight {
+        0%, 100% {
+            transform: translateX(-5px);
+        }
+        50% {
+            transform: translateX(5px);
+        }
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .reviews-scroll-container {
+            padding: 0 10px;
+            margin: 0 -10px;
+        }
+
+        .review-card, .review-summary, .loading-reviews {
+            flex: 0 0 280px;
+        }
+
+        .reviews-scroll-indicator {
+            display: flex;
+        }
+
+        .review-text {
+            max-height: 120px;
+        }
     }
 
     /* Map Section Styles */
@@ -577,9 +731,14 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Load Google Maps script with proper loading attributes
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=<%= googleMapsApiKey %>&callback=initMap&libraries=places&v=weekly`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=<%= googleMapsApiKey %>&libraries=places&v=weekly`;
     script.async = true;
     script.defer = true;
+    script.onload = function() {
+        // Initialize map and load reviews after script is loaded
+        initMap();
+        loadGoogleReviews();
+    };
     script.onerror = function() {
         console.error('Failed to load Google Maps script');
         const mapElement = document.getElementById('salon-map');
@@ -592,9 +751,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     document.head.appendChild(script);
-
-    // Load Google Reviews
-    loadGoogleReviews();
 });
 
 // Initialize Google Map
@@ -623,8 +779,8 @@ function initMap() {
             ]
         });
 
-        // Use regular Marker instead of AdvancedMarkerElement
-        const marker = new google.maps.Marker({
+        // Use AdvancedMarkerElement instead of deprecated Marker
+        const marker = new google.maps.marker.AdvancedMarkerElement({
             map,
             position: salonLocation,
             title: 'Nandini J Makeup Studio & Luxury Salon'
@@ -658,90 +814,149 @@ function loadGoogleReviews() {
     const reviewsContainer = document.getElementById('google-reviews');
     if (!reviewsContainer) return;
 
-    const apiKey = '<%= googleMapsApiKey %>';
-    // Using the correct placeId format for Nandini J Makeup Studio (without the :1 suffix)
-    const placeId = '0x390c2f98f7a35099:0x1cc5130c96e9864d';
-    
-    if (!apiKey) {
-        reviewsContainer.innerHTML = `
-            <div class="review-card">
-                <p>Google Maps API key is not configured.</p>
-                <p>Please contact your website administrator for assistance.</p>
-            </div>
-        `;
-        return;
-    }
-
     // Show loading state
     reviewsContainer.innerHTML = `
         <div class="loading-reviews">
             <p>Loading reviews...</p>
-            <p class="loading-details">Fetching reviews from Google Places API</p>
+            <p class="loading-details">Fetching reviews from Google Places</p>
         </div>
     `;
 
-    // Use server-side proxy to avoid CORS issues
-    fetch(`/api/google-reviews?placeId=${encodeURIComponent(placeId)}`)
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(data => {
-                    throw new Error(data.error || `HTTP error! status: ${response.status}`);
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                throw new Error(data.error);
-            }
+    // Create a map instance for the Places service
+    const map = new google.maps.Map(document.createElement('div'));
+    const service = new google.maps.places.PlacesService(map);
+
+    // Use textSearch to find the place
+    const request = {
+        query: 'Nandini J Makeup Studio & Luxury Salon',
+        location: new google.maps.LatLng(29.4450669, 77.3058998),
+        radius: 100
+    };
+
+    service.textSearch(request, (results, status) => {
+        console.log('Places service response:', {
+            status,
+            hasResults: !!results,
+            resultCount: results?.length || 0
+        });
+
+        if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+            // Get the first result
+            const place = results[0];
             
-            if (data.result && data.result.reviews) {
-                const reviews = data.result.reviews;
-                const rating = data.result.rating || 0;
-                const totalRatings = data.result.user_ratings_total || 0;
-                
-                reviewsContainer.innerHTML = `
-                    <div class="review-summary">
-                        <div class="overall-rating">
-                            <h3>Overall Rating</h3>
-                            <div class="rating-stars">
-                                ${'★'.repeat(Math.round(rating))}${'☆'.repeat(5 - Math.round(rating))}
-                            </div>
-                            <p>${rating.toFixed(1)} out of 5 (${totalRatings} reviews)</p>
-                        </div>
-                    </div>
-                    ${reviews.map(review => `
-                        <div class="review-card">
-                            <div class="review-header">
-                                <img src="${review.profile_photo_url || 'https://via.placeholder.com/60'}" 
-                                     alt="${review.author_name}" 
-                                     class="review-avatar"
-                                     onerror="this.src='https://via.placeholder.com/60'">
-                                <div>
-                                    <div class="review-author">${review.author_name}</div>
-                                    <div class="review-date">${new Date(review.time * 1000).toLocaleDateString()}</div>
+            // Now get the details of this place
+            const detailsRequest = {
+                placeId: place.place_id,
+                fields: ['rating', 'user_ratings_total', 'reviews', 'name', 'formatted_address']
+            };
+
+            service.getDetails(detailsRequest, (placeDetails, detailsStatus) => {
+                console.log('Place details response:', {
+                    status: detailsStatus,
+                    hasDetails: !!placeDetails,
+                    hasReviews: !!placeDetails?.reviews,
+                    reviewCount: placeDetails?.reviews?.length || 0
+                });
+
+                if (detailsStatus === google.maps.places.PlacesServiceStatus.OK && placeDetails) {
+                    const rating = placeDetails.rating || 0;
+                    const totalRatings = placeDetails.user_ratings_total || 0;
+                    const reviews = placeDetails.reviews || [];
+
+                    // Create the reviews HTML
+                    let reviewsHTML = `
+                        <div class="review-summary">
+                            <div class="overall-rating">
+                                <h3>Overall Rating</h3>
+                                <div class="rating-stars">
+                                    ${'★'.repeat(Math.round(rating))}${'☆'.repeat(5 - Math.round(rating))}
                                 </div>
+                                <p>${rating.toFixed(1)} out of 5</p>
+                                <p>${totalRatings} reviews</p>
                             </div>
-                            <div class="review-rating">
-                                ${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}
-                            </div>
-                            <div class="review-text">${review.text}</div>
                         </div>
-                    `).join('')}
-                `;
-            } else {
-                throw new Error('No reviews found');
-            }
-        })
-        .catch(error => {
-            console.error('Error loading Google reviews:', error);
+                    `;
+
+                    if (reviews.length > 0) {
+                        reviewsHTML += reviews.map(review => `
+                            <div class="review-card">
+                                <div class="review-header">
+                                    <img src="${review.profile_photo_url || '/images/team/default.jpg'}" 
+                                         alt="${review.author_name}" 
+                                         class="review-avatar"
+                                         onerror="this.src='/images/team/default.jpg'">
+                                    <div>
+                                        <div class="review-author">${review.author_name}</div>
+                                        <div class="review-date">${new Date(review.time * 1000).toLocaleDateString()}</div>
+                                    </div>
+                                </div>
+                                <div class="review-rating">
+                                    ${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}
+                                </div>
+                                <div class="review-text">${review.text}</div>
+                            </div>
+                        `).join('');
+                    } else {
+                        reviewsHTML += `
+                            <div class="review-card">
+                                <p>No reviews available at this time.</p>
+                                <p class="help-text">Be the first to leave a review!</p>
+                                <a href="https://www.google.com/maps/place/Nandini+J+Makeup+Studio+%26+Luxury+Salon+-HD+Party+Makeup+%7CHaircut+%26+Styling+%7CHD+Bridal+Makeup+in+Shamli/@29.4450715,77.3033249,17z/data=!3m1!4b1!4m6!3m5!1s0x390c2f98f7a35099:0x1cc5130c96e9864d!8m2!3d29.4450669!4d77.3058998!16s%2Fg%2F11kc2x_v4n?entry=ttu" 
+                                   target="_blank" 
+                                   class="btn btn-primary">
+                                    Write a Review
+                                </a>
+                            </div>
+                        `;
+                    }
+
+                    reviewsContainer.innerHTML = reviewsHTML;
+
+                    // Hide scroll indicator after user has scrolled
+                    const scrollContainer = document.querySelector('.reviews-scroll-container');
+                    const scrollIndicator = document.querySelector('.reviews-scroll-indicator');
+                    
+                    if (scrollContainer && scrollIndicator) {
+                        scrollContainer.addEventListener('scroll', function() {
+                            if (this.scrollLeft > 50) {
+                                scrollIndicator.style.opacity = '0';
+                                setTimeout(() => {
+                                    scrollIndicator.style.display = 'none';
+                                }, 500);
+                            }
+                        });
+                    }
+                } else {
+                    console.error('Error loading place details:', detailsStatus);
+                    reviewsContainer.innerHTML = `
+                        <div class="review-card">
+                            <p>Unable to load reviews at this time.</p>
+                            <p class="error-details">${detailsStatus}</p>
+                            <p class="help-text">Please try again later or contact us directly for feedback.</p>
+                            <a href="https://www.google.com/maps/place/Nandini+J+Makeup+Studio+%26+Luxury+Salon+-HD+Party+Makeup+%7CHaircut+%26+Styling+%7CHD+Bridal+Makeup+in+Shamli/@29.4450715,77.3033249,17z/data=!3m1!4b1!4m6!3m5!1s0x390c2f98f7a35099:0x1cc5130c96e9864d!8m2!3d29.4450669!4d77.3058998!16s%2Fg%2F11kc2x_v4n?entry=ttu" 
+                               target="_blank" 
+                               class="btn btn-primary">
+                                View on Google Maps
+                            </a>
+                        </div>
+                    `;
+                }
+            });
+        } else {
+            console.error('Error finding place:', status);
             reviewsContainer.innerHTML = `
                 <div class="review-card">
                     <p>Unable to load reviews at this time.</p>
-                    <p class="error-details">${error.message}</p>
+                    <p class="error-details">${status}</p>
                     <p class="help-text">Please try again later or contact us directly for feedback.</p>
+                    <a href="https://www.google.com/maps/place/Nandini+J+Makeup+Studio+%26+Luxury+Salon+-HD+Party+Makeup+%7CHaircut+%26+Styling+%7CHD+Bridal+Makeup+in+Shamli/@29.4450715,77.3033249,17z/data=!3m1!4b1!4m6!3m5!1s0x390c2f98f7a35099:0x1cc5130c96e9864d!8m2!3d29.4450669!4d77.3058998!16s%2Fg%2F11kc2x_v4n?entry=ttu" 
+                       target="_blank" 
+                       class="btn btn-primary">
+                        View on Google Maps
+                    </a>
                 </div>
             `;
-        });
+        }
+    });
 }
 </script> 

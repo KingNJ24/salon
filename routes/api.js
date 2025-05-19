@@ -5,6 +5,68 @@ const { upload, saveBase64Image } = require('../utils/upload');
 const serviceController = require('../controllers/serviceController');
 const galleryController = require('../controllers/galleryController');
 const { Team, SiteInfo, Booking, ServiceCategory, GalleryCategory } = require('../models');
+const axios = require('axios');
+
+// Google Places API proxy route
+router.get('/google-reviews', async (req, res) => {
+    try {
+        const { placeId } = req.query;
+        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+
+        if (!placeId || !apiKey) {
+            return res.status(400).json({ 
+                error: 'Missing required parameters',
+                details: {
+                    placeId: !placeId ? 'Missing' : 'Present',
+                    apiKey: !apiKey ? 'Missing' : 'Present'
+                }
+            });
+        }
+
+        console.log('Making Google Places API request:', {
+            placeId,
+            hasApiKey: !!apiKey,
+            apiKeyPrefix: apiKey ? apiKey.substring(0, 5) + '...' : 'missing'
+        });
+
+        const response = await axios.get(
+            'https://maps.googleapis.com/maps/api/place/details/json',
+            {
+                params: {
+                    place_id: placeId,
+                    fields: 'reviews,rating,user_ratings_total',
+                    key: apiKey
+                },
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        console.log('Google Places API response:', {
+            status: response.status,
+            dataStatus: response.data.status,
+            hasReviews: !!response.data.result?.reviews,
+            reviewCount: response.data.result?.reviews?.length || 0
+        });
+
+        if (response.data.status === 'OK') {
+            res.json(response.data);
+        } else {
+            res.status(400).json({
+                error: 'Failed to fetch reviews',
+                details: response.data
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching Google reviews:', error.response?.data || error.message);
+        res.status(500).json({
+            error: 'Error fetching reviews',
+            details: error.response?.data || error.message
+        });
+    }
+});
 
 // File upload endpoint
 router.post('/upload', adminAuth, (req, res) => {

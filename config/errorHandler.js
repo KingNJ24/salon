@@ -6,6 +6,11 @@ const { SiteInfo } = require('../models');
 
 // 404 Not Found handler
 const notFound = (req, res, next) => {
+  // Ignore Chrome DevTools requests
+  if (req.path === '/.well-known/appspecific/com.chrome.devtools.json') {
+    return res.status(200).json({});
+  }
+  
   const error = new Error(`Not Found - ${req.originalUrl}`);
   res.status(404);
   next(error);
