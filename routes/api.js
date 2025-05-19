@@ -6,6 +6,8 @@ const serviceController = require('../controllers/serviceController');
 const galleryController = require('../controllers/galleryController');
 const { Team, SiteInfo, Booking, ServiceCategory, GalleryCategory, Service } = require('../models');
 const axios = require('axios');
+const multer = require('multer');
+const uploadMulter = multer({ dest: 'uploads/' });
 
 // Google Places API proxy route
 router.get('/google-reviews', async (req, res) => {
@@ -838,9 +840,13 @@ router.post('/bookings/bulk-action', adminAuth, async (req, res) => {
 });
 
 // Add a new route for creating a service that accepts a POST request to /api/services. This route will handle file uploads and save the service details.
-router.post('/services', adminAuth, async (req, res) => {
+router.post('/services', adminAuth, uploadMulter.single('file'), async (req, res) => {
   try {
-    const { name, description, price, image, videoUrl, isVisible, showOnHomepage, displayOrder } = req.body;
+    const { name, description, price, videoUrl, isVisible, showOnHomepage, displayOrder } = req.body;
+    let image = req.body.image;
+    if (req.file) {
+      image = '/' + req.file.path.split('public')[1].replace(/\\/g, '/');
+    }
     const newService = new Service({
       name,
       description,
