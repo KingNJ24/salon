@@ -432,82 +432,89 @@
             });
         });
 
-        // Form submission handlers
-        document.getElementById('generalSettingsForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            // Validate required fields
-            const businessName = document.getElementById('businessName').value;
-            const latitude = parseFloat(document.getElementById('latitude').value);
-            const longitude = parseFloat(document.getElementById('longitude').value);
-            
-            let hasError = false;
-            
-            if (!businessName) {
-                document.getElementById('businessName').classList.add('error');
-                hasError = true;
-            } else {
-                document.getElementById('businessName').classList.remove('error');
-            }
-            
-            if (isNaN(latitude) || latitude < -90 || latitude > 90) {
-                document.getElementById('latitude').classList.add('error');
-                hasError = true;
-            } else {
-                document.getElementById('latitude').classList.remove('error');
-            }
-            
-            if (isNaN(longitude) || longitude < -180 || longitude > 180) {
-                document.getElementById('longitude').classList.add('error');
-                hasError = true;
-            } else {
-                document.getElementById('longitude').classList.remove('error');
-            }
-            
-            if (hasError) {
-                    return;
-                }
-            
+        // Function to handle form submission
+        async function handleSettingsSubmit(formId, formData) {
             try {
-                const formData = new FormData(this);
                 const response = await fetch('/api/settings/update', {
-                        method: 'POST',
-                        headers: {
-                        'Content-Type': 'application/json',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(Object.fromEntries(formData))
+                    body: JSON.stringify(formData)
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert('Settings saved successfully!');
-                    window.location.reload();
-                    } else {
-                    alert('Error saving settings: ' + result.message);
-                    }
-                } catch (error) {
+                    showNotification('Settings saved successfully!', 'success');
+                    // Reload page after a short delay to show the success message
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(result.message || 'Failed to save settings');
+                }
+            } catch (error) {
                 console.error('Error saving settings:', error);
-                alert('Error saving settings. Please try again.');
+                showNotification('Error saving settings: ' + error.message, 'error');
             }
+        }
+
+        // Handle basic info form submission
+        document.getElementById('generalSettingsForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = {
+                businessName: document.getElementById('businessName').value,
+                latitude: parseFloat(document.getElementById('latitude').value),
+                longitude: parseFloat(document.getElementById('longitude').value),
+                salonName: document.getElementById('salonName').value,
+                email: document.getElementById('salonEmail').value,
+                phone: document.getElementById('salonPhone').value,
+                address: document.getElementById('salonAddress').value
+            };
+            await handleSettingsSubmit('generalSettingsForm', formData);
         });
 
-        document.getElementById('appearanceSettingsForm').addEventListener('submit', function(e) {
+        // Handle appearance settings form submission
+        document.getElementById('appearanceSettingsForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            // Handle appearance settings save
-            console.log('Saving appearance settings...');
+            const formData = {
+                servicesViewMode: document.getElementById('servicesViewMode').value,
+                currencySymbol: document.getElementById('currencySymbol').value,
+                heroTitle: document.getElementById('heroTitle').value,
+                heroSubtitle: document.getElementById('heroSubtitle').value,
+                aboutText: document.getElementById('aboutText').value
+            };
+            await handleSettingsSubmit('appearanceSettingsForm', formData);
         });
 
-        document.getElementById('socialSettingsForm').addEventListener('submit', function(e) {
+        // Handle social media settings form submission
+        document.getElementById('socialSettingsForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            // Handle social media settings save
-            console.log('Saving social media settings...');
+            const formData = {
+                socialMedia: {
+                    facebook: document.getElementById('facebookUrl').value,
+                    instagram: document.getElementById('instagramUrl').value,
+                    twitter: document.getElementById('twitterUrl').value,
+                    youtube: document.getElementById('youtubeUrl').value
+                }
+            };
+            await handleSettingsSubmit('socialSettingsForm', formData);
         });
 
-        document.getElementById('notificationSettingsForm').addEventListener('submit', function(e) {
+        // Handle notification settings form submission
+        document.getElementById('notificationSettingsForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            // Handle notification settings save
-            console.log('Saving notification settings...');
+            const formData = {
+                emailNotifications: {
+                    newBookingEmail: document.getElementById('newBookingEmail').checked,
+                    reminderEmail: document.getElementById('reminderEmail').checked,
+                    reviewEmail: document.getElementById('reviewEmail').checked
+                },
+                smsNotifications: {
+                    newBookingSMS: document.getElementById('newBookingSMS').checked,
+                    reminderSMS: document.getElementById('reminderSMS').checked
+                }
+            };
+            await handleSettingsSubmit('notificationSettingsForm', formData);
         });
 
         // File upload preview
@@ -523,7 +530,55 @@
                 // Handle favicon upload preview
                 console.log('Favicon file selected:', e.target.files[0].name);
             }
-    });
+        });
+
+        // Function to show notifications
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            // Style the notification
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.padding = '15px 25px';
+            notification.style.borderRadius = '4px';
+            notification.style.color = 'white';
+            notification.style.zIndex = '1000';
+            notification.style.animation = 'slideIn 0.5s ease-out';
+            
+            // Set background color based on type
+            if (type === 'success') {
+                notification.style.backgroundColor = '#4CAF50';
+            } else if (type === 'error') {
+                notification.style.backgroundColor = '#f44336';
+            }
+            
+            document.body.appendChild(notification);
+            
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.5s ease-out';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 500);
+            }, 3000);
+        }
+
+        // Add CSS for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
 </script>
 </body>
 </html> 
