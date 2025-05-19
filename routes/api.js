@@ -465,35 +465,30 @@ router.post('/team/delete/:id', adminAuth, async (req, res) => {
 // SITE SETTINGS ROUTES
 router.post('/settings/update', adminAuth, async (req, res) => {
   try {
-    let siteInfo = await SiteInfo.findOne();
+    console.log('Received settings update request:', req.body);
     
-    // Validate map embed URL if provided
-    if (req.body.mapEmbedUrl) {
-      // Ensure it's a valid map embed URL (Google Maps or OpenStreetMap)
-      if (!req.body.mapEmbedUrl.includes('google.com/maps/embed') && !req.body.mapEmbedUrl.includes('openstreetmap.org/export/embed')) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Invalid map embed URL format. Must be from Google Maps or OpenStreetMap.' 
-        });
-      }
-    }
+    let siteInfo = await SiteInfo.findOne();
+    console.log('Current site info:', siteInfo);
     
     if (siteInfo) {
       // Update existing settings
       const updateData = {};
       
       // Handle basic info
-      if (req.body.salonName) updateData.salonName = req.body.salonName;
-      if (req.body.email) updateData.email = req.body.email;
-      if (req.body.phone) updateData.phone = req.body.phone;
-      if (req.body.address) updateData.address = req.body.address;
+      if (req.body.salonName !== undefined) updateData.salonName = req.body.salonName;
+      if (req.body.email !== undefined) updateData.email = req.body.email;
+      if (req.body.phone !== undefined) updateData.phone = req.body.phone;
+      if (req.body.address !== undefined) updateData.address = req.body.address;
+      if (req.body.businessName !== undefined) updateData.businessName = req.body.businessName;
+      if (req.body.latitude !== undefined) updateData.mapLat = parseFloat(req.body.latitude);
+      if (req.body.longitude !== undefined) updateData.mapLng = parseFloat(req.body.longitude);
       
       // Handle appearance settings
-      if (req.body.servicesViewMode) updateData.servicesViewMode = req.body.servicesViewMode;
-      if (req.body.currencySymbol) updateData.currencySymbol = req.body.currencySymbol;
-      if (req.body.heroTitle) updateData.heroTitle = req.body.heroTitle;
-      if (req.body.heroSubtitle) updateData.heroSubtitle = req.body.heroSubtitle;
-      if (req.body.aboutText) updateData.aboutText = req.body.aboutText;
+      if (req.body.servicesViewMode !== undefined) updateData.servicesViewMode = req.body.servicesViewMode;
+      if (req.body.currencySymbol !== undefined) updateData.currencySymbol = req.body.currencySymbol;
+      if (req.body.heroTitle !== undefined) updateData.heroTitle = req.body.heroTitle;
+      if (req.body.heroSubtitle !== undefined) updateData.heroSubtitle = req.body.heroSubtitle;
+      if (req.body.aboutText !== undefined) updateData.aboutText = req.body.aboutText;
       
       // Handle social media
       if (req.body.socialMedia) {
@@ -525,22 +520,36 @@ router.post('/settings/update', adminAuth, async (req, res) => {
         };
       }
       
-      // Update the document
-      Object.assign(siteInfo, updateData);
-      await siteInfo.save();
+      console.log('Updating site info with:', updateData);
       
-      console.log('Settings updated successfully:', updateData);
+      // Update the document using findOneAndUpdate
+      const updatedSiteInfo = await SiteInfo.findOneAndUpdate(
+        { _id: siteInfo._id },
+        { $set: updateData },
+        { new: true, runValidators: true }
+      );
+      
+      if (!updatedSiteInfo) {
+        throw new Error('Failed to update site info');
+      }
+      
+      console.log('Settings updated successfully:', updatedSiteInfo);
+      return res.json({ success: true, siteInfo: updatedSiteInfo });
     } else {
       // Create new settings
+      console.log('Creating new site info with:', req.body);
       siteInfo = new SiteInfo(req.body);
       await siteInfo.save();
-      console.log('New settings created successfully');
+      console.log('New settings created successfully:', siteInfo);
+      return res.json({ success: true, siteInfo });
     }
-    
-    return res.json({ success: true, siteInfo });
   } catch (error) {
     console.error('Error updating site settings:', error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ 
+      success: false, 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 

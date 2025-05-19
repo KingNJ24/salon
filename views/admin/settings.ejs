@@ -435,7 +435,7 @@
         // Function to handle form submission
         async function handleSettingsSubmit(formId, formData) {
             try {
-                console.log('Submitting form data:', formData); // Debug log
+                console.log('Submitting form data for', formId, ':', formData);
                 const response = await fetch('/api/settings/update', {
                     method: 'POST',
                     headers: {
@@ -445,7 +445,7 @@
                 });
                 
                 const result = await response.json();
-                console.log('Server response:', result); // Debug log
+                console.log('Server response:', result);
                 
                 if (result.success) {
                     showNotification('Settings saved successfully!', 'success');
@@ -464,14 +464,21 @@
         document.getElementById('generalSettingsForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const formData = {
-                salonName: document.getElementById('salonName').value,
-                email: document.getElementById('salonEmail').value,
-                phone: document.getElementById('salonPhone').value,
-                address: document.getElementById('salonAddress').value,
-                businessName: document.getElementById('businessName').value,
-                latitude: parseFloat(document.getElementById('latitude').value),
-                longitude: parseFloat(document.getElementById('longitude').value)
+                salonName: document.getElementById('salonName').value.trim(),
+                email: document.getElementById('salonEmail').value.trim(),
+                phone: document.getElementById('salonPhone').value.trim(),
+                address: document.getElementById('salonAddress').value.trim(),
+                businessName: document.getElementById('businessName').value.trim(),
+                latitude: parseFloat(document.getElementById('latitude').value) || 0,
+                longitude: parseFloat(document.getElementById('longitude').value) || 0
             };
+            
+            // Validate required fields
+            if (!formData.salonName || !formData.email || !formData.phone || !formData.address) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
             await handleSettingsSubmit('generalSettingsForm', formData);
         });
 
@@ -481,9 +488,9 @@
             const formData = {
                 servicesViewMode: document.getElementById('servicesViewMode')?.value || 'grid',
                 currencySymbol: document.getElementById('currencySymbol')?.value || '₹',
-                heroTitle: document.getElementById('heroTitle')?.value || '',
-                heroSubtitle: document.getElementById('heroSubtitle')?.value || '',
-                aboutText: document.getElementById('aboutText')?.value || ''
+                heroTitle: document.getElementById('heroTitle')?.value?.trim() || '',
+                heroSubtitle: document.getElementById('heroSubtitle')?.value?.trim() || '',
+                aboutText: document.getElementById('aboutText')?.value?.trim() || ''
             };
             await handleSettingsSubmit('appearanceSettingsForm', formData);
         });
@@ -493,10 +500,10 @@
             e.preventDefault();
             const formData = {
                 socialMedia: {
-                    facebook: document.getElementById('facebookUrl').value || '',
-                    instagram: document.getElementById('instagramUrl').value || '',
-                    twitter: document.getElementById('twitterUrl').value || '',
-                    youtube: document.getElementById('youtubeUrl').value || ''
+                    facebook: document.getElementById('facebookUrl').value.trim() || '',
+                    instagram: document.getElementById('instagramUrl').value.trim() || '',
+                    twitter: document.getElementById('twitterUrl').value.trim() || '',
+                    youtube: document.getElementById('youtubeUrl').value.trim() || ''
                 }
             };
             await handleSettingsSubmit('socialSettingsForm', formData);
