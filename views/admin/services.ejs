@@ -452,27 +452,48 @@
         function handleServiceSubmit(event) {
             event.preventDefault();
             const formData = new FormData(event.target);
-            const serviceId = formData.get('serviceId');
+            const serviceId = formData.get('id');
             const method = serviceId ? 'PUT' : 'POST';
             const url = serviceId ? `/api/services/${serviceId}` : '/api/services';
 
+            // Handle file upload
+            const fileInput = document.getElementById('serviceImage');
+            if (fileInput && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    formData.set('file', reader.result);
+                    submitForm(formData, method, url);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                submitForm(formData, method, url);
+            }
+        }
+
+        function submitForm(formData, method, url) {
             fetch(url, {
                 method: method,
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                body: JSON.stringify(Object.fromEntries(formData))
+                body: formData
             })
             .then(response => {
-                if (response.ok) {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Failed to save service');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
                     window.location.reload();
-                                } else {
-                    throw new Error('Failed to save service');
+                } else {
+                    throw new Error(data.message || 'Failed to save service');
                 }
             })
             .catch(error => {
                 console.error('Error saving service:', error);
-                alert('Failed to save service. Please try again.');
+                alert(error.message || 'Failed to save service. Please try again.');
             });
         }
 

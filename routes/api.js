@@ -727,7 +727,7 @@ router.post('/bookings/bulk-action', adminAuth, async (req, res) => {
 // Add a new route for creating a service that accepts a POST request to /api/services
 router.post('/services', adminAuth, async (req, res) => {
   try {
-    const { name, description, price, videoUrl, isVisible, showOnHomepage, displayOrder } = req.body;
+    const { name, description, price, videoUrl, isVisible, showOnHomepage, displayOrder, type } = req.body;
     let image = req.body.image;
 
     // Handle file upload if present
@@ -756,6 +756,7 @@ router.post('/services', adminAuth, async (req, res) => {
       price,
       image,
       videoUrl,
+      type: type || 'image',
       isVisible: isVisible === 'on' || isVisible === true,
       showOnHomepage: showOnHomepage === 'on' || showOnHomepage === true,
       displayOrder: displayOrder || 0
