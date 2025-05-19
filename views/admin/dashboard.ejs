@@ -164,55 +164,72 @@
 <div class="quick-actions">
     <h2>Quick Actions</h2>
     <div class="actions-grid">
-        <a href="/admin/bookings/new" class="action-card">
+        <a href="/admin/bookings" class="action-card" data-action="bookings">
             <div class="action-icon">
-                <i class="fas fa-plus"></i>
+                <i class="fas fa-calendar-plus"></i>
             </div>
             <div class="action-content">
-                <h3>New Booking</h3>
-                <p>Create a new booking manually</p>
+                <h3>Manage Bookings</h3>
+                <p>View and manage all booking requests</p>
+            </div>
+            <div class="action-hover">
+                <span>View All</span>
+                <i class="fas fa-arrow-right"></i>
             </div>
         </a>
         
-        <a href="/admin/services/new" class="action-card">
+        <a href="/admin/services" class="action-card" data-action="services">
             <div class="action-icon">
                 <i class="fas fa-cut"></i>
             </div>
             <div class="action-content">
-                <h3>Add Service</h3>
-                <p>Add a new service to the menu</p>
+                <h3>Manage Services</h3>
+                <p>Add or edit salon services</p>
+            </div>
+            <div class="action-hover">
+                <span>View All</span>
+                <i class="fas fa-arrow-right"></i>
             </div>
         </a>
         
-        <a href="/admin/gallery/new" class="action-card">
+        <a href="/admin/gallery" class="action-card" data-action="gallery">
             <div class="action-icon">
-                <i class="fas fa-image"></i>
+                <i class="fas fa-images"></i>
             </div>
             <div class="action-content">
-                <h3>Add to Gallery</h3>
-                <p>Upload new gallery items</p>
+                <h3>Manage Gallery</h3>
+                <p>Update your lookbook gallery</p>
+            </div>
+            <div class="action-hover">
+                <span>View All</span>
+                <i class="fas fa-arrow-right"></i>
             </div>
         </a>
         
-        <a href="/admin/team/new" class="action-card">
+        <a href="/admin/team" class="action-card" data-action="team">
             <div class="action-icon">
-                <i class="fas fa-user-plus"></i>
+                <i class="fas fa-users"></i>
             </div>
             <div class="action-content">
-                <h3>Add Team Member</h3>
-                <p>Add a new team member</p>
+                <h3>Manage Team</h3>
+                <p>Update team members and roles</p>
+            </div>
+            <div class="action-hover">
+                <span>View All</span>
+                <i class="fas fa-arrow-right"></i>
             </div>
         </a>
     </div>
 </div>
 
 <style>
-    /* Dashboard Layout */
+    /* Enhanced Dashboard Layout */
     .dashboard-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 2rem;
+        animation: fadeInDown 0.5s ease-out;
     }
 
     .dashboard-stats {
@@ -220,6 +237,7 @@
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         gap: 1.5rem;
         margin-bottom: 2rem;
+        animation: fadeInUp 0.5s ease-out;
     }
 
     .dashboard-grid {
@@ -227,35 +245,59 @@
         grid-template-columns: 2fr 1fr;
         gap: 1.5rem;
         margin-bottom: 2rem;
+        animation: fadeIn 0.5s ease-out;
     }
 
-    /* Stat Cards */
+    /* Enhanced Stat Cards */
     .stat-card {
         background: white;
-        border-radius: 12px;
+        border-radius: 16px;
         padding: 1.5rem;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         display: flex;
         align-items: center;
         gap: 1rem;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s;
+    }
+
+    .stat-card:hover::before {
+        transform: translateX(100%);
     }
 
     .stat-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
     }
 
     .stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
         background: var(--color-primary);
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+        transform: scale(1.1) rotate(5deg);
     }
 
     .stat-content {
@@ -414,73 +456,186 @@
         color: white;
     }
 
-    /* Quick Actions */
+    /* Enhanced Quick Actions */
     .quick-actions {
         margin-top: 2rem;
+        animation: fadeInUp 0.5s ease-out;
     }
 
     .quick-actions h2 {
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+        color: var(--color-primary);
+        position: relative;
+        padding-bottom: 0.5rem;
+    }
+
+    .quick-actions h2::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 50px;
+        height: 3px;
+        background: var(--color-primary);
+        transition: width 0.3s ease;
+    }
+
+    .quick-actions:hover h2::after {
+        width: 100px;
     }
 
     .actions-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
     }
 
     .action-card {
         background: white;
-        border-radius: 12px;
+        border-radius: 16px;
         padding: 1.5rem;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 1.5rem;
         text-decoration: none;
         color: inherit;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .action-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s;
+    }
+
+    .action-card:hover::before {
+        transform: translateX(100%);
     }
 
     .action-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
     }
 
     .action-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
         background: var(--color-primary);
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .action-card:hover .action-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .action-content {
+        flex: 1;
     }
 
     .action-content h3 {
         margin: 0;
-        font-size: 1rem;
+        font-size: 1.1rem;
         color: var(--color-primary);
+        transition: color 0.3s ease;
     }
 
     .action-content p {
         margin: 0.25rem 0 0;
-        font-size: 0.8rem;
+        font-size: 0.9rem;
         color: #666;
+        transition: color 0.3s ease;
     }
 
-    /* Reviews Container */
-    .reviews-container {
-        max-height: 400px;
-        overflow-y: auto;
+    .action-hover {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--color-primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        opacity: 0;
+        transform: translateY(100%);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Mobile Responsiveness */
+    .action-card:hover .action-hover {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .action-hover span {
+        font-weight: 500;
+    }
+
+    .action-hover i {
+        transition: transform 0.3s ease;
+    }
+
+    .action-card:hover .action-hover i {
+        transform: translateX(5px);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Enhanced Mobile Responsiveness */
     @media (max-width: 1024px) {
         .dashboard-grid {
             grid-template-columns: 1fr;
+        }
+
+        .actions-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         }
     }
 
@@ -492,42 +647,62 @@
         }
 
         .stat-card {
-            padding: 1rem;
+            padding: 1.25rem;
         }
 
         .stat-icon {
-            width: 40px;
-            height: 40px;
-            font-size: 1.2rem;
+            width: 48px;
+            height: 48px;
+            font-size: 1.25rem;
         }
 
-        .stat-content .value {
-            font-size: 1.5rem;
+        .action-card {
+            padding: 1.25rem;
         }
 
-        .card-header {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: stretch;
+        .action-icon {
+            width: 48px;
+            height: 48px;
+            font-size: 1.25rem;
         }
 
-        .header-actions {
-            justify-content: flex-end;
+        .action-content h3 {
+            font-size: 1rem;
         }
 
-        .table th,
-        .table td {
-            padding: 0.75rem;
+        .action-content p {
+            font-size: 0.85rem;
         }
 
-        .action-buttons {
-            flex-direction: column;
+        .action-hover {
+            display: none;
         }
+    }
 
-        .btn-icon {
-            width: 28px;
-            height: 28px;
-        }
+    /* Loading Animation */
+    .loading-reviews {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .loading-reviews::after {
+        content: '';
+        width: 40px;
+        height: 40px;
+        margin-top: 1rem;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid var(--color-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 </style>
 
@@ -642,7 +817,7 @@ function exportBookings() {
     console.log('Export bookings');
 }
 
-// Initialize dashboard
+// Initialize dashboard with animations
 document.addEventListener('DOMContentLoaded', function() {
     // Load Google Reviews
     loadGoogleReviews();
@@ -662,6 +837,26 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('dateRange').addEventListener('change', function() {
         // Implement date range filtering
         console.log('Date range changed:', this.value);
+    });
+
+    // Add animation classes to elements
+    const animateElements = document.querySelectorAll('.stat-card, .dashboard-card, .action-card');
+    animateElements.forEach((element, index) => {
+        element.style.animationDelay = `${index * 0.1}s`;
+    });
+
+    // Handle quick action clicks
+    document.querySelectorAll('.action-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            const action = this.dataset.action;
+            if (!action) return;
+
+            // Add click animation
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 200);
+        });
     });
 });
 </script> 
