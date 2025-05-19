@@ -463,86 +463,75 @@ router.post('/team/delete/:id', adminAuth, async (req, res) => {
 });
 
 // SITE SETTINGS ROUTES
-router.post('/settings/update', adminAuth, async (req, res) => {
+router.post('/settings/update', async (req, res) => {
   try {
     console.log('Received settings update request:', req.body);
     
+    // Find existing site info or create new one
     let siteInfo = await SiteInfo.findOne();
-    console.log('Current site info:', siteInfo);
     
-    if (siteInfo) {
-      // Update existing settings
-      const updateData = {};
-      
-      // Handle basic info
-      if (req.body.salonName !== undefined) updateData.salonName = req.body.salonName;
-      if (req.body.email !== undefined) updateData.email = req.body.email;
-      if (req.body.phone !== undefined) updateData.phone = req.body.phone;
-      if (req.body.address !== undefined) updateData.address = req.body.address;
-      if (req.body.businessName !== undefined) updateData.businessName = req.body.businessName;
-      if (req.body.latitude !== undefined) updateData.mapLat = parseFloat(req.body.latitude);
-      if (req.body.longitude !== undefined) updateData.mapLng = parseFloat(req.body.longitude);
-      
-      // Handle appearance settings
-      if (req.body.servicesViewMode !== undefined) updateData.servicesViewMode = req.body.servicesViewMode;
-      if (req.body.currencySymbol !== undefined) updateData.currencySymbol = req.body.currencySymbol;
-      if (req.body.heroTitle !== undefined) updateData.heroTitle = req.body.heroTitle;
-      if (req.body.heroSubtitle !== undefined) updateData.heroSubtitle = req.body.heroSubtitle;
-      if (req.body.aboutText !== undefined) updateData.aboutText = req.body.aboutText;
-      
-      // Handle social media
-      if (req.body.socialMedia) {
-        updateData.socialMedia = {
-          ...siteInfo.socialMedia,
-          ...req.body.socialMedia
-        };
-      }
-      
-      // Handle business hours
-      if (req.body.hours) {
-        updateData.hours = {
-          ...siteInfo.hours,
-          ...req.body.hours
-        };
-      }
-      
-      // Handle notification settings
-      if (req.body.emailNotifications) {
-        updateData.emailNotifications = {
-          ...siteInfo.emailNotifications,
-          ...req.body.emailNotifications
-        };
-      }
-      if (req.body.smsNotifications) {
-        updateData.smsNotifications = {
-          ...siteInfo.smsNotifications,
-          ...req.body.smsNotifications
-        };
-      }
-      
-      console.log('Updating site info with:', updateData);
-      
-      // Update the document using findOneAndUpdate
-      const updatedSiteInfo = await SiteInfo.findOneAndUpdate(
-        { _id: siteInfo._id },
-        { $set: updateData },
-        { new: true, runValidators: true }
-      );
-      
-      if (!updatedSiteInfo) {
-        throw new Error('Failed to update site info');
-      }
-      
-      console.log('Settings updated successfully:', updatedSiteInfo);
-      return res.json({ success: true, siteInfo: updatedSiteInfo });
-    } else {
-      // Create new settings
-      console.log('Creating new site info with:', req.body);
-      siteInfo = new SiteInfo(req.body);
-      await siteInfo.save();
-      console.log('New settings created successfully:', siteInfo);
-      return res.json({ success: true, siteInfo });
+    if (!siteInfo) {
+      console.log('No existing site info found, creating new one');
+      siteInfo = new SiteInfo();
     }
+    
+    // Update fields based on what was sent
+    const updateFields = {};
+    
+    // Basic info
+    if (req.body.salonName !== undefined) updateFields.salonName = req.body.salonName;
+    if (req.body.email !== undefined) updateFields.email = req.body.email;
+    if (req.body.phone !== undefined) updateFields.phone = req.body.phone;
+    if (req.body.address !== undefined) updateFields.address = req.body.address;
+    if (req.body.businessName !== undefined) updateFields.businessName = req.body.businessName;
+    if (req.body.latitude !== undefined) updateFields.mapLat = parseFloat(req.body.latitude);
+    if (req.body.longitude !== undefined) updateFields.mapLng = parseFloat(req.body.longitude);
+    
+    // Appearance settings
+    if (req.body.servicesViewMode !== undefined) updateFields.servicesViewMode = req.body.servicesViewMode;
+    if (req.body.currencySymbol !== undefined) updateFields.currencySymbol = req.body.currencySymbol;
+    if (req.body.heroTitle !== undefined) updateFields.heroTitle = req.body.heroTitle;
+    if (req.body.heroSubtitle !== undefined) updateFields.heroSubtitle = req.body.heroSubtitle;
+    if (req.body.aboutText !== undefined) updateFields.aboutText = req.body.aboutText;
+    
+    // Social media
+    if (req.body.socialMedia) {
+      updateFields.socialMedia = {
+        ...(siteInfo.socialMedia || {}),
+        ...req.body.socialMedia
+      };
+    }
+    
+    // Notification settings
+    if (req.body.emailNotifications) {
+      updateFields.emailNotifications = {
+        ...(siteInfo.emailNotifications || {}),
+        ...req.body.emailNotifications
+      };
+    }
+    if (req.body.smsNotifications) {
+      updateFields.smsNotifications = {
+        ...(siteInfo.smsNotifications || {}),
+        ...req.body.smsNotifications
+      };
+    }
+    
+    console.log('Updating site info with:', updateFields);
+    
+    // Update the document
+    const updatedSiteInfo = await SiteInfo.findOneAndUpdate(
+      { _id: siteInfo._id },
+      { $set: updateFields },
+      { new: true, upsert: true }
+    );
+    
+    if (!updatedSiteInfo) {
+      throw new Error('Failed to update site info');
+    }
+    
+    console.log('Settings updated successfully:', updatedSiteInfo);
+    return res.json({ success: true, siteInfo: updatedSiteInfo });
+    
   } catch (error) {
     console.error('Error updating site settings:', error);
     return res.status(500).json({ 
