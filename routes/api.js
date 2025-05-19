@@ -4,7 +4,7 @@ const { adminAuth } = require('../middlewares/auth');
 const { upload, saveBase64Image } = require('../utils/upload');
 const serviceController = require('../controllers/serviceController');
 const galleryController = require('../controllers/galleryController');
-const { Team, SiteInfo, Booking, ServiceCategory, GalleryCategory } = require('../models');
+const { Team, SiteInfo, Booking, ServiceCategory, GalleryCategory, Service } = require('../models');
 const axios = require('axios');
 
 // Google Places API proxy route
@@ -398,7 +398,7 @@ router.get('/services/visible', serviceController.getVisibleServices);
 router.get('/services/:id', serviceController.getServiceById);
 router.post('/service/create', adminAuth, serviceController.createService);
 router.post('/service/update/:id', adminAuth, serviceController.updateService);
-router.post('/service/delete/:id', adminAuth, serviceController.deleteService);
+router.delete('/services/:id', adminAuth, serviceController.deleteService);
 router.get('/services', serviceController.getAllServices);
 
 // SERVICE CATEGORY ROUTES
@@ -833,6 +833,28 @@ router.post('/bookings/bulk-action', adminAuth, async (req, res) => {
     }
   } catch (error) {
     console.error('Error in bulk action:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Add a new route for creating a service that accepts a POST request to /api/services. This route will handle file uploads and save the service details.
+router.post('/services', adminAuth, async (req, res) => {
+  try {
+    const { name, description, price, image, videoUrl, isVisible, showOnHomepage, displayOrder } = req.body;
+    const newService = new Service({
+      name,
+      description,
+      price,
+      image,
+      videoUrl,
+      isVisible: isVisible === 'on' || isVisible === true,
+      showOnHomepage: showOnHomepage === 'on' || showOnHomepage === true,
+      displayOrder: displayOrder || 0
+    });
+    await newService.save();
+    return res.json({ success: true, service: newService });
+  } catch (error) {
+    console.error('Error creating service:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 });
