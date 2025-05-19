@@ -467,62 +467,39 @@ router.post('/settings/update', async (req, res) => {
   try {
     console.log('Received settings update request:', req.body);
     
-    // Find existing site info or create new one
-    let siteInfo = await SiteInfo.findOne();
-    
-    if (!siteInfo) {
-      console.log('No existing site info found, creating new one');
-      siteInfo = new SiteInfo();
-    }
-    
-    // Update fields based on what was sent
-    const updateFields = {};
-    
-    // Basic info
-    if (req.body.salonName !== undefined) updateFields.salonName = req.body.salonName;
-    if (req.body.email !== undefined) updateFields.email = req.body.email;
-    if (req.body.phone !== undefined) updateFields.phone = req.body.phone;
-    if (req.body.address !== undefined) updateFields.address = req.body.address;
-    if (req.body.businessName !== undefined) updateFields.businessName = req.body.businessName;
-    if (req.body.latitude !== undefined) updateFields.mapLat = parseFloat(req.body.latitude);
-    if (req.body.longitude !== undefined) updateFields.mapLng = parseFloat(req.body.longitude);
-    
-    // Appearance settings
-    if (req.body.servicesViewMode !== undefined) updateFields.servicesViewMode = req.body.servicesViewMode;
-    if (req.body.currencySymbol !== undefined) updateFields.currencySymbol = req.body.currencySymbol;
-    if (req.body.heroTitle !== undefined) updateFields.heroTitle = req.body.heroTitle;
-    if (req.body.heroSubtitle !== undefined) updateFields.heroSubtitle = req.body.heroSubtitle;
-    if (req.body.aboutText !== undefined) updateFields.aboutText = req.body.aboutText;
-    
-    // Social media
-    if (req.body.socialMedia) {
-      updateFields.socialMedia = {
-        ...(siteInfo.socialMedia || {}),
-        ...req.body.socialMedia
-      };
-    }
-    
-    // Notification settings
-    if (req.body.emailNotifications) {
-      updateFields.emailNotifications = {
-        ...(siteInfo.emailNotifications || {}),
-        ...req.body.emailNotifications
-      };
-    }
-    if (req.body.smsNotifications) {
-      updateFields.smsNotifications = {
-        ...(siteInfo.smsNotifications || {}),
-        ...req.body.smsNotifications
-      };
-    }
-    
+    // Create update object with all fields
+    const updateFields = {
+      salonName: req.body.salonName,
+      email: req.body.email,
+      phone: req.body.phone,
+      address: req.body.address,
+      businessName: req.body.businessName,
+      mapLat: parseFloat(req.body.latitude) || 29.4450833,
+      mapLng: parseFloat(req.body.longitude) || 77.3059167,
+      servicesViewMode: req.body.servicesViewMode || 'grid',
+      currencySymbol: req.body.currencySymbol || '₹',
+      heroTitle: req.body.heroTitle || 'Your Hair, Our Passion',
+      heroSubtitle: req.body.heroSubtitle || 'Experience the best in hair care and styling',
+      aboutText: req.body.aboutText || 'We are a team of passionate stylists dedicated to helping you look and feel your best.',
+      socialMedia: {
+        facebook: req.body.socialMedia?.facebook || '',
+        instagram: req.body.socialMedia?.instagram || '',
+        twitter: req.body.socialMedia?.twitter || '',
+        youtube: req.body.socialMedia?.youtube || ''
+      }
+    };
+
     console.log('Updating site info with:', updateFields);
     
-    // Update the document
+    // Use findOneAndUpdate with upsert to create or update
     const updatedSiteInfo = await SiteInfo.findOneAndUpdate(
-      { _id: siteInfo._id },
+      {}, // empty filter to match any document
       { $set: updateFields },
-      { new: true, upsert: true }
+      { 
+        new: true, 
+        upsert: true, // create if doesn't exist
+        setDefaultsOnInsert: true // apply schema defaults on insert
+      }
     );
     
     if (!updatedSiteInfo) {
