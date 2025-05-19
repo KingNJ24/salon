@@ -344,6 +344,7 @@ router.get('/api/google-reviews', async (req, res) => {
         const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
         if (!placeId || !apiKey) {
+            console.error('Missing required parameters:', { placeId: !!placeId, apiKey: !!apiKey });
             return res.status(400).json({ 
                 error: 'Missing required parameters',
                 details: {
@@ -355,6 +356,7 @@ router.get('/api/google-reviews', async (req, res) => {
 
         // Add logging to debug the request
         console.log('Fetching reviews for place:', placeId);
+        console.log('Using API key:', apiKey.substring(0, 5) + '...');
 
         const response = await axios.get(
             `https://maps.googleapis.com/maps/api/place/details/json`,
@@ -372,6 +374,7 @@ router.get('/api/google-reviews', async (req, res) => {
 
         // Add logging to debug the response
         console.log('Google Places API response status:', response.status);
+        console.log('Response data:', JSON.stringify(response.data, null, 2));
 
         if (response.data.status === 'OK') {
             res.json(response.data);
