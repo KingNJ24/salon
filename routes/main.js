@@ -150,7 +150,8 @@ router.get('/about', async (req, res, next) => {
       title: 'About Us', 
       siteInfo,
       team,
-      page: 'about'
+      page: 'about',
+      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY
     });
   } catch (error) {
     next(error);

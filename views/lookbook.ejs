@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const videoSrc = this.getAttribute('data-video-src');
             if (videoModal && videoPlayer && videoSrc) {
                 // Set video source
-                videoPlayer.innerHTML = `<source src="${videoSrc}" type="video/mp4">Your browser does not support the video tag.`;
+                videoPlayer.innerHTML = `<source src="${videoSrc}" type="video/mp4">`;
                 videoPlayer.load();
                 
                 // Show modal
@@ -303,13 +303,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Try playing after loading
                 setTimeout(() => {
-                    videoPlayer.play().catch(err => console.log('Modal video play failed:', err));
+                    videoPlayer.play().catch(error => {
+                        console.error('Error playing video in modal:', error);
+                    });
                 }, 100);
             }
         });
     });
     
-    // Hide modal when clicking close button or outside modal
+    // Close modal functionality
     if (closeModal) {
         closeModal.addEventListener('click', function() {
             videoModal.style.display = 'none';
