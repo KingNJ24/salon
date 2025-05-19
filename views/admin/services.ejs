@@ -456,55 +456,116 @@
             const method = serviceId ? 'PUT' : 'POST';
             const url = serviceId ? `/api/services/${serviceId}` : '/api/services';
 
-            // Handle file upload
-            const fileInput = document.getElementById('imageFileInput');
-            if (fileInput && fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                const reader = new FileReader();
-                reader.onloadend = function() {
-                    formData.set('file', reader.result);
-                    submitForm(formData, method, url);
-                };
-                reader.readAsDataURL(file);
-            } else {
-                submitForm(formData, method, url);
-            }
-        }
-
-        function submitForm(formData, method, url) {
-            // Convert FormData to JSON for the API
+            // Convert FormData to JSON
             const jsonData = {};
             formData.forEach((value, key) => {
                 jsonData[key] = value;
             });
 
-            fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(jsonData)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(err.message || 'Failed to save service');
+            // Handle file uploads
+            const imageFileInput = document.getElementById('imageFileInput');
+            const videoFileInput = document.getElementById('videoFileInput');
+            const type = formData.get('type');
+
+            // Function to handle the submission after file upload
+            const submitData = async (fileData = null) => {
+                if (fileData) {
+                    if (type === 'video') {
+                        jsonData.videoUrl = fileData.url;
+                        jsonData.image = fileData.url; // Use video URL as thumbnail
+                    } else {
+                        jsonData.image = fileData.url;
+                    }
+                }
+
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(jsonData)
                     });
+
+                    if (!response.ok) {
+                        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        throw new Error(data.message || 'Failed to save service');
+                    }
+                } catch (error) {
+                    console.error('Error saving service:', error);
+                    showNotification('Failed to save service: ' + error.message, 'error');
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    throw new Error(data.message || 'Failed to save service');
-                }
-            })
-            .catch(error => {
-                console.error('Error saving service:', error);
-                alert(error.message || 'Failed to save service. Please try again.');
-            });
+            };
+
+            // Handle file upload if present
+            if (type === 'video' && videoFileInput && videoFileInput.files.length > 0) {
+                const file = videoFileInput.files[0];
+                readFileAsBase64(file).then(base64Data => {
+                    fetch('/api/express-upload-video', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            file: base64Data,
+                            fileName: file.name,
+                            fileType: file.type
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            submitData(data);
+                        } else {
+                            throw new Error(data.message || 'Failed to upload video');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error uploading video:', error);
+                        showNotification('Failed to upload video: ' + error.message, 'error');
+                    });
+                });
+            } else if (type === 'image' && imageFileInput && imageFileInput.files.length > 0) {
+                const file = imageFileInput.files[0];
+                readFileAsBase64(file).then(base64Data => {
+                    fetch('/api/express-upload', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            file: base64Data,
+                            fileName: file.name,
+                            fileType: file.type
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            submitData(data);
+                        } else {
+                            throw new Error(data.message || 'Failed to upload image');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error uploading image:', error);
+                        showNotification('Failed to upload image: ' + error.message, 'error');
+                    });
+                });
+            } else {
+                // No file to upload, submit directly
+                submitData();
+            }
         }
+
+        // Add event listener to the form
+        document.getElementById('serviceForm').addEventListener('submit', handleServiceSubmit);
 
         function closeModal() {
             document.getElementById('serviceModal').style.display = 'none';
@@ -554,6 +615,73 @@
                 alert('Failed to update view mode');
             });
         }
-</script> 
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize video upload button
+            const videoUploadBtn = document.getElementById('videoUploadBtn');
+            const videoFileInput = document.getElementById('videoFileInput');
+            const videoUrlInput = document.getElementById('serviceVideo');
+            const videoPreview = document.getElementById('videoPreview');
+            const thumbnailStatus = document.getElementById('thumbnailStatus');
+
+            if (videoUploadBtn && videoFileInput) {
+                videoUploadBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    
+                    if (!videoFileInput.files || !videoFileInput.files[0]) {
+                        showNotification('Please select a video file to upload', 'error');
+                        return;
+                    }
+                    
+                    const file = videoFileInput.files[0];
+                    videoUploadBtn.disabled = true;
+                    videoUploadBtn.textContent = 'Uploading...';
+                    
+                    try {
+                        // Convert file to base64
+                        const base64Data = await readFileAsBase64(file);
+                        
+                        const response = await fetch('/api/express-upload-video', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                file: base64Data,
+                                fileName: file.name,
+                                fileType: file.type
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            showNotification('Video uploaded successfully', 'success');
+                            if (videoUrlInput) {
+                                videoUrlInput.value = data.url;
+                            }
+                            if (videoPreview) {
+                                videoPreview.querySelector('source').src = data.url;
+                                videoPreview.load();
+                                videoPreview.style.display = 'block';
+                            }
+                        } else {
+                            throw new Error(data.message || 'Failed to upload video');
+                        }
+                    } catch (error) {
+                        console.error('Error uploading video:', error);
+                        showNotification('Failed to upload video: ' + error.message, 'error');
+                    } finally {
+                        videoUploadBtn.disabled = false;
+                        videoUploadBtn.textContent = 'Upload Video';
+                    }
+                });
+            }
+        });
+    </script> 
 </body>
 </html> 
